@@ -8,7 +8,7 @@ typedef struct Server {
 
    // Wal    wal;
     Socket sock;
-    Heap   conns;//这个server上的连接
+    //Heap   conns;//这个server上的连接
 }Server;
 //创建服务端套接字
 int makeServerSocket(char* host, char*port);
