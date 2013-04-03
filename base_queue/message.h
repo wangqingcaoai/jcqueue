@@ -17,4 +17,8 @@ typedef struct Message
 }Message,MessagePtr*;
 MessagePtr buildMessage(MessageState state,time,priority,void* data,int length);
 int setMessageState(MessagePtr , MessageState);
+MessagePtr cloneMessage(MessagePtr );
+int freeMessage(MessagePtr);//释放消息
+void * getMessageData(MessagePtr );
+MessageState getMessageState(MessagePtr);
 #endif
