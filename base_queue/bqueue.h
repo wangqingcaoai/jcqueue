@@ -5,6 +5,7 @@
 */
 typedef struct BQueue
 {
+    
 
 }BQueue,BQueuePtr *;
 #endif
