@@ -13,6 +13,25 @@ int addLog(LogLevel level,const char* logMessage,...){
     if(logError!=0){
         errorStr = strerror(logError);
     }
+    if(isOn(getConfig("verbose"))){
+        time_t timep;
+        time(&timep);
+        struct tm *p = localtime(&timep); /*取得当地时间*/    
+        char timeStr[25] ;
+        strftime (timeStr,25,"%F %T", p);
+        char* header = getLogHeader(level);
+        fprintf(stderr, "%s %s ", timeStr, header);
+        va_list va;
+        va_start(va,logMessage);
+        vfprintf(stderr,logMessage,va);
+        va_end(va);
+        if(logError){
+            fprintf(stderr, "[errno:%d error:%s]",logError , errorStr);    
+        }
+        fprintf(stderr, "\n");
+        fflush(stderr);
+    }
+
     Switch onLog = isOn(getConfig("error_log"));
     if(onLog==ON){
         char* logPath = (char*)getConfig("log_path");
@@ -25,7 +44,8 @@ int addLog(LogLevel level,const char* logMessage,...){
         if(file == NULL){
             int error =errno;
             printf("open log file error errno.%02d : %s\n", error, strerror(error));
-            
+            errno = 0;
+            return 1;
         }else{
             time_t timep;
             time(&timep);
@@ -46,7 +66,7 @@ int addLog(LogLevel level,const char* logMessage,...){
             fclose(file); /*关闭文件*/
         }   
     }
-    
+    errno = 0;
     return 1;
 
 }

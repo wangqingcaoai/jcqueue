@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include "base.h"
 #include "heap.h"
 
 static void set(Heap *h, int k, void *x)
@@ -108,4 +109,44 @@ void * heapremove(Heap *h, int k)
     siftup(h, k);
     h->rec(x, -1);
     return x;
+}
+
+HeapPtr buildHeap(Record record, Less less){
+    HeapPtr ptr = malloc(sizeof(Heap));
+    ptr->cap=ptr->len = 0;
+    ptr->data = NULL;
+    ptr->rec = record;
+    ptr->less = less;
+    return ptr;
+}
+void freeHeap(HeapPtr * h,Free freeMem){
+    if(h == NULL){
+        return ;
+    }
+    HeapPtr ptr = *h;
+    if(ptr!=NULL){
+        if(freeMem!=NULL){
+            int i = 0;
+            for (i = 0; i < ptr->len; ++i)
+            {
+                (*freeMem)(&ptr->data[i]);
+            }
+        }
+        free(ptr->data);
+        free(ptr);
+        ptr = NULL;
+        (*h) =NULL;
+    }
+
+}
+
+int heapFindIndex(HeapPtr h,Find f,void * arg){
+    int i = 0;
+    for (i ; i < h->len; ++i)
+    {
+        if(f(h->data[i],arg)){
+            return i;
+        }
+    }
+    return -1;
 }

@@ -1,93 +1,83 @@
-#include "list.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "base.h"
+#include "list.h"
 //减小计数
-static int  removeOne(ListPtr header){
-    if(!checkHeader(header)){
+static int  removeOne(ListPtr list){
+    if(!checklist(list)){
         return LIST_ERROR;
     }
-    header->length--;
+    list->count--;
     return 1;
 }
 //检查所给的指针是否正确
-int checkHeader(ListPtr header){
-    if(header == NULL){
+int checklist(ListPtr list){
+    if(list == NULL){
+        return LIST_ERROR;
+    }
+    if(list->header == NULL){
         return LIST_ERROR;
     }
     //指针不正确
-    if(header->prev==NULL || header->next == NULL){
+    if(list->header->prev==NULL || list->header->next == NULL){
         return LIST_ERROR;
     }
 }
-ListPtr initList(Free freeMem, Copy copyData){
-    ListPtr header = (ListPtr)malloc(sizeof(List));
-    header->prev = header;
-    header->next = header;
-    header->data = NULL;
-    header->freeMem = freeMem;
-    header->copyData = copyData;
-    header->length = 0;
-    header->id=0;
-    header->maxCount=0;
-    return header;
+ListPtr buildList(){
+    static int listnode_id;
+    listnode_id ++;
+    ListPtr list = (ListPtr)malloc(sizeof(List));
+    list->header = (ListNodePtr)malloc(sizeof(ListNode));
+    list->count = 0;
+    list->header->id=listnode_id;
+    list->header->prev = list->header->next = list->header;
+    return list;
 }
 
-int insertToList(ListPtr header,void *data,int length){
-    if(!checkHeader(header)){
+int insertToList(ListPtr list,void *data){
+    if(!checklist(list)){
         return LIST_ERROR;
     }
-    ListPtr new = (ListPtr)malloc(sizeof(List));
+    ListNodePtr header = list->header;
+    ListNodePtr new = (ListNodePtr)malloc(sizeof(ListNode));
     header->prev->next = new;
     new->prev = header->prev;
     header->prev = new;
     new->next=header;
 
-    header->maxCount++;
-    header->length++;
-
-    new->freeMem = header->freeMem;
-    new->copyData = header->copyData;
+    list->maxCount++;
+    list->count++;
    
-    new->id = header->maxCount;
-    new->maxCount = 0;
-    new->length  = 0;
-
-    if(data == NULL){
-        new->data = NULL;
-    }else{
-        //如果没有定义拷贝函数则直接复制内存
-        if(new->copyData == NULL){
-            new->data=(void*) malloc(length);
-            memcpy(new->data,data,length);
-        }else{
-            //调用拷贝函数进行复制
-            new->data=(*(new->copyData))(data);
-        }
-    }
+    new->id = list->maxCount;
+    new->data = data;
     new = NULL;
     return 1;
 }
 
-void * getFromList(ListPtr header,Find find,void*args[]){
-    if(!checkHeader(header)){
+void * getFromList(ListPtr list,Find find,void*arg){
+    if(!checklist(list)){
         return NULL;
     }
-    ListPtr ptr = getPtrFromList(header,find,args);
+    ListNodePtr ptr = getPtrFromList(list,find,arg);
     if(ptr!=NULL){
         return ptr->data;
     }
     return NULL;
 }
-ListPtr findNode(ListPtr startNode,ListPtr endNode,Find find , void * args[],ListPosition position ){
-    if(!checkHeader(startNode)){
+ListNodePtr findNode(ListNodePtr startNode,ListNodePtr endNode,Find find , void * arg,ListPosition position ){
+    if(startNode==NULL||startNode->prev==NULL||startNode->next==NULL){
+        return NULL;
+    }
+    if(find == NULL){
         return NULL;
     }
     if(endNode == NULL){
         endNode = startNode;
     }
-    ListPtr ptr =NULL;
+    ListNodePtr ptr =NULL;
     if(position == LIST_NEXT){
         ptr= startNode->next;
     }else{
@@ -97,7 +87,7 @@ ListPtr findNode(ListPtr startNode,ListPtr endNode,Find find , void * args[],Lis
         if(find == NULL){
             break;
         }
-        else if((*(find))(ptr->data,args)){
+        else if((*(find))(ptr->data,arg)){
             break;
         };
         if(position == LIST_NEXT){
@@ -107,38 +97,67 @@ ListPtr findNode(ListPtr startNode,ListPtr endNode,Find find , void * args[],Lis
         }
 
     }
-    if(ptr == endNode || find==NULL){
+    if(ptr == endNode){
         return NULL;
     }else{
         return ptr;
     }
 }
-ListPtr getPtrFromList(ListPtr header,Find find,void*args[]){
-    if(!checkHeader(header)){
+ListNodePtr getPtrFromList(ListPtr list,Find find,void*arg){
+    if(!checklist(list)){
         return NULL;
     }
-    return findNode(header,header,find,args,LIST_NEXT);
+    return findNode(list->header,list->header,find,arg,LIST_NEXT);
     
 }
 
-void * nextFromList(ListPtr *node ,ListPtr endNode,Find find,void*args[]){
-    if(!checkHeader(*node)){
+void * nextFromList(ListNodePtr *node ,ListNodePtr endNode,Find find,void*arg){
+    ListNodePtr startNode = (*node); 
+    if(startNode==NULL||startNode->prev==NULL||startNode->next==NULL){
         return NULL;
     }
     if (endNode ==NULL)
     {
         return NULL;
     }
-    if((*node)->next == endNode){
+    if(startNode->next == endNode){
+        (*node) = endNode;
+        return NULL;
+    }
+    if(find ==NULL){
+        void* data = startNode->next->data;
+        (*node) = startNode->next;
+        return data;
+    }
+    ListNodePtr ptr= findNode(startNode,endNode,find,arg,LIST_NEXT);
+    if(ptr!=NULL){
+        (*node) = ptr;
+        return ptr->data;        
+    }else{
+        (*node) = endNode;
+        return NULL;
+    }
+}
+
+void * preFromList(ListNodePtr *node,ListNodePtr endNode,Find find,void*arg){
+    ListNodePtr startNode = (*node); 
+    if(startNode==NULL||startNode->prev==NULL||startNode->next==NULL){
+        return NULL;
+    }
+    if (endNode ==NULL)
+    {
+        return NULL;
+    }
+    if(startNode->prev == endNode){
         *node = endNode;
         return NULL;
     }
     if(find ==NULL){
-        void* data = (*node)->next->data;
-        *node = (*node)->next;
+        void* data = startNode->prev->data;
+        *node = startNode->prev;
         return data;
     }
-    ListPtr ptr= findNode(*node,endNode,find,args,LIST_NEXT);
+    ListNodePtr ptr= findNode(startNode,endNode,find,arg,LIST_PRE);
     if(ptr!=NULL){
         *node = ptr;
         return ptr->data;        
@@ -146,138 +165,113 @@ void * nextFromList(ListPtr *node ,ListPtr endNode,Find find,void*args[]){
         *node = endNode;
         return NULL;
     }
-}
-
-void * preFromList(ListPtr *node,ListPtr endNode,Find find,void*args[]){
-    if(!checkHeader(*node)){
-        return NULL;
-    }
-    if (endNode ==NULL)
-    {
-        return NULL;
-    }
-    if((*node)->prev == endNode){
-        *node = endNode;
-        return NULL;
-    }
-    if(find ==NULL){
-        void* data = (*node)->prev->data;
-        *node = (*node)->prev;
-        return data;
-    }
-    ListPtr ptr= findNode(*node,endNode,find,args,LIST_PRE);
-    if(ptr!=NULL){
-        *node = ptr;
-        return ptr->data;        
-    }else{
-        *node = endNode;
-        return NULL;
-    }
 
 
 }
 
-int removeFromList(ListPtr header,Find find,void*args[]){
-    if(!checkHeader(header)){
+int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
+    if(!checklist(list)){
         return LIST_COUNT_ERROR;
     }
-    ListPtr ptr = findNode(header,header,find,args,LIST_NEXT);
-    ListPtr prev = NULL;
+    ListNodePtr ptr = findNode(list->header,list->header,find,arg,LIST_NEXT);
+    ListNodePtr prev = NULL;
     int removeNum = 0;
     while(ptr!=NULL){
         ptr->prev ->next = ptr->next;
         ptr->next->prev = ptr->prev;
         prev = ptr->prev;;
-        freeNode(&ptr);
+        freeNode(&ptr,freeMem);
         removeNum++;
-        removeOne(header);
+        removeOne(list);
         //获取下一个
-        ptr = findNode(prev,header,find,args,LIST_NEXT);
+        ptr = findNode(prev,list->header,find,arg,LIST_NEXT);
     }
     return removeNum;    
 }
 
-int setToList(ListPtr header ,void * data ,int length,Find find,void*args[]){
-    if(!checkHeader(header)){
-        return LIST_ERROR;
-    }
+// int setToList(ListPtr list ,void * data ,int count,Find find,void*arg){
+//     if(!checklist(list)){
+//         return LIST_ERROR;
+//     }
  
-    ListPtr ptr =header->next ;
-    int updateNum = 0;
-    if(find == NULL){
-        return LIST_ERROR;
-    }
-    while(ptr!=header){
+//     ListPtr ptr =list->next ;
+//     int updateNum = 0;
+//     if(find == NULL){
+//         return LIST_ERROR;
+//     }
+//     while(ptr!=list){
         
-        if((*(find))(ptr->data,args)){
-            updateNum++;
-            if(ptr->freeMem==NULL){
-                if(ptr->data!=NULL){
-                    free(ptr->data);
-                }
-            }else{
-                if (ptr->data!=NULL)
-                {
-                    (*(ptr->freeMem))(ptr->data);
-                    free(ptr->data);
-                }
-            }
-            if(data == NULL){
-                ptr->data = NULL;
-            }else{
-                //如果没有定义拷贝函数则直接复制内存
-                if(ptr->copyData == NULL){
-                    ptr->data=(void*) malloc(length);
-                    memcpy(ptr->data,data,length);
-                }else{
-                    //调用拷贝函数进行复制
-                    ptr->data=(*(ptr->copyData))(data);
-                }
-            }       
-        };
-        //获取下一个
-        ptr= ptr->next;
-    }
-    return updateNum;
-}
+//         if((*(find))(ptr->data,arg)){
+//             updateNum++;
+//             if(ptr->freeMem==NULL){
+//                 if(ptr->data!=NULL){
+//                     free(ptr->data);
+//                 }
+//             }else{
+//                 if (ptr->data!=NULL)
+//                 {
+//                     (*(ptr->freeMem))(ptr->data);
+//                     free(ptr->data);
+//                 }
+//             }
+//             if(data == NULL){
+//                 ptr->data = NULL;
+//             }else{
+//                 //如果没有定义拷贝函数则直接复制内存
+//                 if(ptr->copyData == NULL){
+//                     ptr->data=(void*) malloc(count);
+//                     memcpy(ptr->data,data,count);
+//                 }else{
+//                     //调用拷贝函数进行复制
+//                     ptr->data=(*(ptr->copyData))(data);
+//                 }
+//             }       
+//         };
+//         //获取下一个
+//         ptr= ptr->next;
+//     }
+//     return updateNum;
+// }
 
 //会释放根节点
-int freeList(ListPtr *header){
-    ListPtr head= (*header);
-    if(!checkHeader(head)){
+int freeList(ListPtr *l,Free freeMem){
+    ListPtr list= (*l);
+    if(!checklist(list)){
         return LIST_ERROR;
     }
-    ListPtr ptr = head->next;
-    head->next = NULL;
+    ListNodePtr ptr = list->header->next;
+    list->header->next = NULL;
     int freeNum=0;
-    ListPtr tmp;
+    ListNodePtr tmp;
     while(ptr!= NULL){
         freeNum++;
         tmp = ptr->next;
-        freeNode(&ptr);
+        freeNode(&ptr,freeMem);
         ptr = tmp;
         tmp = NULL;
     }
-    *header=NULL;
+    free(l);
+    (*l)=NULL;
+    list =NULL;
     return freeNum;
 }
 
-int getCount(ListPtr header){
-    if(!checkHeader(header)){
+int getCount(ListPtr list){
+    if(!checklist(list)){
         return LIST_COUNT_ERROR;
     }
-    return header->length;
+    return list->count;
 }
 
-int displayList(ListPtr header,Display display,int lineShows){
-    if(!checkHeader(header)){
+int displayList(ListPtr list,Display display,int lineShows){
+    if(!checklist(list)){
         return LIST_ERROR;
     }
-    ListPtr ptr = header->next;
+    ListNodePtr header = list->header;
+    ListNodePtr ptr = header->next;
     int count = 0;
-    printf("list: length %d,maxCount %d, header id %d\n",
-        getCount(header),header->maxCount,header->id);
-    printf("%d",header->id );
+    printf("list: count %d,maxCount %d, \n",
+        list->count,list->maxCount);
     while(ptr!=header){
         printf("->%d",ptr->id);
         if (display!=NULL)
@@ -296,28 +290,29 @@ int displayList(ListPtr header,Display display,int lineShows){
     return 1;
 }
 
-void * getByIdFromList(ListPtr header,int id){
-    if(!checkHeader(header)){
+void * getByIdFromList(ListPtr list,int id){
+    if(!checklist(list)){
         return NULL;
     }
     if(id <= 0){
         return NULL;
     }
-    ListPtr ptr = getPtrByIdFromList(header,id);
+    ListNodePtr ptr = getPtrByIdFromList(list,id);
     if(ptr!=NULL){
         return ptr->data;   
     }else{
         return NULL;
     }
 }
-ListPtr getPtrByIdFromList(ListPtr header,int id){
-    if(!checkHeader(header)){
+ListNodePtr getPtrByIdFromList(ListPtr list,int id){
+    if(!checklist(list)){
         return NULL;
     }
     if(id <= 0){
         return NULL;
     }
-    ListPtr ptr = header->next;
+    ListNodePtr header =list->header;
+    ListNodePtr ptr = header->next;
     while(ptr!=header){
         if(ptr->id == id ){
             break;
@@ -331,32 +326,31 @@ ListPtr getPtrByIdFromList(ListPtr header,int id){
     }
 }
 
-int removeByIdFromList(ListPtr header,int id){
-    if(!checkHeader(header)){
+int removeByIdFromList(ListPtr list,int id,Free freeMem){
+    if(!checklist(list)){
         return LIST_COUNT_ERROR;
     }
     if(id<=0){
         return LIST_COUNT_ERROR;
     }
-    ListPtr ptr = getPtrByIdFromList(header,id);
+    ListNodePtr ptr = getPtrByIdFromList(list,id);
     if(ptr == NULL){
         return 0;
     }else{
-        freeNode(&ptr);
+        freeNode(&ptr,freeMem);
     }
     return 1;
 }
-int freeNode(ListPtr *node){
-    ListPtr ptr =(*node);
-    if(ptr->freeMem==NULL){
+int freeNode(ListNodePtr *node,Free freeMem){
+    ListNodePtr ptr =(*node);
+    if(freeMem==NULL){
         if(ptr->data!=NULL){
             free(ptr->data);
         }
     }else{
         if (ptr->data!=NULL)
         {
-            (*(ptr->freeMem))(ptr->data);
-            free(ptr->data);
+            (*(freeMem))(&ptr->data);
         }
     }
     free(ptr);
@@ -364,21 +358,21 @@ int freeNode(ListPtr *node){
     (*node) ==NULL;
 }
 
-int getListNodeId(ListPtr node){
+int getListNodeId(ListNodePtr node){
     if(node == NULL){
         return -1;
     }
     return node->id;
 }
-int isEmptyList(ListPtr header){
-    if(header == NULL){
+int isEmptyList(ListPtr list){
+    if(list == NULL){
         return 1;
     }
-    return header->length ==0;
+    return list->count ==0;
 }
 
 
-void* getDataOfListNode(ListPtr node){
+void* getDataOfListNode(ListNodePtr node){
     if(node == NULL){
         return NULL;
     }

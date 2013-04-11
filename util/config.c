@@ -41,8 +41,10 @@ int initConfig(){
                     //just jump the annotation line
                     //here is jump a long line that length more than BUF_SIZE
                 }else{
-                    if(buf[length-1] == '\n'){
-                        buf[length-1] = '\0';//去除末尾换行符号
+                    if(length<BUF_SIZE){
+                        if(buf[length-1]=='\n'){
+                            buf[length-1] = '\0';//去除末尾换行符号
+                        }
                         key = strtok(buf,"=");
                         value = strtok(NULL,"=");
                         if(value==NULL){
@@ -54,6 +56,7 @@ int initConfig(){
                         }
                         continue;
                     }else{
+
                         hasError = 1;
                         printError(line," it is to long ",buf);
                     }
@@ -151,6 +154,9 @@ int printError(int lineNum,const char* errorInfo,const char* data){
 }
 
 Switch isOn(char* data){
+    if(data == NULL){
+        return OFF;
+    }
     if(strcasecmp(data,"on")==0){
         return ON;
     }

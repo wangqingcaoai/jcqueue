@@ -13,6 +13,7 @@
 #include "../util/log.h"
 #include "sd-daemon.h"
 #include "server.h"
+#include "connect.h"
 
 
 int
@@ -104,7 +105,7 @@ makeServerSocket(char *host, char *port)
         continue;
       }
 
-      if (verbose) {
+      if (isOn(getConfig("verbose"))) {
           char hbuf[NI_MAXHOST], pbuf[NI_MAXSERV], *h = host, *p = port;
           r = getnameinfo(ai->ai_addr, ai->ai_addrlen,
                   hbuf, sizeof hbuf,
@@ -189,7 +190,7 @@ srvserve(Server *s)
 
         int64 t1 = nanoseconds();
         if (t1-t > period) {
-            //prottick(s);
+            srvtick(s);
             t = t1;
         }
 
@@ -198,9 +199,17 @@ srvserve(Server *s)
         }
     }
 }
-
+/**
+ * 连接接入处理
+ */
 void
 srvaccept(Server *s, int ev)
 {
-    //h_accept(s->sock.fd, ev, s);
+    acceptConnect(s,ev);    
+}
+/**
+ * 心跳处理
+ */
+void srvtick(Server *s){
+
 }

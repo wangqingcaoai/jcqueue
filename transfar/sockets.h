@@ -6,7 +6,7 @@ typedef struct Socket{
     int fd;//套接字的文件描述符
     Handle f;//句柄
     int added;//已添加标记
-    void   *x;
+    void   *x;//关联结构体 ，为Connect 或Server
 }Socket;
 //套接字事件队列初始化
 int sockinit(void);

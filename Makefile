@@ -1,13 +1,11 @@
 TARGET=jcqueue
-dirs = data\
+dirs = app_queue\
+	base_queue\
 	secure\
 	transfar\
 	util\
-
-	 # app_queue\
-	#base_queue\
-	
-	# parser\
+	parser\
+	data\
 	
 libs = $(dirs:%=lib%.a)
 libflag = $(dirs:%=-l% ) 
@@ -16,9 +14,9 @@ CFLAGS = -g
 $(TARGET):$(libs) main.o build
 	$(CC) $(CFLAGS) -L. main.o $(libflag)  -o $@
 
-lib%.a: 
+lib%.a: %/*.c
 	$(MAKE) -C  $(@:lib%.a=%)/ CFLAGS=$(CFLAGS)
-	ar rs  $@ `echo $(@:lib%.a=%)/*.o`
+	ar rs  $@ $(@:lib%.a=%)/*.o 
 %.o:%.c
 	$(CC) $(CFLAGS) -c $^ 
 build:
