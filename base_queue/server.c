@@ -20,5 +20,7 @@ int freeBaseServer(BaseServerPtr * p){
     }
     ListPtr lptr =ptr->topicList;
     freeList(&lptr,(Free)freeTopic);
+    free(ptr);
+    (*p) = NULL;
     
 }

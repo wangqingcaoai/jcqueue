@@ -20,8 +20,9 @@ int sleepMessage(TopicPtr topic,int messageid);
 int reuseMessage(TopicPtr topic,int messageid,int time);
 int delMessage(TopicPtr topic, int messageid);
 int wakeUpMessage(TopicPtr topic,int messageid,int time);//唤醒某个消息。可指定唤醒时间
-int tick(TopicPtr topic,int64 timestamp);//对延迟队列和休眠队列进行检查进行处理
+int tickTopic(TopicPtr topic,int64 timestamp);//对延迟队列和休眠队列进行检查进行处理
 int freeTopic(TopicPtr *topic);
 char* getTopicName(TopicPtr ptr);
 int backupTopic(TopicPtr ptr);//还未撰写
+int isSameTopicName(TopicPtr ptr,char* topicName);
 #endif

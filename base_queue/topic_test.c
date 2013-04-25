@@ -44,7 +44,7 @@ int test_topic(){
     if(rptr == NULL){
         printf("delay add success\n");
     }
-    tick(ptr,nanoseconds());
+    tickTopic(ptr,nanoseconds());
     rptr = getReadyMessage(ptr);
     if(rptr ==mptr){
         printf("tick right\n");

@@ -98,7 +98,7 @@ int wakeUpMessage(TopicPtr topic,int messageid,int delay){
 
 }
 //对延迟队列和休眠队列进行检查进行处理
-int tick(TopicPtr topic,int64 timestamp){
+int tickTopic(TopicPtr topic,int64 timestamp){
     MessagePtr ptr=NULL;
     //对延迟队列进行检查
     while((ptr=heapremove(topic->delay_queue,0))!=NULL){
