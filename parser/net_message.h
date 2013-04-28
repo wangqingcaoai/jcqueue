@@ -7,6 +7,7 @@ typedef struct NetMessage
 {
     char* cmd ;//命令名
     char* target;//操作的目标
+    char* targetType;
     char* host ;//来源主机
     char* port ;//端口
     char* user;//来源用户
@@ -15,6 +16,7 @@ typedef struct NetMessage
     void* data;//消息数据
     int length;//消息长度
     int delay;//消息延迟
+    int priority;
     char* clientVersion;//客户端版本
     char* clientType;//客户端类型
     int64 timestamp;//创建时间
@@ -28,8 +30,10 @@ typedef struct NetMessage
     char* clientPassword;//响应密码
     int64 sendTime;
 }NetMessage,* NetMessagePtr;
-char* getCmd(NetMessagePtr);
-char* getTarget(NetMessagePtr);
-int setSendData(NetMessagePtr ptr,int errcode,char* clientCmd,char* clientTarget,char* sendData,int datalength);
-int setSendUser(NetMessagePtr ptr,int clientUser,int clientKey,int clientPassword);
+char* NM_getCmd(NetMessagePtr);
+char* NM_getTarget(NetMessagePtr);
+int NM_setSendData(NetMessagePtr ptr,int errcode,char* clientCmd,char* clientTarget,char* sendData,int datalength);
+int NM_setSendUser(NetMessagePtr ptr,int clientUser,int clientKey,int clientPassword);
+NetMessagePtr NM_buildNetMessage();
+int NM_setError(NetMessagePtr ptr,int errcode,char* errorMessage,...);
 #endif

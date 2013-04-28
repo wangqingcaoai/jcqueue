@@ -3,5 +3,5 @@
  */
 #ifndef BQ_TICK_H
 #define BQ_TICK_H 
- tickBQ(int timestamp);//
+ tickBQ(int timestamp);
 #endif
