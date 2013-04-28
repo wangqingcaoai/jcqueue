@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "topic_router.h"
 #include "router.h"
 #include "errors.h"
+
 
 int bq_router(BaseServerPtr serverPtr,NetMessagePtr ptr){
     if(serverPtr == NULL){
@@ -40,41 +43,40 @@ int bq_router(BaseServerPtr serverPtr,NetMessagePtr ptr){
 
 }
 static int bq_empty_baseServer(BaseServerPtr serverPtr,NetMessagePtr ptr){
-    return NM_setError(ptr,BQ_EMPTY_BASESERVER,BQ_EMPTY_BASESERVER_MSG);
+    return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_EMPTY_BASESERVER),BQ_EMPTY_BASESERVER_MSG);
 
 }
 
 static int bq_unknow_cmd(BaseServerPtr serverPtr,NetMessagePtr ptr){
-    return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_CMD,BQ_UNKNOW_CMD_MSG);
-
+    return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_CMD),BQ_UNKNOW_CMD_MSG,ptr->cmd);
 }
 
 static int bq_add(BaseServerPtr serverPtr,NetMessagePtr ptr){
     TopicPtr tPtr = useTopic(serverPtr,ptr->target);
     if(tPtr == NULL){
-        return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC,BQ_UNKNOW_TOPIC_MSG,ptr->target);
+        return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
 
         MessagePtr mPtr = buildMessage(ptr->delay!=0?MS_READY:MS_DELAY,ptr->sendTime,ptr->priority,ptr->data,ptr->length,ptr->delay );
         if(mPtr == NULL){
-            return NM_setError(ptr,BQ_ERRORS_MARK,BQ_BUILD_MESSAGE_FAILED,BQ_BUILD_MESSAGE_FAILED_MSG);
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_BUILD_MESSAGE_FAILED),BQ_BUILD_MESSAGE_FAILED_MSG);
         }
         addMessage(tPtr,mPtr,ptr->delay);
-        return NM_setSuccess(ptr,BQ_SUCCESS_MARK,BQ_ADD_SUCCESS,BQ_ADD_SUCCESS_MSG);
+        return NM_setError(ptr,buildErrorCode(BQ_SUCCESS_MARK,BQ_ADD_SUCCESS),BQ_ADD_SUCCESS_MSG);
     }
 
 }
 static int bq_get(BaseServerPtr serverPtr,NetMessagePtr ptr){
     TopicPtr tPtr = useTopic(serverPtr,ptr->target);
     if(tPtr == NULL){
-        return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC,BQ_UNKNOW_TOPIC_MSG,ptr->target);
+        return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
         MessagePtr mPtr = getReadyMessage(tPtr);
         if(mPtr == NULL){
-            return NM_setError(ptr,BQ_ERRORS_MARK,BQ_NO_READY_MESSAGE,BQ_NO_READY_MESSAGE_MSG,ptr->target);
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_NO_READY_MESSAGE),BQ_NO_READY_MESSAGE_MSG,ptr->target);
         }else{
             //TODO client cmd undefined now 
-            return NM_setSendData(ptr,BQ_SUCCESS_MARK,"","",mPtr->sendData,mPtr->length);
+            return NM_setSendData(ptr,BQ_SUCCESS_MARK,"","",mPtr->data,mPtr->length);
         }
     }
 }
@@ -82,32 +84,65 @@ static int bq_get(BaseServerPtr serverPtr,NetMessagePtr ptr){
 static int bq_sleep(BaseServerPtr serverPtr,NetMessagePtr ptr){
     TopicPtr tPtr = useTopic(serverPtr,ptr->target);
     if(tPtr == NULL){
-        return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC,BQ_UNKNOW_TOPIC_MSG,ptr->target);
+        return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
+        int messageId  = *((int*)(ptr->data));
+        int code  = sleepMessage(tPtr,messageId);
+        if(code == -1){
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
+        }else{
+            return NM_setError(ptr,buildErrorCode(BQ_SUCCESS_MARK,BQ_SLEEP_SUCCESS),BQ_SLEEP_SUCCESS_MSG, messageId);
+        }
+    }
 } 
 
 static int bq_reuse(BaseServerPtr serverPtr,NetMessagePtr ptr){
     TopicPtr tPtr = useTopic(serverPtr,ptr->target);
     if(tPtr == NULL){
-        return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC,BQ_UNKNOW_TOPIC_MSG,ptr->target);
+        return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
+        int messageId  = *((int*)(ptr->data));
+        int code = reuseMessage(tPtr,messageId,ptr->delay);
+        if(code == -1){
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
+        }else{
+            return NM_setError(ptr,buildErrorCode(BQ_SUCCESS_MARK,BQ_REUSE_SUCCESS),BQ_REUSE_SUCCESS_MSG, messageId);
+        }
+    }
 } 
 
 static int bq_del(BaseServerPtr serverPtr,NetMessagePtr ptr){
     TopicPtr tPtr = useTopic(serverPtr,ptr->target);
     if(tPtr == NULL){
-        return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC,BQ_UNKNOW_TOPIC_MSG,ptr->target);
+        return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
+        int messageId  = *((int*)(ptr->data));
+        int code = delMessage(tPtr,messageId);
+        if(code == -1){
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
+        }else{
+            return NM_setError(ptr,buildErrorCode(BQ_SUCCESS_MARK,BQ_DEL_SUCCESS),BQ_DEL_SUCCESS_MSG, messageId);
+        }
+    }
 } 
 
 static int bq_wakeup(BaseServerPtr serverPtr,NetMessagePtr ptr){
     TopicPtr tPtr = useTopic(serverPtr,ptr->target);
     if(tPtr == NULL){
-        return NM_setError(ptr,BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC,BQ_UNKNOW_TOPIC_MSG,ptr->target);
+        return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
+        int messageId  = *((int*)(ptr->data));
+        int code = wakeUpMessage(tPtr,messageId,ptr->delay);
+        if(code == -1){
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
+        }else{
+            return NM_setError(ptr,buildErrorCode(BQ_SUCCESS_MARK,BQ_WAKEUP_SUCCESS),BQ_WAKEUP_SUCCESS_MSG, messageId);
+        }
+    }
 } 
 
 static int bq_add_topic(BaseServerPtr serverPtr,NetMessagePtr ptr){
+
 
 } 
 static int bq_del_topic(BaseServerPtr serverPtr,NetMessagePtr ptr){

@@ -17,12 +17,14 @@ TopicPtr buildTopic(const char* topicName);//新建topic
 int addMessage(TopicPtr topic,MessagePtr message,int delay);//添加消息
 MessagePtr getReadyMessage(TopicPtr topic);//获取消息
 int sleepMessage(TopicPtr topic,int messageid);
-int reuseMessage(TopicPtr topic,int messageid,int time);
+int reuseMessage(TopicPtr topic,int messageid,int delay);
 int delMessage(TopicPtr topic, int messageid);
-int wakeUpMessage(TopicPtr topic,int messageid,int time);//唤醒某个消息。可指定唤醒时间
+int wakeUpMessage(TopicPtr topic,int messageid,int delay);//唤醒某个消息。可指定唤醒时间
 int tickTopic(TopicPtr topic,int64 timestamp);//对延迟队列和休眠队列进行检查进行处理
 int freeTopic(TopicPtr *topic);
 char* getTopicName(TopicPtr ptr);
 int backupTopic(TopicPtr ptr);//还未撰写
 int isSameTopicName(TopicPtr ptr,char* topicName);
+
+
 #endif

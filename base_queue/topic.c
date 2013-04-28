@@ -78,8 +78,9 @@ int delMessage(TopicPtr topic, int messageid){
     }else if((i= heapFindIndex(topic->sleep_queue,(Find)isMessage,&messageid))!=-1){
         MessagePtr ptr = heapremove(topic->sleep_queue,i);
         freeMessage(&ptr);
+        return 1;
     }
-    return 0;
+    return -1;
 }
 //唤醒某个消息。可指定唤醒时间
 int wakeUpMessage(TopicPtr topic,int messageid,int delay){
