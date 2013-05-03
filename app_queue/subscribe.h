@@ -16,4 +16,7 @@ typedef struct Subscribe
     ChannelPtr channel;//订阅的用户频道
     List subscribedTopicIds;
 }Subscribe,*SubscribePtr;
+int addSubscribe(ListPtr subscribeList, UserPtr userPtr , NetMessagePtr );
+int delSubscribe(ListPtr subscribeList, );
+int processSubscribe(ListPtr subscribeList);
 #endif

@@ -2,7 +2,11 @@
 #define AQ_SERVER_H 
 typedef struct AppServer
 {
-    int UsersList;
-    int BaseServer 
+    List UsersList;
+    List BaseServer 
 }AppServer , * AppServerPtr;
+AppServerPtr buildAppServer();
+int initAppServer(AppServerPtr);
+int freeAppServer(AppServerPtr *);
+
 #endif
