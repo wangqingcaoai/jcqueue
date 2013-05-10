@@ -27,12 +27,13 @@ int checklist(ListPtr list){
     }
 }
 ListPtr buildList(){
-    static int listnode_id;
-    listnode_id ++;
+    static int list_id;
+    list_id ++;
     ListPtr list = (ListPtr)malloc(sizeof(List));
     list->header = (ListNodePtr)malloc(sizeof(ListNode));
-    list->count = 0;
-    list->header->id=listnode_id;
+    list->count  = 0;
+    list->listId = list_id; 
+    list->header->id= LIST_HEADER_ID;
     list->header->prev = list->header->next = list->header;
     return list;
 }
@@ -345,7 +346,9 @@ int freeNode(ListNodePtr *node,Free freeMem){
     ListNodePtr ptr =(*node);
     if(freeMem==NULL){
         if(ptr->data!=NULL){
-            free(ptr->data);
+            //free(ptr->data);
+            //并不知道传入的是分配的内存还是 何处的指针
+            ptr->data = NULL;
         }
     }else{
         if (ptr->data!=NULL)

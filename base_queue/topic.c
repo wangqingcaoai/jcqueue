@@ -135,3 +135,9 @@ int freeTopic(TopicPtr *topic){
 char* getTopicName(TopicPtr ptr){
     return ptr->topic_name;
 }
+int backupTopic(TopicPtr ptr){
+
+}//还未撰写
+int isSameTopicName(TopicPtr ptr,const char* topicName){
+
+}

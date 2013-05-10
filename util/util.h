@@ -8,4 +8,5 @@ int64 nanoseconds(void);
 
 char * allocString(const char* s);
 int freeString(char **s);
+int isEmptyString(const char * s);
 #endif

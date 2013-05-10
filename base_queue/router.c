@@ -86,7 +86,11 @@ static int bq_sleep(BaseServerPtr serverPtr,NetMessagePtr ptr){
     if(tPtr == NULL){
         return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
-        int messageId  = *((int*)(ptr->data));
+        char * param = getEntraParam(ptr,'message_id');
+        if(param == NULL){
+            return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_EMPTY_MESSAGE_ID),BQ_EMPTY_MESSAGE_ID_MSG);
+        }
+        int messageId  = atoi(param);
         int code  = sleepMessage(tPtr,messageId);
         if(code == -1){
             return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
@@ -101,7 +105,8 @@ static int bq_reuse(BaseServerPtr serverPtr,NetMessagePtr ptr){
     if(tPtr == NULL){
         return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
-        int messageId  = *((int*)(ptr->data));
+        char * param = getEntraParam(ptr,'message_id');
+        int messageId  = atoi(param);
         int code = reuseMessage(tPtr,messageId,ptr->delay);
         if(code == -1){
             return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
@@ -116,7 +121,8 @@ static int bq_del(BaseServerPtr serverPtr,NetMessagePtr ptr){
     if(tPtr == NULL){
         return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
-        int messageId  = *((int*)(ptr->data));
+        char * param = getEntraParam(ptr,'message_id');
+        int messageId  = atoi(param);
         int code = delMessage(tPtr,messageId);
         if(code == -1){
             return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);
@@ -131,7 +137,8 @@ static int bq_wakeup(BaseServerPtr serverPtr,NetMessagePtr ptr){
     if(tPtr == NULL){
         return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,ptr->target);
     }else{
-        int messageId  = *((int*)(ptr->data));
+        char * param = getEntraParam(ptr,'message_id');
+        int messageId  = atoi(param);
         int code = wakeUpMessage(tPtr,messageId,ptr->delay);
         if(code == -1){
             return NM_setError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_MSG),BQ_UNKNOW_MSG_MSG,messageId);

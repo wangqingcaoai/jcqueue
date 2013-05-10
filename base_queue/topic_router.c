@@ -3,7 +3,7 @@
 #include <string.h>
 #include "topic.h"
 #include "server.h"
-int addTopic(BaseServerPtr ptr,char* topicName){
+int addTopic(BaseServerPtr ptr,const char* topicName){
     if(topicName == NULL){
         return -1;
     }
@@ -19,7 +19,7 @@ int addTopic(BaseServerPtr ptr,char* topicName){
         return -1;
     }
 }
-int removeTopic(BaseServerPtr ptr,char* topicName){
+int removeTopic(BaseServerPtr ptr,const char* topicName){
     if(topicName == NULL){
         return -1;
     }
@@ -30,7 +30,7 @@ int removeTopic(BaseServerPtr ptr,char* topicName){
     return count;   
 
 }
-int cleanTopic(BaseServerPtr ptr,char* topicName){
+int cleanTopic(BaseServerPtr ptr,const char* topicName){
     int count = removeTopic(ptr,topicName);
     if(count !=-1 ){
         return addTopic(ptr,topicName);
@@ -39,7 +39,7 @@ int cleanTopic(BaseServerPtr ptr,char* topicName){
     return -1;
 
 }//清空topic
-TopicPtr useTopic(BaseServerPtr ptr,char*topicName){
+TopicPtr useTopic(BaseServerPtr ptr,const char*topicName){
     if(topicName == NULL){
         return NULL;
     }

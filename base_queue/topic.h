@@ -24,7 +24,7 @@ int tickTopic(TopicPtr topic,int64 timestamp);//对延迟队列和休眠队列�
 int freeTopic(TopicPtr *topic);
 char* getTopicName(TopicPtr ptr);
 int backupTopic(TopicPtr ptr);//还未撰写
-int isSameTopicName(TopicPtr ptr,char* topicName);
+int isSameTopicName(TopicPtr ptr,const char* topicName);
 
 
 #endif

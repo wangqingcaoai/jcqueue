@@ -59,3 +59,17 @@ int  freeString( char** s){
         }
     }
 }
+int isEmptyString(const char* s){
+    if(s == NULL){
+        return 1
+    }
+    char * ptr = malloc(strlen(s)+1);
+    strcpy(ptr,s);
+    char* str =  trim(ptr);
+
+    if(str[0]=='\0'){
+        return 1;
+    }else{
+        return 0;
+    }
+}

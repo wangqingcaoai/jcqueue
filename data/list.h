@@ -2,9 +2,9 @@
 #define DATA_LIST_H
 #include <stdarg.h>
 #include "base.h"
-#define LIST_COUNT_ERROR -1;
-#define LIST_ERROR 0;
-
+#define LIST_COUNT_ERROR -1
+#define LIST_ERROR 0
+#define LIST_HEADER_ID -1
 
 typedef struct ListNode{
     struct ListNode * prev;
@@ -14,6 +14,7 @@ typedef struct ListNode{
 }ListNode,*ListNodePtr;
 typedef struct List 
 {
+    int listId;
     ListNodePtr header;
     int count,maxCount;
 }List ,* ListPtr;
