@@ -8,6 +8,7 @@
 #define SUBSCRIBE_SUCCESS 0
 #define SUBSCRIBE_ERROR_PARAM_ERROR 1
 #define SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND 2
+#define SUBSCRIBE_ERROR_APP_SERVER_NOT_FOUND 3
 #define SUBSCRIBE_TYPE_PUSH "push"
 #define SUBSCRIBE_TYPE_GET "get"
 typedef struct Subscribe
@@ -34,10 +35,10 @@ typedef struct SubscribeServer
     int serverId;
     ListPtr topics;
     ListPtr subscribes;
-
+    AppServerPtr appServer;
 }SubscribeServer,* SubscribeServerPtr;
 
-SubscribeServerPtr buildSubscribeServer();
+SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer);
 int freeSubscribeServer(SubscribeServerPtr *);
 SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
 int freeSubscribe(SubscribePtr *);

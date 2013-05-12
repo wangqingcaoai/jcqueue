@@ -3,7 +3,8 @@
 typedef struct AppServer
 {
     List UsersList;
-    List BaseServer 
+    List BaseServer ;
+    List SubscribeServer;
 }AppServer , * AppServerPtr;
 AppServerPtr buildAppServer();
 int initAppServer(AppServerPtr);
