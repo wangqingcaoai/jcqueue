@@ -1,13 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "subscribe.h"
-SubscribeServerPtr buildSubscribeServer(){
+SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
     static int server_id;
     server_id++;
     SubscribeServerPtr ptr = malloc(sizeof(SubscribeServer));
     ptr->serverId = server_id;
     ptr->topics = bulidList();
     ptr->subscribes = bulidList();
+    ptr->appServer = appServer;
     return ptr;
 
 }
@@ -58,10 +59,7 @@ int freeSubscribe(SubscribePtr *pptr){
         //当subscribe 被释放时，在对应的subscribeTopic中的列表中移除该项 TODO 检查逻辑
         SubscribeTopicPtr sptr = lptr->data;
         while(sptr!=NULL){
-          }SubscribeServer,* SubscribeServerPtr;
-}SubscribeServer,* SubscribeServerPtr;
-}SubscribeServer,* SubscribeServerPtr;
-  int removeNum = removeFromList(sptr->subscribesList,(Find)isSubscribeById,&(ptr->id),NULL);
+            int removeNum = removeFromList(sptr->subscribesList,(Find)isSubscribeById,&(ptr->id),NULL);
             sptr = nextFromList(&lptr,lptrEnd,NULL,NULL);
         }
     }
@@ -131,9 +129,15 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     insertIntoList(server->subscribes,ptr);
-
-    //addSubscribeTopic(server,)
-}
+    if(server->appServer == NULL){
+        addLog(LOG_ERROR,"no appServer defined on subscribeServer, could not find topic");
+        return NULL;
+    }
+    ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,keyword);
+    if(topicList!=NULL||(!isEmptyList(topicList))){
+        //addSubscribeTopic(server,)//TODO
+    }
+    
 int delSubscribe(SubscribeServerPtr server,int  subscribeId);
 int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr);
 int getSubscribeIdsByUser(SubscribeServerPtr server);

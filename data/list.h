@@ -37,7 +37,7 @@ void * preFromList(ListNodePtr *node,ListNodePtr endNode,Find find,void*arg);//T
 
 void * getByIdFromList(ListPtr list,int id);
 ListNodePtr getPtrByIdFromList(ListPtr list,int id);
-int getCount(ListPtr list);
+int getCountOfList(ListPtr list);
 int displayList(ListPtr list,Display display,int lineShows);
 ListNodePtr findNode(ListNodePtr startNode,ListNodePtr endNode,Find find , void * arg,ListPosition position );
 int getListNodeId(ListNodePtr node);
@@ -47,8 +47,8 @@ int removeFromList(ListPtr List,Find find,void*arg,Free freeMem);
 //int setToList(ListPtr List,void *data ,int length,Find find,void*arg);
 int freeList(ListPtr *l,Free freeMem);
 int removeByIdFromList(ListPtr list,int id,Free freeMem);
-int freeNode(ListNodePtr *node,Free freeMem);
-
-
+int freeListNode(ListNodePtr *node,Free freeMem);
+ListNodePtr getListHeader(ListPtr);
+ListNodePtr getListEnd(ListPtr);
 //todo 带条件连续查找
 #endif

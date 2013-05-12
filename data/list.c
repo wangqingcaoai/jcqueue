@@ -181,7 +181,7 @@ int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
         ptr->prev ->next = ptr->next;
         ptr->next->prev = ptr->prev;
         prev = ptr->prev;;
-        freeNode(&ptr,freeMem);
+        freeListNode(&ptr,freeMem);
         removeNum++;
         removeOne(list);
         //获取下一个
@@ -247,7 +247,7 @@ int freeList(ListPtr *l,Free freeMem){
     while(ptr!= NULL){
         freeNum++;
         tmp = ptr->next;
-        freeNode(&ptr,freeMem);
+        freeListNode(&ptr,freeMem);
         ptr = tmp;
         tmp = NULL;
     }
@@ -257,7 +257,7 @@ int freeList(ListPtr *l,Free freeMem){
     return freeNum;
 }
 
-int getCount(ListPtr list){
+int getCountOfList(ListPtr list){
     if(!checklist(list)){
         return LIST_COUNT_ERROR;
     }
@@ -338,11 +338,11 @@ int removeByIdFromList(ListPtr list,int id,Free freeMem){
     if(ptr == NULL){
         return 0;
     }else{
-        freeNode(&ptr,freeMem);
+        freeListNode(&ptr,freeMem);
     }
     return 1;
 }
-int freeNode(ListNodePtr *node,Free freeMem){
+int freeListNode(ListNodePtr *node,Free freeMem){
     ListNodePtr ptr =(*node);
     if(freeMem==NULL){
         if(ptr->data!=NULL){
@@ -380,5 +380,18 @@ void* getDataOfListNode(ListNodePtr node){
         return NULL;
     }
     return node->data;
+}
+
+ListNodePtr getListHeader(ListPtr ptr){
+    if(ptr == NULL){
+        return NULL;
+    }
+    return list->header;
+}
+ListNodePtr getListEnd(ListPtr ptr){
+    if(ptr == NULL){
+        return NULL;
+    }
+    return list->header;
 }
 

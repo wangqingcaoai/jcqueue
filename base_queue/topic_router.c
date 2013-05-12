@@ -49,3 +49,34 @@ TopicPtr useTopic(BaseServerPtr ptr,const char*topicName){
     TopicPtr tptr = getFromList(ptr->topicList,(Find)isSameTopicName,topicName);
     return tptr;
 }
+
+ListPtr getTopicListByKeyword(BaseServerPtr ptr ,const char* keyword){
+    if(ptr == NULL || keyword == NULL){
+        return NULL;
+    }
+    ListNodePtr start = getListHeader(ptr->topicList);
+    ListNodePtr end = getListEnd(ptr->topicList);
+    if(start == NULL || end == NULL){
+        return NULL;
+    }
+    TopicPtr tptr = nextFromList(start,end,(Find)isMatchTopicName,keyword);
+    ListPtr lptr = buildList();
+    while(tptr!= NULL){
+        insertToList(lptr,tptr);
+        tptr = nextFromList(start,end,(Find)isMatchTopicName,keyword);
+    }
+    return lptr;
+}
+
+int isMatchTopicName(TopicPtr ptr, const char* keyword){
+    if(ptr==NULL){
+        return 0;
+    }else{
+        int result = isMatchedString(ptr->topicName,keyword);
+        if(result == REGEX_SUCCESS){
+            return 1;
+        }else{
+            return 0;
+        }
+    }
+}
