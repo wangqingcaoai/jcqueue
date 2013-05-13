@@ -59,11 +59,11 @@ ListPtr getTopicListByKeyword(BaseServerPtr ptr ,const char* keyword){
     if(start == NULL || end == NULL){
         return NULL;
     }
-    TopicPtr tptr = nextFromList(start,end,(Find)isMatchTopicName,keyword);
+    TopicPtr tptr = nextFromList(&start,end,(Find)isMatchTopicName,keyword);
     ListPtr lptr = buildList();
     while(tptr!= NULL){
         insertToList(lptr,tptr);
-        tptr = nextFromList(start,end,(Find)isMatchTopicName,keyword);
+        tptr = nextFromList(&start,end,(Find)isMatchTopicName,keyword);
     }
     return lptr;
 }

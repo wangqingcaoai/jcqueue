@@ -7,7 +7,7 @@
 #include "log.h"
 #include "config.h"
 
-int addLog(LogLevel level,const char* logMessage,...){
+int addLog(LogLevel level,LogLayer layer,const char* position ,const char* logMessage,...){
     int logError = errno;
     char* errorStr = NULL;
     if(logError!=0){
@@ -19,8 +19,8 @@ int addLog(LogLevel level,const char* logMessage,...){
         struct tm *p = localtime(&timep); /*取得当地时间*/    
         char timeStr[25] ;
         strftime (timeStr,25,"%F %T", p);
-        char* header = getLogHeader(level);
-        fprintf(stderr, "%s %s ", timeStr, header);
+        
+        fprintf(stderr, "%s %s %s %s : ", timeStr, logLevel[level],logLayer[layer],position);
         va_list va;
         va_start(va,logMessage);
         vfprintf(stderr,logMessage,va);
@@ -52,8 +52,7 @@ int addLog(LogLevel level,const char* logMessage,...){
             struct tm *p = localtime(&timep); /*取得当地时间*/    
             char timeStr[25] ;
             strftime (timeStr,25,"%F %T", p);
-            char* header = getLogHeader(level);
-            fprintf(file, "%s %s ", timeStr, header);
+            fprintf(file,  "%s %s %s %s : ", timeStr, logLevel[level],logLayer[layer],position);
             va_list va;
             va_start(va,logMessage);
             vfprintf(file,logMessage,va);
@@ -70,6 +69,9 @@ int addLog(LogLevel level,const char* logMessage,...){
     return 1;
 
 }
-static char* getLogHeader(LogLevel level){
-    return logHeader[level];
+static char* getLogLevel(LogLevel level){
+    return logLevel[level];
+}
+static char* getLogLayer(LogLayer layer){
+    return logLayer[layer];
 }

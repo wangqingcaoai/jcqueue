@@ -11,6 +11,9 @@
 #define SUBSCRIBE_ERROR_APP_SERVER_NOT_FOUND 3
 #define SUBSCRIBE_TYPE_PUSH "push"
 #define SUBSCRIBE_TYPE_GET "get"
+#define SUBSCRIBE_POSITION_NAME "subscribe"
+#define SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED 4
+ #define SUBSCRIBE_BUILD_SUBSCRIBE_FAILED 5
 typedef struct Subscribe
 {
     int subscribeId;
@@ -25,6 +28,7 @@ typedef struct Subscribe
 }Subscribe,*SubscribePtr;
 typedef struct subscribeTopic{
     int id;
+    TopicPtr topic;
     char* topicName;
     ListPtr subscribesList;//指向订阅
 
@@ -33,7 +37,7 @@ typedef struct subscribeTopic{
 typedef struct SubscribeServer
 {
     int serverId;
-    ListPtr topics;
+    ListPtr subscribeTopics;
     ListPtr subscribes;
     AppServerPtr appServer;
 }SubscribeServer,* SubscribeServerPtr;
@@ -43,20 +47,24 @@ int freeSubscribeServer(SubscribeServerPtr *);
 SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
 int freeSubscribe(SubscribePtr *);
 int isSubscribeById(SubscribePtr ptr,int id);
-subscribeTopicPtr bulidSubScribeTopic(const char* topicName);
-int freeScribeTopic(SubscribeTopicPtr *pptr);
-int isSubscribeTopicById(subscribeTopicPtr ptr,int id);
 
+subscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr);
+int freeScribeTopic(SubscribeTopicPtr *pptr);
+int isSubscribeTopicById(SubscribeTopicPtr ptr,int  id);
+int isSubscribeTopicByTopicName(SubscribeTopicPtr ptr,const char* topicName);
 int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr );
 int delSubscribe(SubscribeServerPtr server,int  subscribeId);
 int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr);
 int getSubscribeIdsByUser(SubscribeServerPtr server);
 // int getSubscribeTopicIdsByUser(SubscribeServerPtr server);
+int delSubscribebyKeywordAndUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr netPtr);
 
-int addSubscribeTopic(SubscribeServerPtr subscribeServer,const char* topicName, SubscribePtr subscribe);
+
+int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, SubscribePtr subscribe);
+int addSubscribeTopicsByList(SubscribeServerPtr subscribeServer,ListPtr topicList, SubscribePtr subscribe);
 int delSubscribeTopic(SubscribeServerPtr subscribeServer,const char* topicName, SubscribePtr subscribe);
 int processSubscribeTopic(SubscribeServerPtr subscribeServer);//need add Push server 
 
-
-
+int addSubscribeToSubscribeTopic(SubscribeTopicPtr ptr,SubscribePtr sptr);
+int addSubscribeTopicToSubscribe(SubscribePtr ptr,SubscribeTopicPtr sptr);
 #endif

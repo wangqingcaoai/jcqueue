@@ -73,3 +73,14 @@ int isEmptyString(const char* s){
         return 0;
     }
 }
+
+int isSameString(const char* first ,const char* second){
+    if(first == NULL || second == NULL){
+        return 0;
+    }
+    if(!strcmp(first,second)){
+        return 1;
+    }else{
+        return 0;
+    }
+}
