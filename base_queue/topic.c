@@ -31,6 +31,9 @@ int addMessage(TopicPtr topic,MessagePtr message,int delay){
     return 0;
 }//获取消息 就绪
 MessagePtr getReadyMessage(TopicPtr topic){
+    if(topic == NULL){
+        return NULL;
+    }
     MessagePtr ptr = (MessagePtr)heapremove(topic->ready_queue,0);
     if(ptr==NULL){
         return ptr;

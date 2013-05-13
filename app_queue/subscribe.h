@@ -68,4 +68,8 @@ int processSubscribeTopic(SubscribeServerPtr subscribeServer);//need add Push se
 
 int addSubscribeToSubscribeTopic(SubscribeTopicPtr ptr,SubscribePtr sptr);
 int addSubscribeTopicToSubscribe(SubscribePtr ptr,SubscribeTopicPtr sptr);
+//增加新的topic时检查 是否有匹配的订阅需要更新
+int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName);
+int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicName);
+int isMatchSubscribeByTopicName(SubscribePtr ,const char* topicName);
 #endif

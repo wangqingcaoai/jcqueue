@@ -175,12 +175,13 @@ int delSubscribe(SubscribeServerPtr server,int  subscribeId){
     if(server->subscibes == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    int removeNum =removeFromList(server->subscibes,freeSubscribe);
+    int removeNum =removeFromList(server->subscibes,(Find)isSubscribeById,subscribeId,(Free)freeSubscribe);
     if(removeNum == 0){
         return SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND;
     }else{
         return SUBSCRIBE_SUCCESS;
     }
+
 
 }
 int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr){
@@ -217,7 +218,6 @@ int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, Subscrib
         addSubscribeTopicToSubscribe(subscibe,ptr);
     }
     return SUBSCRIBE_SUCCESS;
-
 }
 int addSubscribeTopicsByList(SubscribeServerPtr subscribeServer,ListPtr topicList, SubscribePtr subscribe){
     if(subscribeServer == NULL  || subscribe == NULL){
@@ -242,7 +242,28 @@ int addSubscribeTopicsByList(SubscribeServerPtr subscribeServer,ListPtr topicLis
 int delSubscribeTopic(SubscribeServerPtr subscribeServer,const char* topicName, SubscribePtr subscribe){
 
 }
-int processSubscribeTopic(SubscribeServerPtr subscribeServer){
+int processSubscribeTopic(SubscribeServerPtr server){
+    if(server == NULL){
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    if(server->subscribeTopics == NULL){
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to process subscibetopic on SubscribeServer(ID:%d) ,subscribeTopics list is NULL",server->serverId);
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    ListNodePtr start = getListHeader(server->subscribeTopics);
+    ListNodePtr end = getListEnd(server->subscribeTopics);
+    SubScribeTopicPtr stptr = nextFromList(&start,end,NULL,NULL);
+    MessagePtr mptr = NULL;
+    while(stptr!=NULL){
+        //获取就绪消息
+        mptr = getReadyMessage(stptr->topic);
+        if(mptr == NULL){
+            //没有就绪的消息 不做处理
+        }else{
+            //有就绪消息，发送到每个的推送器
+        }
+        stptr = nextFromList(&start,end,NULL,NULL);
+    }
 
 }//need add Push server 
 int addSubscribeToSubscribeTopic(SubscribeTopicPtr ptr,SubscribePtr sptr){
@@ -250,7 +271,7 @@ int addSubscribeToSubscribeTopic(SubscribeTopicPtr ptr,SubscribePtr sptr){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(ptr->subscribesList == NULL){
-         addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibe to subscibetopic on SubscribeTopic(ID:%d,topicName:%s) ,list is NULL",ptr->id,ptr->topicName);
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibe to subscibetopic on SubscribeTopic(ID:%d,topicName:%s) ,subscribesList is NULL",ptr->id,ptr->topicName);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     insertIntoList(ptr->subscribesList,sptr);
@@ -261,9 +282,67 @@ int addSubscribeTopicToSubscribe(SubscribePtr ptr,SubscribeTopicPtr sptr){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(ptr->subscribedTopicLists == NULL){
-         addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibetopic to subscibe on Subscribe(ID:%d,keyword:%s) ,list is NULL",ptr->id,ptr->subscribeKeyWord);
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibetopic to subscibe on Subscribe(ID:%d,keyword:%s) ,subscribedTopicLists is NULL",ptr->id,ptr->subscribeKeyWord);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     insertIntoList(ptr->subscribedTopicLists,sptr);
+    return SUBSCRIBE_SUCCESS;
+}
+
+int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName){
+    if(server == NULL || topicName == NULL){
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    if(server->subscribes == NULL){
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to update subscribe after add new topic, subscribeserver's subscribes is null");
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    if(server->appServer == NULL){
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to update subscribe after add new topic, subscribeserver's appServer is null");
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    if(server->appServer->baseServer == NULL){
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to update subscribe after add new topic, subscribeserver's baseServer is null");
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    ListNodePtr start = getListHeader(server->subscribes);
+    ListNodePtr end = getListEnd(server->subscibes);
+    TopicPtr tptr = useTopic(server->appServer->baseServer,topicName);
+    SubScribePtr sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,topicName);
+    while(sptr!=NULL){
+        addSubscribeTopic(server,tptr,sptr);
+        sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,topicName);
+    }
+    return SUBSCRIBE_SUCCESS;
+}
+int isMatchSubscribeByTopicName(SubscribePtr ptr ,const char* topicName){
+    if(ptr == NULL || topicName ==NULL){
+        return 0;
+    }else if(REGEX_SUCCESS == isMatchedString(topicName,ptr->subscribeKeyWord)){
+        return 1;
+    }else{
+        return  0;
+    }
+}
+
+int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicName){
+    if(server == NULL || topicName == NULL){
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    if(server->subscribes == NULL){
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to update subscribe after add new topic, subscribeserver's subscribes is null");
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    if(server->appServer == NULL){
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to update subscribe after add new topic, subscribeserver's appServer is null");
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    int removeNum =removeFromList(server->subscribeTopics,(Find)isSubscribeTopicByTopicName,topicName,(Free)freeSubscribeTopic);
+    if(removeNum == 0){
+        return SUBSCRIBE_ERROR_SUBSCRIBE_TOPIC_NOT_FOUND;
+    }else{
+        return SUBSCRIBE_SUCCESS;
+    }
+
     return SUBSCRIBE_SUCCESS;
 }

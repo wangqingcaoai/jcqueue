@@ -2,9 +2,10 @@
 #define AQ_SERVER_H 
 typedef struct AppServer
 {
-    List UsersList;
-    List BaseServer ;
-    List SubscribeServer;
+    ListPtr UsersList;
+    ListPtr BaseServer ;
+    ListPtr SubscribeServer;
+    ListPtr PushServer;
 }AppServer , * AppServerPtr;
 AppServerPtr buildAppServer();
 int initAppServer(AppServerPtr);
