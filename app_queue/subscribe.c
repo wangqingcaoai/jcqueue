@@ -175,11 +175,12 @@ int delSubscribe(SubscribeServerPtr server,int  subscribeId){
     if(server->subscibes == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    SubscribePtr ptr = getFromList(server->subscibes,(Find)isSubscribeById,subscribeId);
-    if(ptr == NULL){
-        return  SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND;
+    int removeNum =removeFromList(server->subscibes,freeSubscribe);
+    if(removeNum == 0){
+        return SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND;
+    }else{
+        return SUBSCRIBE_SUCCESS;
     }
-    //TODO
 
 }
 int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr){

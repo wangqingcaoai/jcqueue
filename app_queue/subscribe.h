@@ -13,7 +13,8 @@
 #define SUBSCRIBE_TYPE_GET "get"
 #define SUBSCRIBE_POSITION_NAME "subscribe"
 #define SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED 4
- #define SUBSCRIBE_BUILD_SUBSCRIBE_FAILED 5
+#define SUBSCRIBE_BUILD_SUBSCRIBE_FAILED 5
+
 typedef struct Subscribe
 {
     int subscribeId;
