@@ -26,6 +26,7 @@ typedef struct Subscribe
     UserPtr user;//订阅的用户
     ChannelPtr channel;//订阅的用户频道
     ListPtr subscribedTopicLists;//指向订阅的topic
+    PusherPtr pusher;
 }Subscribe,*SubscribePtr;
 typedef struct subscribeTopic{
     int id;
@@ -72,4 +73,6 @@ int addSubscribeTopicToSubscribe(SubscribePtr ptr,SubscribeTopicPtr sptr);
 int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName);
 int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicName);
 int isMatchSubscribeByTopicName(SubscribePtr ,const char* topicName);
+int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message);
+
 #endif

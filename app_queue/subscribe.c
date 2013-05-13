@@ -46,6 +46,7 @@ SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,
     ptr->user = user;
     ptr->channel = NULL;
     ptr->subscribedTopicLists = bulidList();
+    ptr->pusher = buildPusher(ptr);
     return ptr;
 }
 int freeSubscribe(SubscribePtr *pptr){
@@ -71,7 +72,7 @@ int freeSubscribe(SubscribePtr *pptr){
     ptr->channel =NULL;
 
     freeList(&(ptr->subscribedTopicLists,NULL));//free
-
+    freePusher(ptr);
     free(ptr);
     ptr = NULL;
     (*pptr) = NULL;
@@ -261,6 +262,7 @@ int processSubscribeTopic(SubscribeServerPtr server){
             //没有就绪的消息 不做处理
         }else{
             //有就绪消息，发送到每个的推送器
+            pushMessageToSubscribeList(server,stptr->subscribesList,mptr);
         }
         stptr = nextFromList(&start,end,NULL,NULL);
     }
@@ -345,4 +347,8 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
     }
 
     return SUBSCRIBE_SUCCESS;
+}
+
+int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message){
+
 }
