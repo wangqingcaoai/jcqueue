@@ -350,5 +350,16 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
 }
 
 int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message){
+    if(server ==NULL || subscibes == NULL ||message ==NULL){
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
 
+    ListNodePtr start = getListHeader(subscribes);
+    ListNodePtr end = getListEnd(subscibes);
+    SubScribePtr sptr = nextFromList(&start,end,NULL,NULL);
+    while(sptr!=NULL){
+        addMessageToPusher(sptr->pusher,message);
+        sptr = nextFromList(&start,end,NULL,NULL);
+    }
+    return SUBSCRIBE_SUCCESS;
 }
