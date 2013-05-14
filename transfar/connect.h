@@ -10,6 +10,7 @@
 #include "../parser/net_message.h"
 
 typedef struct Connect{
+    int id;
     Server *srv;
     Socket sock;
     char state;
@@ -19,7 +20,7 @@ typedef struct Connect{
     int recvLength;
     int sendLength;
     int onlineTime;
-    int ip;
+    char* ip;
 }Connect, *ConnectPtr ;
 ConnectPtr buildConnect(const int cfd, const int state);
 void acceptConnect(ServerPtr s,const int ev );

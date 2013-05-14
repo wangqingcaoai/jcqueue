@@ -76,7 +76,12 @@ void closeFd(int fd){
 
 //新建连接对象
 ConnectPtr buildConnect(const int cfd, const int state){
-    
+    if(cfd<0 ){
+        return NULL;
+    }
+    static int id;
+    ConnectPtr ptr = malloc(sizeof(Connect));
+    ptr->
     return NULL;
 }
 
