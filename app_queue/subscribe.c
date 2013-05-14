@@ -1,10 +1,19 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include "push.h"
+#include "server.h"
+#include "../base_queue/topic_router.h"
+#include "../base_queue/topic.h"
+#include "../base_queue/server.h"
+#include "../util/log.h"
+#include "../util/regex.h"
+#include "../data/list.h"
 #include "subscribe.h"
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
     static int server_id;
     server_id++;
-    SubscribeServerPtr ptr = malloc(sizeof(SubscribeServer));
+    SubscribeServerPtr ptr = (SubscribeServerPtr)malloc(sizeof(SubscribeServer));
     ptr->serverId = server_id;
     ptr->subscribeTopics = bulidList();
     ptr->subscribes = bulidList();
@@ -36,7 +45,7 @@ SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,
     }
     static int subscribe_id;
     subscribe_id++;
-    SubscribePtr ptr = malloc(sizeof(subscribe));
+    SubscribePtr ptr = (SubscribePtr)malloc(sizeof(Subscribe));
     ptr->subscribeId = subscribe_id;
     ptr->subscribeKeyWord = allocString(subscribeKeyWord);
     ptr->remoteHost = allocString(remoteHost);
@@ -60,7 +69,7 @@ int freeSubscribe(SubscribePtr *pptr){
         //当subscribe 被释放时，在对应的subscribeTopic中的列表中移除该项 TODO 检查逻辑
         SubscribeTopicPtr sptr = lptr->data;
         while(sptr!=NULL){
-            int removeNum = removeFromList(sptr->subscribesList,(Find)isSubscribeById,&(ptr->id),NULL);
+            int removeNum = removeFromList(sptr->subscribesList,(Find)isSubscribeById,&(ptr->subscribeId),NULL);
             sptr = nextFromList(&lptr,lptrEnd,NULL,NULL);
         }
     }
@@ -71,8 +80,8 @@ int freeSubscribe(SubscribePtr *pptr){
     ptr->user = NULL;
     ptr->channel =NULL;
 
-    freeList(&(ptr->subscribedTopicLists,NULL));//free
-    freePusher(ptr);
+    freeList(&(ptr->subscribedTopicLists),NULL);//free
+    freePusher(&(ptr->pusher));
     free(ptr);
     ptr = NULL;
     (*pptr) = NULL;
@@ -96,7 +105,7 @@ SubscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr){
 
 
 }
-int freeScribeTopic(SubscribeTopicPtr *pptr){
+int freeSubscribeTopic(SubscribeTopicPtr *pptr){
     if(pptr==NULL||(*pptr)==NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
@@ -118,12 +127,21 @@ int freeScribeTopic(SubscribeTopicPtr *pptr){
     (*pptr) = NULL;
     return SUBSCRIBE_SUCCESS;
 }
-
-int isSubscribeTopicById(SubscribeTopicPtr ptr,int id){
-    if(ptr == NULL){
+int isSubscribeById(SubscribePtr ptr,const int *id){
+    if(ptr == NULL ||id == NULL){
         return 0;
     }
-    if(ptr->id == id){
+    if(ptr->subscribeId = (*id)){
+        return 1;
+    }else{
+        return 0;
+    }
+}
+int isSubscribeTopicById(SubscribeTopicPtr ptr,const int* id){
+    if(ptr == NULL || id == NULL){
+        return 0;
+    }
+    if(ptr->id == (*id)){
         return 1;
     }else{
         return 0;
@@ -142,21 +160,25 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
     if(server == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    if(user == NULL){
+    if(userPtr == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(netMessage == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     char * keyword = getEntraParam(netMessage,"keyword");
-    SubscribePtr ptr = bulidSubScribe( keyword,netMessage->remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
+    char * remoteHost = getEntraParam(netMessage,"remoteHost");
+    char * remotePort = getEntraParam(netMessage,"remotePort");
+    char * protocol = getEntraParam(netMessage,"protocol");
+    char* type = getEntraParam(netMessage ,"type");
+    SubscribePtr ptr = bulidSubScribe( keyword,remoteHost,atoi(remotePort), protocol, type,userPtr);
     if(ptr == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     insertIntoList(server->subscribes,ptr);
     if(server->appServer == NULL){
         addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"no appServer defined on subscribeServer, could not find topic");
-        return NULL;
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,keyword);
     if(topicList!=NULL){
@@ -173,10 +195,10 @@ int delSubscribe(SubscribeServerPtr server,int  subscribeId){
     if(server == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    if(server->subscibes == NULL){
+    if(server->subscribes == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    int removeNum =removeFromList(server->subscibes,(Find)isSubscribeById,subscribeId,(Free)freeSubscribe);
+    int removeNum =removeFromList(server->subscribes,(Find)isSubscribeById,&subscribeId,(Free)freeSubscribe);
     if(removeNum == 0){
         return SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND;
     }else{
@@ -185,7 +207,7 @@ int delSubscribe(SubscribeServerPtr server,int  subscribeId){
 
 
 }
-int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr){
+int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr netMessage){
 
 }
 int delSubscribebyKeywordAndUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr netPtr){
@@ -203,20 +225,20 @@ int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, Subscrib
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(subscribeServer->subscribeTopics == NULL){
-        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }else{
-        subscribeTopic ptr = getFromList(subscribeServer->subscribeTopics,(Find)isSubscribeTopicByTopicName,tptr->topicName);
+        SubscribeTopicPtr ptr = getFromList(subscribeServer->subscribeTopics,(Find)isSubscribeTopicByTopicName,tptr->topic_name);
         if(ptr == NULL){
-            ptr = bulidSubScribeTopic(tptr->topicName,tptr);
+            ptr = bulidSubScribeTopic(tptr->topic_name,tptr);
             if(ptr == NULL){
-                addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
+                addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
                 return SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED;
             }
             insertIntoList(subscribeServer->subscribeTopics,ptr);
         }
         addSubscribeToSubscribeTopic(ptr,subscribe);
-        addSubscribeTopicToSubscribe(subscibe,ptr);
+        addSubscribeTopicToSubscribe(subscribe,ptr);
     }
     return SUBSCRIBE_SUCCESS;
 }
@@ -248,12 +270,12 @@ int processSubscribeTopic(SubscribeServerPtr server){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(server->subscribeTopics == NULL){
-        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to process subscibetopic on SubscribeServer(ID:%d) ,subscribeTopics list is NULL",server->serverId);
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to process subscribetopic on SubscribeServer(ID:%d) ,subscribeTopics list is NULL",server->serverId);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     ListNodePtr start = getListHeader(server->subscribeTopics);
     ListNodePtr end = getListEnd(server->subscribeTopics);
-    SubScribeTopicPtr stptr = nextFromList(&start,end,NULL,NULL);
+    SubscribeTopicPtr stptr = nextFromList(&start,end,NULL,NULL);
     MessagePtr mptr = NULL;
     while(stptr!=NULL){
         //获取就绪消息
@@ -273,7 +295,7 @@ int addSubscribeToSubscribeTopic(SubscribeTopicPtr ptr,SubscribePtr sptr){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(ptr->subscribesList == NULL){
-        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibe to subscibetopic on SubscribeTopic(ID:%d,topicName:%s) ,subscribesList is NULL",ptr->id,ptr->topicName);
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribe to subscribetopic on SubscribeTopic(ID:%d,topicName:%s) ,subscribesList is NULL",ptr->id,ptr->topicName);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     insertIntoList(ptr->subscribesList,sptr);
@@ -284,7 +306,7 @@ int addSubscribeTopicToSubscribe(SubscribePtr ptr,SubscribeTopicPtr sptr){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(ptr->subscribedTopicLists == NULL){
-        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscibetopic to subscibe on Subscribe(ID:%d,keyword:%s) ,subscribedTopicLists is NULL",ptr->id,ptr->subscribeKeyWord);
+        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribetopic to subscribe on Subscribe(ID:%d,keyword:%s) ,subscribedTopicLists is NULL",ptr->subscribeId,ptr->subscribeKeyWord);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     insertIntoList(ptr->subscribedTopicLists,sptr);
@@ -308,12 +330,12 @@ int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     ListNodePtr start = getListHeader(server->subscribes);
-    ListNodePtr end = getListEnd(server->subscibes);
+    ListNodePtr end = getListEnd(server->subscribes);
     TopicPtr tptr = useTopic(server->appServer->baseServer,topicName);
-    SubScribePtr sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,topicName);
+    SubscribePtr sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,(char*)topicName);
     while(sptr!=NULL){
         addSubscribeTopic(server,tptr,sptr);
-        sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,topicName);
+        sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,(char*)topicName);
     }
     return SUBSCRIBE_SUCCESS;
 }
@@ -339,7 +361,7 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
         addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to update subscribe after add new topic, subscribeserver's appServer is null");
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    int removeNum =removeFromList(server->subscribeTopics,(Find)isSubscribeTopicByTopicName,topicName,(Free)freeSubscribeTopic);
+    int removeNum =removeFromList(server->subscribeTopics,(Find)isSubscribeTopicByTopicName,(char*)topicName,(Free)freeSubscribeTopic);
     if(removeNum == 0){
         return SUBSCRIBE_ERROR_SUBSCRIBE_TOPIC_NOT_FOUND;
     }else{
@@ -350,13 +372,13 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
 }
 
 int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message){
-    if(server ==NULL || subscibes == NULL ||message ==NULL){
+    if(server ==NULL || subscribes == NULL ||message ==NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
 
     ListNodePtr start = getListHeader(subscribes);
-    ListNodePtr end = getListEnd(subscibes);
-    SubScribePtr sptr = nextFromList(&start,end,NULL,NULL);
+    ListNodePtr end = getListEnd(subscribes);
+    SubscribePtr sptr = nextFromList(&start,end,NULL,NULL);
     while(sptr!=NULL){
         addMessageToPusher(sptr->pusher,message);
         sptr = nextFromList(&start,end,NULL,NULL);

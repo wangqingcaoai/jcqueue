@@ -1,7 +1,7 @@
-#include "push.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include "../data/list.h"
+#include "push.h"
 PushServerPtr buildPushServer(){
 	static int id;
 	id++;
@@ -26,8 +26,18 @@ int freePushServer(PushServerPtr * pptr){
 PusherPtr buildPusher(SubscribePtr subscribe){
 	
 }
-int freePusher(SubscribePtr * pptr);
-int addPusher(PushServerPtr server,SubscribePtr subscribe);
-int addMessageToPusher(PusherPtr ,MessagePtr message);
-int pushToTarget(PusherPtr ptr);
-int processPush(PushServerPtr );
+int freePusher(PusherPtr * pptr){
+
+}
+int addPusher(PushServerPtr server,SubscribePtr subscribe){
+
+}
+int addMessageToPusher(PusherPtr ptr,MessagePtr message){
+
+}
+int pushToTarget(PusherPtr ptr){
+
+}
+int processPush(PushServerPtr server){
+
+}

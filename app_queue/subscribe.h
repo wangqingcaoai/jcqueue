@@ -5,6 +5,10 @@
 #define AQ_SUBSCRIBE_H
 #include "user.h"
 #include "channel.h"
+#include "server.h"
+#include "../base_queue/message.h"
+#include "../base_queue/topic.h"
+#include "push.h"
 #define SUBSCRIBE_SUCCESS 0
 #define SUBSCRIBE_ERROR_PARAM_ERROR 1
 #define SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND 2
@@ -14,7 +18,9 @@
 #define SUBSCRIBE_POSITION_NAME "subscribe"
 #define SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED 4
 #define SUBSCRIBE_BUILD_SUBSCRIBE_FAILED 5
-
+#define SUBSCRIBE_ERROR_SUBSCRIBE_TOPIC_NOT_FOUND 6
+typedef struct Pusher* PusherPtr;
+typedef struct AppServer * AppServerPtr;
 typedef struct Subscribe
 {
     int subscribeId;
@@ -28,13 +34,13 @@ typedef struct Subscribe
     ListPtr subscribedTopicLists;//指向订阅的topic
     PusherPtr pusher;
 }Subscribe,*SubscribePtr;
-typedef struct subscribeTopic{
+typedef struct SubscribeTopic{
     int id;
     TopicPtr topic;
     char* topicName;
     ListPtr subscribesList;//指向订阅
 
-}subscribeTopic, *subscribeTopicPtr;
+}SubscribeTopic, *SubscribeTopicPtr;
 
 typedef struct SubscribeServer
 {
@@ -48,11 +54,10 @@ SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer);
 int freeSubscribeServer(SubscribeServerPtr *);
 SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
 int freeSubscribe(SubscribePtr *);
-int isSubscribeById(SubscribePtr ptr,int id);
-
-subscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr);
-int freeScribeTopic(SubscribeTopicPtr *pptr);
-int isSubscribeTopicById(SubscribeTopicPtr ptr,int  id);
+int isSubscribeById(SubscribePtr ptr,const int *id);
+SubscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr);
+int freeSubscribeTopic(SubscribeTopicPtr *pptr);
+int isSubscribeTopicById(SubscribeTopicPtr ptr,const int*  id);
 int isSubscribeTopicByTopicName(SubscribeTopicPtr ptr,const char* topicName);
 int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr );
 int delSubscribe(SubscribeServerPtr server,int  subscribeId);
