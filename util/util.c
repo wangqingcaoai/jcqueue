@@ -30,7 +30,7 @@ nanoseconds(void)
     struct timeval tv;
 
     r = gettimeofday(&tv, 0);
-    if (r != 0) return addLog(LOG_WARNING,"gettimeofday"), -1; // can't happen
+    if (r != 0) return addLog(LOG_WARNING,LOG_LAYER_UTIL,UTIL_UTIL_POSITION_NAME,"gettimeofday"), -1; // can't happen
 
     return ((int64)tv.tv_sec)*1000000000 + ((int64)tv.tv_usec)*1000;
 }
@@ -61,7 +61,7 @@ int  freeString( char** s){
 }
 int isEmptyString(const char* s){
     if(s == NULL){
-        return 1
+        return 1;
     }
     char * ptr = malloc(strlen(s)+1);
     strcpy(ptr,s);

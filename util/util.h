@@ -1,7 +1,7 @@
 #include "type.h"
 #ifndef UTIL_H
 #define UTIL_H
-
+#define UTIL_UTIL_POSITION_NAME "util"
 char * trim(char* _s);
 void * buildAgrs(void* agrs[],int length,...);
 int64 nanoseconds(void);

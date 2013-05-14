@@ -24,6 +24,17 @@ int freePushServer(PushServerPtr * pptr){
 	return PUSH_SUCCESS;
 }
 PusherPtr buildPusher(SubscribePtr subscribe){
+	static int id;
+	if(subscribe == NULL){
+		return NULL;
+	}
+	id++;
+	PusherPtr ptr = (PusherPtr)malloc(sizeof(Pusher));
+	ptr->pusherId = id;
+	ptr->subscribe = subscribe;
+	ptr->messageReady = buildList();
+	ptr->connect = NULL;
+	return ptr; 
 	
 }
 int freePusher(PusherPtr * pptr){

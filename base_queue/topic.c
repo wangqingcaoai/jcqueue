@@ -10,9 +10,9 @@ TopicPtr buildTopic(const char* topicName){
     topicid++;
     //创建topic内存对象
     TopicPtr ptr= (TopicPtr)malloc(sizeof(Topic));
-    ptr->topic_id = topicid;
-    ptr->topic_name = malloc(strlen(topicName)+1);
-    strcpy(ptr->topic_name,topicName);
+    ptr->topicId = topicid;
+    ptr->topicName = malloc(strlen(topicName)+1);
+    strcpy(ptr->topicName,topicName);
     ptr->ready_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
     ptr->delay_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
     ptr->using_pool = buildHeap((Record)MessageRecord,(Less)MessageLess);
@@ -130,13 +130,13 @@ int freeTopic(TopicPtr *topic){
     freeHeap(&(tptr->using_pool),(Free)freeMessage);
     freeHeap(&(tptr->sleep_queue),(Free)freeMessage);
 
-    free(tptr->topic_name);
+    free(tptr->topicName);
     free(tptr);
     (*topic)=NULL;
     tptr = NULL;
 }
 char* getTopicName(TopicPtr ptr){
-    return ptr->topic_name;
+    return ptr->topicName;
 }
 int backupTopic(TopicPtr ptr){
 

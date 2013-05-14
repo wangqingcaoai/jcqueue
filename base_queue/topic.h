@@ -6,8 +6,8 @@
 //指一类型消息的集合，
 typedef struct Topic
 {
-    int topic_id;
-    char * topic_name;
+    int topicId;
+    char * topicName;
     Heap* ready_queue;//就绪队列 有优先级
     Heap* delay_queue;//延迟队列 有优先级
     Heap* using_pool;//使用池，正在处理的消息

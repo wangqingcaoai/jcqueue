@@ -1,6 +1,7 @@
 #ifndef SOCKETS_H
 #define SOCKETS_H
 #include "../util/type.h"
+#define TRANSFAR_SOCKET_POSITION_NAME "sockets"
 typedef void(*Handle)(void*, int rw);
 typedef struct Socket{
     int fd;//套接字的文件描述符

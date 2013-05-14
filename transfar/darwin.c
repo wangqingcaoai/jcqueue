@@ -44,7 +44,7 @@ sockinit(void)
 {
     kq = kqueue();
     if (kq == -1) {
-        addLog(LOG_WARNING,"kqueue");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SOCKET_POSITION_NAME,"kqueue");
         return -1;
     }
     return 0;
@@ -103,7 +103,7 @@ socknext(Socket **s, int64 timeout)
     ts.tv_nsec = timeout % 1000000000;
     r = kevent(kq, NULL, 0, &ev, 1, &ts);
     if (r == -1 && errno != EINTR) {
-        addLog(LOG_WARNING,"kevent");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SOCKET_POSITION_NAME,"kevent");
         return -1;
     }
 

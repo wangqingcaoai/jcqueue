@@ -386,12 +386,12 @@ ListNodePtr getListHeader(ListPtr ptr){
     if(ptr == NULL){
         return NULL;
     }
-    return list->header;
+    return ptr->header;
 }
 ListNodePtr getListEnd(ListPtr ptr){
     if(ptr == NULL){
         return NULL;
     }
-    return list->header;
+    return ptr->header;
 }
 

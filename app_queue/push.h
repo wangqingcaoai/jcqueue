@@ -17,9 +17,9 @@
 typedef struct Pusher
 {
 	int pusherId;
-	SubscribePtr* subscribe;
+	SubscribePtr subscribe;
 	ListPtr messageReady;
-	ConnectPtr con;
+	ConnectPtr connect;
 }Pusher,*PusherPtr;
 
 PushServerPtr buildPushServer();

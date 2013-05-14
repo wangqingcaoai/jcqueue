@@ -3,7 +3,7 @@
 #include "topic.h"
 int test_topic(){
     TopicPtr ptr =  buildTopic("test");
-    printf("%s\n",ptr->topic_name );
+    printf("%s\n",ptr->topicName );
     int data =2;
     MessagePtr mptr= buildMessage(MS_READY,23,1,&data,1,0);
     addMessage(ptr,mptr,0);

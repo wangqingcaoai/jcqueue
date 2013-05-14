@@ -4,7 +4,7 @@
 #define CONNECT_STATE_SENDDATA 2
 #define CONNECT_STATE_READDATA 3
 #define CONNECT_STATE_WAIT 4
-
+#define TRANSFAR_CONNECT_POSITION_NAME "connect"
 #include "server.h"
 #include "sockets.h"
 #include "../parser/net_message.h"

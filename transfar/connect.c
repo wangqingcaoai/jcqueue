@@ -24,7 +24,7 @@ void acceptConnect(ServerPtr s,const int ev )
     cfd = accept(fd, (struct sockaddr *)&addr, &addrlen);
     if (cfd == -1) {
         if (errno != EAGAIN && errno != EWOULDBLOCK){
-            addLog(LOG_WARNING,"accept client failed");
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"accept client failed");
         }
         //update_conns();
         
@@ -36,21 +36,21 @@ void acceptConnect(ServerPtr s,const int ev )
 
     flags = fcntl(cfd, F_GETFL, 0);
     if (flags < 0) {
-        addLog(LOG_WARNING,"get fileflags failed");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"get fileflags failed");
         closeFd(cfd);
         return;
     }
 
     r = fcntl(cfd, F_SETFL, flags | O_NONBLOCK);
     if (r < 0) {
-        addLog(LOG_WARNING,"setting O_NONBLOCK failed");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"setting O_NONBLOCK failed");
         closeFd(cfd);
         return;
     }
 
     c = buildConnect(cfd,CONNECT_STATE_WANTDATA);
     if (!c) {
-        addLog(LOG_WARNING,"buildConnect failed %d",cfd);
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"buildConnect failed %d",cfd);
         closeFd(cfd);
         return;
     }
@@ -61,7 +61,7 @@ void acceptConnect(ServerPtr s,const int ev )
 
     r = sockwant(&c->sock, 'r');
     if (r == -1) {
-        addLog(LOG_WARNING,"sockwant failed");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"sockwant failed");
         close(cfd);
         return;
     }

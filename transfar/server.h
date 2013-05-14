@@ -2,6 +2,7 @@
 #define SERVER_H
 #include "sockets.h"
 #include "../data/heap.h"
+#define TRANSFAR_SERVER_POSITION_NAME "socket_server"
 typedef struct Server {
     char *port;
     char *addr;

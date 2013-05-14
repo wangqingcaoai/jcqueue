@@ -15,8 +15,8 @@ SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
     server_id++;
     SubscribeServerPtr ptr = (SubscribeServerPtr)malloc(sizeof(SubscribeServer));
     ptr->serverId = server_id;
-    ptr->subscribeTopics = bulidList();
-    ptr->subscribes = bulidList();
+    ptr->subscribeTopics = buildList();
+    ptr->subscribes = buildList();
     ptr->appServer = appServer;
     return ptr;
 
@@ -54,7 +54,7 @@ SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,
     ptr->type = allocString(type);
     ptr->user = user;
     ptr->channel = NULL;
-    ptr->subscribedTopicLists = bulidList();
+    ptr->subscribedTopicLists = buildList();
     ptr->pusher = buildPusher(ptr);
     return ptr;
 }
@@ -100,7 +100,7 @@ SubscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr){
     ptr->id =  id;
     ptr->topicName = allocString(topicName);
     ptr->topic = tptr;
-    ptr->subscribesList = bulidList();
+    ptr->subscribesList = buildList();
     return ptr;
 
 
@@ -228,9 +228,9 @@ int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, Subscrib
         addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }else{
-        SubscribeTopicPtr ptr = getFromList(subscribeServer->subscribeTopics,(Find)isSubscribeTopicByTopicName,tptr->topic_name);
+        SubscribeTopicPtr ptr = getFromList(subscribeServer->subscribeTopics,(Find)isSubscribeTopicByTopicName,tptr->topicName);
         if(ptr == NULL){
-            ptr = bulidSubScribeTopic(tptr->topic_name,tptr);
+            ptr = bulidSubScribeTopic(tptr->topicName,tptr);
             if(ptr == NULL){
                 addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
                 return SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED;

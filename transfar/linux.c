@@ -19,7 +19,7 @@ sockinit(void)
 {
     epfd = epoll_create(1);
     if (epfd == -1) {
-        addLog(LOG_WARNING,"epoll_create");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SOCKET_POSITION_NAME,"epoll_create");
         return -1;
     }
     return 0;
@@ -66,7 +66,7 @@ socknext(Socket **s, int64 timeout)
 
     r = epoll_wait(epfd, &ev, 1, (int)(timeout/1000000));
     if (r == -1 && errno != EINTR) {
-        addLog(LOG_WARNING,"epoll_wait");
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SOCKET_POSITION_NAME,"epoll_wait");
         exit(1);
     }
 
