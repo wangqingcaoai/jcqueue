@@ -11,7 +11,7 @@
 #include "../util/log.h"
 #include "connect.h"
 
-void acceptConnect(ServerPtr s,const int ev )  
+void acceptConnect(TransfarServerPtr s,const int ev )  
 {
     int fd = s->sock.fd;
     ConnectPtr c;
@@ -26,8 +26,6 @@ void acceptConnect(ServerPtr s,const int ev )
         if (errno != EAGAIN && errno != EWOULDBLOCK){
             addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"accept client failed");
         }
-        //update_conns();
-        
         return;
     }
     if (isOn(getConfig("verbose"))) {
@@ -81,12 +79,18 @@ ConnectPtr buildConnect(const int cfd, const int state){
     }
     static int id;
     ConnectPtr ptr = malloc(sizeof(Connect));
-    ptr->
-    return NULL;
+    ptr->id = id;
+    ptr->srv = NULL;
+    ptr->state = state;
+    ptr->NetMEssagePtr = NM_buildNetMessage();
+    ptr->onlineTime = -1;
+    ptr->ip  = NULL;
+    return ptr;
 }
 
-void connectFree(ConnectPtr c){
-    if(c!= NULL){
-
+int freeConnect(ConnectPtr c){
+    if(c == NULL){
+        return  CONNECT_ERROR_PARAM_ERROR;
     }
+    return CONNECT_SUCCESS;
 }

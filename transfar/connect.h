@@ -8,26 +8,27 @@
 #include "server.h"
 #include "sockets.h"
 #include "../parser/net_message.h"
-
+#define CONNECT_SUCCESS 0
+#define CONNECT_ERROR_PARAM_ERROR 1
 typedef struct Connect{
     int id;
     Server *srv;
     Socket sock;
     char state;
     char type;
-    NetMessagePtr recvMessage;
-    NetMessagePtr sendMessage;
-    int recvLength;
-    int sendLength;
+    NetMessagePtr netMessage;
     int onlineTime;
     char* ip;
 }Connect, *ConnectPtr ;
 ConnectPtr buildConnect(const int cfd, const int state);
-void acceptConnect(ServerPtr s,const int ev );
+void acceptConnect(TransfarServerPtr s,const int ev );
 int readData(ConnectPtr,void *buffer, int length);
 int writeData(ConnectPtr,void *buffer, int length);
 int connectClose(ConnectPtr);
 int connectTimeOut(ConnectPtr);
 void closeFd(int fd);
-void connectFree(ConnectPtr);
+int freeConnect(ConnectPtr *);
+
+int compareConnect(ConnectPtr ,ConnectPtr);
+
 #endif
