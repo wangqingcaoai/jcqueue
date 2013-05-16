@@ -1,0 +1,59 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "server.h"
+AppServerPtr buildAppServer(){
+    AppServerPtr ptr = allocMem(sizeof(AppServer));
+    if(ptr == NULL){
+        return ptr;
+    }
+    ptr->usersList = buildList();
+    ptr->baseServer = buildBaseServer();
+    ptr->subscribeServer = buildSubscribeServer(ptr);
+    ptr->pushServer = buildPushServer(ptr);
+    ptr->transfarServer = buildTransfarServer("127.0.0.1","11221");
+    return ptr;
+}
+int initAppServer(AppServerPtr ptr){
+    if(ptr == NULL){
+        return APP_SERVER_ERROR_PARAM_ERROR;
+    }
+    restoreUsers(ptr->usersList);
+    restoreBaseServer(ptr->baseServer);
+    restoreSubscribes(ptr->subscribeServer);
+    restorePushs(ptr->pushServer);
+    restoreTransfarServer(ptr->pushServer);
+    return APP_SERVER_SUCCESS;
+}
+int storeAppServer(AppServerPtr){
+
+    if(ptr == NULL){
+        return APP_SERVER_ERROR_PARAM_ERROR;
+    }
+    storeUsers(ptr->usersList);
+    storeBaseServer(ptr->baseServer);
+    storeSubscribes(ptr->subscribeServer);
+    storePushs(ptr->pushServer);
+    storeTransfarServer(ptr->pushServer);
+    return APP_SERVER_SUCCESS;
+}
+int freeAppServer(AppServerPtr *pptr){
+    if(pptr == NULL){
+        return APP_SERVER_ERROR_PARAM_ERROR;
+    }
+    AppServerPtr ptr = (*pptr);
+    if(ptr == NULL){
+        return APP_SERVER_ERROR_PARAM_ERROR;
+    }
+    freeList(&(ptr->usersList),freeUser);
+    freeBaseServer(&(ptr->baseServer));
+    freeSubscribeServer(&(ptr->subscribeServer));
+    freePushServer(&(ptr->pushServer));
+    freeTransfarServer(&(ptr->transfarServer));
+    free(ptr);
+    (*pptr) = ptr = NULL;
+    return APP_SERVER_SUCCESS;
+}
+int processAppServer(AppServerPtr ptr){
+    processConnect(ptr->transfarServer);
+}

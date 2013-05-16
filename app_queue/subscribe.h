@@ -80,4 +80,5 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
 int isMatchSubscribeByTopicName(SubscribePtr ,const char* topicName);
 int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message);
 
+int restoreSubscribes(SubscribeServerPtr);
 #endif

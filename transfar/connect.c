@@ -87,7 +87,8 @@ ConnectPtr buildConnect(const int cfd, const int state){
     ptr->state = state;
     ptr->netMessage = NM_buildNetMessage();
     ptr->onlineTime = -1;
-    ptr->ip  = NULL;
+    ptr->addr  = NULL;
+    ptr->port = NULL;
     return ptr;
 }
 
