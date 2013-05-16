@@ -16,12 +16,16 @@
 #include "connect.h"
 
 TransfarServerPtr buildTransfarServer(const char* addr,const char* port){
-    if(addr == NULL || port == NULL){
+    if(isEmptyString(addr) || isEmptyString(port) ){
         return NULL;
     }
     static int id;
+    
+    TransfarServerPtr ptr = (TransfarServerPtr)allocMem(sizeof(TransfarServer));
+    if(ptr==NULL){
+        return ptr;
+    }
     id++;
-    TransfarServerPtr ptr = malloc(sizeof(TransfarServer));
     ptr->id = id;
     ptr->addr = allocString(addr);
     ptr->port = allocString(port);
@@ -53,7 +57,7 @@ int freeTransfarServer(TransfarServerPtr *pptr){
 
 
 int
-makeServerSocket(char *host, char *port)
+makeServerSocket(const char *host,const char *port)
 {
         int fd = -1, flags, r;
         struct linger linger = {0, 0};
@@ -142,7 +146,8 @@ makeServerSocket(char *host, char *port)
             }
 
             if (isOn(getConfig("verbose"))) {
-                    char hbuf[NI_MAXHOST], pbuf[NI_MAXSERV], *h = host, *p = port;
+                    char hbuf[NI_MAXHOST], pbuf[NI_MAXSERV];
+                    const char *h = host, *p = port;
                     r = getnameinfo(ai->ai_addr, ai->ai_addrlen,
                                     hbuf, sizeof hbuf,
                                     pbuf, sizeof pbuf,
@@ -249,7 +254,7 @@ srvaccept(TransfarServer *s, int ev)
 void srvtick(TransfarServer *s){
 
 }
-int makeClientSocket(char* host, char*port){
+int makeClientSocket(const char* host,const char*port){
         int fd = -1, flags, r;
         struct linger linger = {0, 0};
         struct addrinfo *airoot, *ai, hints;
@@ -337,7 +342,8 @@ int makeClientSocket(char* host, char*port){
             }
 
             if (isOn(getConfig("verbose"))) {
-                    char hbuf[NI_MAXHOST], pbuf[NI_MAXSERV], *h = host, *p = port;
+                    char hbuf[NI_MAXHOST], pbuf[NI_MAXSERV];
+                    const char *h = host, *p = port;
                     r = getnameinfo(ai->ai_addr, ai->ai_addrlen,
                                     hbuf, sizeof hbuf,
                                     pbuf, sizeof pbuf,

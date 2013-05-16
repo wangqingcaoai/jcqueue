@@ -39,7 +39,7 @@ char * allocString(const char* s){
     if(s==NULL){
         return NULL;
     }
-    char* ptr = malloc(strlen(s)+1);
+    char* ptr = allocMem(strlen(s)+1);
     strcpy(ptr,s);
     return ptr;
 }
@@ -63,15 +63,20 @@ int isEmptyString(const char* s){
     if(s == NULL){
         return 1;
     }
-    char * ptr = malloc(strlen(s)+1);
-    strcpy(ptr,s);
-    char* str =  trim(ptr);
-
-    if(str[0]=='\0'){
-        return 1;
-    }else{
+    char * ptr = allocMem(strlen(s)+1);
+    if(ptr ==NULL){
         return 0;
     }
+    strcpy(ptr,s);
+    char* str =  trim(ptr);
+    int result = 0;
+    if(str[0]=='\0'){
+        result = 1;
+    }else{
+        result = 0;
+    }
+    free(ptr);
+    return result;
 }
 
 int isSameString(const char* first ,const char* second){
@@ -83,4 +88,15 @@ int isSameString(const char* first ,const char* second){
     }else{
         return 0;
     }
+}
+void* allocMem(int size){
+    if(size <= 0){
+        return NULL;
+    }
+    void* ptr = malloc(size);
+    if(ptr == NULL){
+        addLog(LOG_WARNING,LOG_LAYER_UTIL,UTIL_UTIL_POSITION_NAME,"allocMem memory(size:%d) failed! maybe app is out of memory!",size);
+        return NULL;
+    }
+    return ptr;
 }

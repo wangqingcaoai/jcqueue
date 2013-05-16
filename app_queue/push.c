@@ -4,8 +4,11 @@
 #include "push.h"
 PushServerPtr buildPushServer(){
 	static int id;
-	id++;
-	PushServerPtr ptr = malloc(sizeof(PushServer));
+	PushServerPtr ptr = (PushServerPtr)allocMem(sizeof(PushServer));
+	if(ptr==NULL){
+        return ptr;
+    }
+    id++;
 	ptr->serverId = id;
 	ptr->pushers = buildList();
 	return ptr;
@@ -28,8 +31,13 @@ PusherPtr buildPusher(SubscribePtr subscribe){
 	if(subscribe == NULL){
 		return NULL;
 	}
+	
+	PusherPtr ptr = (PusherPtr)allocMem(sizeof(Pusher));
+	
+	if(ptr == NULL){
+		return ptr;
+	}
 	id++;
-	PusherPtr ptr = (PusherPtr)malloc(sizeof(Pusher));
 	ptr->pusherId = id;
 	ptr->subscribe = subscribe;
 	ptr->messageReady = buildList();

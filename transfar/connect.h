@@ -12,7 +12,7 @@
 #define CONNECT_ERROR_PARAM_ERROR 1
 typedef struct Connect{
     int id;
-    Server *srv;
+    TransfarServerPtr srv;
     Socket sock;
     char state;
     char type;
@@ -28,7 +28,6 @@ int connectClose(ConnectPtr);
 int connectTimeOut(ConnectPtr);
 void closeFd(int fd);
 int freeConnect(ConnectPtr *);
-
 int compareConnect(ConnectPtr ,ConnectPtr);
 
 #endif

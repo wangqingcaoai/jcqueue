@@ -8,11 +8,11 @@ typedef struct Socket{
     Handle f;//句柄
     int added;//已添加标记
     void   *x;//关联结构体 ，为Connect 或Server
-}Socket;
+}Socket,* SocketPtr;
 //套接字事件队列初始化
 int sockinit(void);
 //获取下一个连接
-int socknext(Socket **s, int64 timeout);
+int socknext(SocketPtr *s, int64 timeout);
 //期望在该链接发生什么事件时通知
-int sockwant(Socket *s, int rw);
+int sockwant(SocketPtr s, int rw);
 #endif

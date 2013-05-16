@@ -28,9 +28,19 @@ int checklist(ListPtr list){
 }
 ListPtr buildList(){
     static int list_id;
+    
+    ListPtr list = (ListPtr)allocMem(sizeof(List));
+    if(list == NULL){
+        return NULL;
+    }
+    
+    list->header = (ListNodePtr)allocMem(sizeof(ListNode));
+    if(list->header == NULL){
+        free(list);
+        list =NULL;
+        return NULL;
+    }
     list_id ++;
-    ListPtr list = (ListPtr)malloc(sizeof(List));
-    list->header = (ListNodePtr)malloc(sizeof(ListNode));
     list->count  = 0;
     list->listId = list_id; 
     list->header->id= LIST_HEADER_ID;
@@ -43,7 +53,10 @@ int insertToList(ListPtr list,void *data){
         return LIST_ERROR;
     }
     ListNodePtr header = list->header;
-    ListNodePtr new = (ListNodePtr)malloc(sizeof(ListNode));
+    ListNodePtr new = (ListNodePtr)allocMem(sizeof(ListNode));
+    if(new == NULL){
+        return LIST_ERROR_MEM_ALLOC_FAILED;
+    }
     header->prev->next = new;
     new->prev = header->prev;
     header->prev = new;
@@ -220,7 +233,7 @@ int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
 //             }else{
 //                 //如果没有定义拷贝函数则直接复制内存
 //                 if(ptr->copyData == NULL){
-//                     ptr->data=(void*) malloc(count);
+//                     ptr->data=(void*) allocMem(count);
 //                     memcpy(ptr->data,data,count);
 //                 }else{
 //                     //调用拷贝函数进行复制

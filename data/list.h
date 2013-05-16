@@ -4,6 +4,7 @@
 #include "base.h"
 #define LIST_COUNT_ERROR -1
 #define LIST_ERROR 0
+#define LIST_ERROR_MEM_ALLOC_FAILED 1
 #define LIST_HEADER_ID -1
 
 typedef struct ListNode{

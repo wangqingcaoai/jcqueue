@@ -89,22 +89,21 @@ int setConfig(char* configName, char* configData){
     configData = trim(configData);
     ConfigPtr ptr = globalConfig;
     if(NULL == ptr){
-        globalConfig= malloc(sizeof(Config));
-
+        globalConfig= allocMem(sizeof(Config));
+        if(globalConfig == NULL){
+            return 0;
+        }
         globalConfig->next = NULL;
-        globalConfig->name = malloc(strlen(configName)+1);
-        strcpy(globalConfig->name,configName);
-        globalConfig->data = malloc(strlen(configData)+1);
-        strcpy(globalConfig->data,configData);
+        globalConfig->name = allocString(configName);
+        globalConfig->data = allocString(configData);
         return 1;
 
     }
     ConfigPtr last = ptr;
     while(ptr!=NULL){
         if(strcmp(configName,ptr->name)==0){
-            free(ptr->data);
-            ptr->data = malloc(strlen(configData)+1);
-            strcpy(ptr->data,configData);
+            freeString(&(ptr->data));
+            ptr->data = allocString(configData);
             return 1;
         }
         last = ptr;
@@ -112,12 +111,10 @@ int setConfig(char* configName, char* configData){
     }
 
 
-    ptr = last->next = malloc(sizeof(Config));
+    ptr = last->next = allocMem(sizeof(Config));
     ptr->next = NULL;
-    ptr->name = (char*)malloc(strlen(configName)+1);
-    strcpy(ptr->name,configName);
-    ptr->data = malloc(strlen(configData)+1);
-    strcpy(ptr->data,configData);
+    ptr->name = allocString(configName);
+    ptr->data = allocString(configData);
     return 1;
 }
 int destoryConfig(){
@@ -125,8 +122,8 @@ int destoryConfig(){
     ConfigPtr tmp = ptr;
     while(ptr!=NULL){
         tmp = ptr->next;
-        free(ptr->data);
-        free(ptr->name);
+        freeString(&(ptr->data));
+        freeString(&(ptr->name));
         free(ptr);
         ptr = tmp;
     }

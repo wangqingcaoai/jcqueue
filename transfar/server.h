@@ -14,11 +14,12 @@ typedef struct TransfarServer {
     HeapPtr   conns;//这个server上的连接
 }TransfarServer,*TransfarServerPtr;
 //创建服务端套接字
-int makeServerSocket(char* host, char*port);
-int makeClientSocket(char* host, char*port);
+int makeServerSocket(const char* host,const char*port);
+int makeClientSocket(const char* host,const char*port);
 TransfarServerPtr buildTransfarServer(const char* addr,const char* port);
 int freeTransfarServer(TransfarServerPtr *);
-
+int restoreTransfarServer(TransfarServerPtr );
+int storeTransfarServer(TransfarServerPtr);
 
 int acceptRequest(TransfarServerPtr tserver,const int ev);
 void srvaccept(TransfarServer *s, int ev);

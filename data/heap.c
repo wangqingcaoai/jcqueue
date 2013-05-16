@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "base.h"
+#include "../util/util.h"
 #include "heap.h"
 
 static void set(Heap *h, int k, void *x)
@@ -75,7 +76,7 @@ int heapinsert(Heap *h, void *x)
         void **ndata;
         int ncap = (h->len+1) * 2; /* allocate twice what we need */
 
-        ndata = malloc(sizeof(void*) * ncap);
+        ndata = (void**)allocMem(sizeof(void*) * ncap);
         if (!ndata) {
             return 0;
         }
@@ -112,7 +113,10 @@ void * heapremove(Heap *h, int k)
 }
 
 HeapPtr buildHeap(Record record, Less less){
-    HeapPtr ptr = malloc(sizeof(Heap));
+    HeapPtr ptr = (HeapPtr)allocMem(sizeof(Heap));
+    if(ptr == NULL){
+        return NULL;
+    }
     ptr->cap=ptr->len = 0;
     ptr->data = NULL;
     ptr->rec = record;

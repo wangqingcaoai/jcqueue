@@ -4,8 +4,14 @@
 #include "../util/util.h"
 
 UserPtr buildUser(const char* userName,const char* userPassWord){
-    UserPtr ptr = (UserPtr)malloc(sizeof(User));
+    if(isEmptyString(userName)|| isEmptyString(userPassWord)){
+        return NULL;
+    }
     static int user_id;
+    UserPtr ptr = (UserPtr)allocMem(sizeof(User));
+    if(ptr == NULL){
+        return NULL;
+    }
     user_id ++;
     ptr->userId = user_id;
     ptr->userName = allocString(userName);

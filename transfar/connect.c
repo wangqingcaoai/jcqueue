@@ -78,17 +78,20 @@ ConnectPtr buildConnect(const int cfd, const int state){
         return NULL;
     }
     static int id;
-    ConnectPtr ptr = malloc(sizeof(Connect));
+    ConnectPtr ptr = (ConnectPtr)allocMem(sizeof(Connect));
+    if(ptr == NULL){
+        return NULL;
+    }
     ptr->id = id;
     ptr->srv = NULL;
     ptr->state = state;
-    ptr->NetMEssagePtr = NM_buildNetMessage();
+    ptr->netMessage = NM_buildNetMessage();
     ptr->onlineTime = -1;
     ptr->ip  = NULL;
     return ptr;
 }
 
-int freeConnect(ConnectPtr c){
+int freeConnect(ConnectPtr *c){
     if(c == NULL){
         return  CONNECT_ERROR_PARAM_ERROR;
     }

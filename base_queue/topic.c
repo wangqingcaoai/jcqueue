@@ -6,13 +6,19 @@
 #include "topic.h"
 //新建topic
 TopicPtr buildTopic(const char* topicName){
+    if(isEmptyString(topicName)){
+        return NULL;
+    }
     static int topicid;
-    topicid++;
+    
     //创建topic内存对象
-    TopicPtr ptr= (TopicPtr)malloc(sizeof(Topic));
+    TopicPtr ptr= (TopicPtr)allocMem(sizeof(Topic));
+    if(ptr == NULL){
+        return ptr;
+    }
+    topicid++;
     ptr->topicId = topicid;
-    ptr->topicName = malloc(strlen(topicName)+1);
-    strcpy(ptr->topicName,topicName);
+    ptr->topicName = allocString(topicName);
     ptr->ready_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
     ptr->delay_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
     ptr->using_pool = buildHeap((Record)MessageRecord,(Less)MessageLess);
@@ -130,7 +136,7 @@ int freeTopic(TopicPtr *topic){
     freeHeap(&(tptr->using_pool),(Free)freeMessage);
     freeHeap(&(tptr->sleep_queue),(Free)freeMessage);
 
-    free(tptr->topicName);
+    freeString(&(tptr->topicName));
     free(tptr);
     (*topic)=NULL;
     tptr = NULL;

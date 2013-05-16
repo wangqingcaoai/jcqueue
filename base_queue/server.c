@@ -4,10 +4,15 @@
 #include "topic.h"
 BaseServerPtr buildBaseServer(){
     static int baseserver_id;
+    
+    BaseServerPtr ptr = (BaseServerPtr)allocMem(sizeof(BaseServer));
+    if(ptr == NULL){
+        return NULL;
+    }
     baseserver_id++;
-    BaseServerPtr ptr = malloc(sizeof(BaseServer));
     ptr->baseserver_id = baseserver_id;
     ptr->topicList = buildList(NULL,NULL);
+    return ptr;
 }
 
 int freeBaseServer(BaseServerPtr * p){

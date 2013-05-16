@@ -12,8 +12,12 @@
 #include "subscribe.h"
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
     static int server_id;
+    
+    SubscribeServerPtr ptr = (SubscribeServerPtr)allocMem(sizeof(SubscribeServer));
+    if(ptr == NULL){
+        return ptr;
+    }
     server_id++;
-    SubscribeServerPtr ptr = (SubscribeServerPtr)malloc(sizeof(SubscribeServer));
     ptr->serverId = server_id;
     ptr->subscribeTopics = buildList();
     ptr->subscribes = buildList();
@@ -44,8 +48,12 @@ SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,
         return NULL;
     }
     static int subscribe_id;
+    
+    SubscribePtr ptr = (SubscribePtr)allocMem(sizeof(Subscribe));
+    if(ptr == NULL){
+        return ptr;
+    }
     subscribe_id++;
-    SubscribePtr ptr = (SubscribePtr)malloc(sizeof(Subscribe));
     ptr->subscribeId = subscribe_id;
     ptr->subscribeKeyWord = allocString(subscribeKeyWord);
     ptr->remoteHost = allocString(remoteHost);
@@ -96,7 +104,11 @@ SubscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr){
     if(tptr == NULL){
         return NULL;
     }
-    SubscribeTopicPtr ptr = malloc(sizeof(SubscribeTopic));
+    SubscribeTopicPtr ptr = (SubscribeTopicPtr)allocMem(sizeof(SubscribeTopic));
+    if(ptr == NULL){
+        return ptr;
+    }
+    id++;
     ptr->id =  id;
     ptr->topicName = allocString(topicName);
     ptr->topic = tptr;

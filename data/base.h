@@ -1,5 +1,6 @@
 #ifndef DATA_BASE_H
 #define DATA_BASE_H 
+#include "../util/util.h"
 //需要用到的常用函数定义
 typedef int(*Free)(void*);
 //查找函数，在链表中查找指定内容 后面可变参数为传入的查找参数

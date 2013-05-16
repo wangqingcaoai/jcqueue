@@ -5,8 +5,12 @@
 
 MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* data,int length,int delay){
     static int messageid;
+    
+    MessagePtr ptr = (MessagePtr)allocMem(sizeof(Message));
+    if(ptr == NULL){
+        return NULL;
+    }
     messageid++;
-    MessagePtr ptr = malloc(sizeof(Message));
     ptr->messageid = messageid;
     ptr->state = state;
     ptr->timestamp = timestamp;
@@ -16,8 +20,15 @@ MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* d
     ptr->delay = delay;
     ptr->activetime = ptr->createtime+delay;
     if(length > 0){
-        ptr->data = malloc(length);
-        memcpy(ptr->data,data,length);
+        ptr->data = (void*)allocMem(length);
+        if(ptr->data != NULL){
+            memcpy(ptr->data,data,length);
+        }else{
+            free(ptr);
+            messageid --;
+            ptr = NULL;
+        }
+        
     }else{
         ptr->data = NULL;
         ptr->length = 0;
