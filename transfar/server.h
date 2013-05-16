@@ -20,7 +20,6 @@ TransfarServerPtr buildTransfarServer(const char* addr,const char* port);
 int freeTransfarServer(TransfarServerPtr *);
 int restoreTransfarServer(TransfarServerPtr );
 int storeTransfarServer(TransfarServerPtr);
-
 int acceptRequest(TransfarServerPtr tserver,const int ev);
 void srvaccept(TransfarServer *s, int ev);
 void srvserve(TransfarServer *s);

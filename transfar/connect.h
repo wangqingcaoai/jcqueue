@@ -15,12 +15,15 @@ typedef struct Connect{
     TransfarServerPtr srv;
     Socket sock;
     char state;
-    char type;
-    NetMessagePtr netMessage;
-    int onlineTime;
-    char* ip;
+    char type;//client or request
+	NetMessagePtr netMessage;//
+    int onlineTime;// use to close outtime client
+    char *addr;
+	char *port;
+
 }Connect, *ConnectPtr ;
 ConnectPtr buildConnect(const int cfd, const int state);
+int setConnectHostInfo(ConnectPtr ptr,const char * addr,const char *port);	
 void acceptConnect(TransfarServerPtr s,const int ev );
 int readData(ConnectPtr,void *buffer, int length);
 int writeData(ConnectPtr,void *buffer, int length);
@@ -29,5 +32,5 @@ int connectTimeOut(ConnectPtr);
 void closeFd(int fd);
 int freeConnect(ConnectPtr *);
 int compareConnect(ConnectPtr ,ConnectPtr);
-
+ConnectPtr buildRequestConnect(TransfarServerPtr ptr,const char* addr,const char * port);
 #endif
