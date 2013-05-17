@@ -3,11 +3,13 @@
 #define BUF_SIZE 512
 #define ANNOTATION ';'
 #include "../config_list.h"
+#define CURRENT_DIR_CONFIG_FILE "./jcqueue.conf"
+#define DEFAULT_CONFIG_FILE "/etc/jcqueue/jcqueue.conf"
 typedef struct Config
 {
     struct Config *next;
     char* name;
-    void* data;
+    char* data;
 }Config,*ConfigPtr;
 
 //开关
@@ -16,8 +18,8 @@ typedef enum Switch{
     ON,
 }Switch;
 static  ConfigPtr globalConfig =NULL;
-void* getConfig(char* configName);
-int initConfig();
+void* getConfig(char* configName, char* defaultValue);
+int initConfig(char * fileName);
 int setConfig(char* configName, char* configData );
 /**
  * 删除配置信息

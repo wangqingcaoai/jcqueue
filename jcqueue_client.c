@@ -35,8 +35,9 @@ int main(int argc, char  *argv[])
                 break;            
         }
     }
-    initConfig();
-    // AppServerPtr serverPtr = buildAppServer();
+    initConfig(NULL);
+    //sAppServerPtr serverPtr = buildAppServer();
+    //initAppServer();
     // while(true){
     //     processServer();
     //     tick();

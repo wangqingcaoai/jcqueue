@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include "app_queue/server.h"
 char *l_opt_arg;  
 char* const short_options = "h:p:c:";  
 struct option long_options[] = {  
@@ -9,9 +10,10 @@ struct option long_options[] = {
      { "config",1,  NULL,   'c'     },
      {      0,     0,     0,     0},  
 };
-int main(int argc, char const *argv[])
+int main(int argc, char  *argv[])
 {
     int opt;
+    initConfig(NULL);
     while((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1)
     {
         switch (opt)
@@ -34,8 +36,8 @@ int main(int argc, char const *argv[])
                 break;            
         }
     }
-    initConfig();
-    // AppServerPtr serverPtr = buildAppServer();
+    setConfig();
+    AppServerPtr serverPtr = buildAppServer();
     // while(true){
     //     processServer();
     //     tick();

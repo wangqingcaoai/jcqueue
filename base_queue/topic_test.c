@@ -9,13 +9,13 @@ int test_topic(){
     addMessage(ptr,mptr,0);
     MessagePtr rptr = getReadyMessage(ptr);
     if(rptr == mptr){
-        printf("add right %x\n",rptr);
+        //printf("add right %x\n",rptr);
     }
     rptr = getReadyMessage(ptr);
     if(rptr == NULL){
         printf(" get ready right\n" );
     }else{
-        printf("%x\n",rptr );
+        //printf("%x\n",rptr );
     }
     sleepMessage(ptr,mptr->messageid);
     int wake = wakeUpMessage(ptr,mptr->messageid,0);
@@ -24,13 +24,13 @@ int test_topic(){
     }
     rptr = getReadyMessage(ptr);
     if(rptr == mptr){
-        printf("wark up  right %x\n",rptr);
+        //printf("wark up  right %x\n",rptr);
     }
 
     reuseMessage(ptr,rptr->messageid,0);
     rptr = getReadyMessage(ptr);
     if(rptr == mptr){
-        printf("reuse  right %x\n",rptr);
+        //printf("reuse  right %x\n",rptr);
     }
     int messageid =rptr->messageid;
     int del = delMessage(ptr,rptr->messageid);

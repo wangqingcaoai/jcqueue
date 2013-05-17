@@ -1,3 +1,6 @@
+PREFIX=/usr/local
+BINDIR=$(PREFIX)/bin
+INSTALL=install
 TARGET=jcqueue_server jcqueue_client 
 dirs = app_queue\
 	base_queue\
@@ -23,8 +26,14 @@ lib%.a: %/*.c
 	ar rs  $@ $(@:lib%.a=%)/*.o 
 %.o:%.c
 	$(CC) $(CFLAGS) -c $^ 
-build:
+.PHONY: install
+install: $(BINDIR) $(TARGET:%=$(BINDIR)/%)
 
+$(BINDIR):
+	$(INSTALL) -d $@
+
+$(BINDIR)/%: %
+	$(INSTALL) $< $@
 
 clean:
 	rm -f $(dirs:%=%/*.o)

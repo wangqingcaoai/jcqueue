@@ -2,13 +2,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <unistd.h>
 #include "../config_list.h"
 #include "util.h"
 #include "config.h"
 /**
  * @param
  */
-void* getConfig(char* configName){
+void* getConfig(char* configName,char* defaultValue){
 
     ConfigPtr ptr = globalConfig;
     while(ptr!=NULL){
@@ -17,15 +18,29 @@ void* getConfig(char* configName){
         }
         ptr = ptr->next;
     }
-    return NULL;
+    
+    return defaultValue;
 }
 
-int initConfig(){
+int initConfig(char * fileName){
     // find conf file on current directory
-    FILE * configFile = fopen("./jcqueue.conf","r");
+    FILE * configFile = NULL;
+    if(fileName == NULL || access(fileName,R_OK)!=0){
+        if(access(CURRENT_DIR_CONFIG_FILE,R_OK) ==0){
+            configFile = fopen(CURRENT_DIR_CONFIG_FILE,"r");
+        }else if(access(DEFAULT_CONFIG_FILE,R_OK) == 0){
+            configFile = fopen(DEFAULT_CONFIG_FILE,"r");
+        }
+    }else{
+        configFile = fopen(fileName,"r");
+    }
     if(configFile ==NULL ){
         int error =errno;
-        fprintf(stderr,"open config file error errno.%02d : %s\n", error, strerror(error));
+        if(error !=0){
+            fprintf(stderr,"open config file error errno.%02d : %s\n", error, strerror(error));
+        }else{
+            fprintf(stderr, "open config file error ,config file not found");
+        }
     }else{
 
         char buf[BUF_SIZE];

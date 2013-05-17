@@ -34,7 +34,7 @@ int storeAppServer(AppServerPtr ptr){
     storeBaseServer(ptr->baseServer);
     storeSubscribes(ptr->subscribeServer);
     storePushs(ptr->pushServer);
-    storeTransfarServer(ptr->pushServer);
+    storeTransfarServer(ptr->transfarServer);
     return APP_SERVER_SUCCESS;
 }
 int freeAppServer(AppServerPtr *pptr){
@@ -45,7 +45,7 @@ int freeAppServer(AppServerPtr *pptr){
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
-    freeList(&(ptr->usersList),freeUser);
+    freeList(&(ptr->usersList),(Free)freeUser);
     freeBaseServer(&(ptr->baseServer));
     freeSubscribeServer(&(ptr->subscribeServer));
     freePushServer(&(ptr->pushServer));

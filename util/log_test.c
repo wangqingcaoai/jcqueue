@@ -11,7 +11,7 @@ int main(){
     // char * t="./log.log";
     // setConfig("log_path",t,strlen(t));
     // addLog(LOG_WARNING,message);
-    initConfig();
+    initConfig(NULL);
     displayConfig();
     destoryConfig();
 }*/

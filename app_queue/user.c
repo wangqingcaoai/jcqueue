@@ -214,5 +214,13 @@ int isUser(UserPtr userPtr,const char* userName){
     }
 }
 
+int restoreUsers(ListPtr userList){
+
+}
+int storeUsers(ListPtr userList){
+    
+}
+
+
 
 

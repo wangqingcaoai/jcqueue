@@ -28,7 +28,7 @@ void acceptConnect(TransfarServerPtr s,const int ev )
         }
         return;
     }
-    if (isOn(getConfig("verbose"))) {
+    if (isOn(getConfig("verbose","off"))) {
         printf("accept client %d\n", cfd);
     }
 
@@ -66,7 +66,7 @@ void acceptConnect(TransfarServerPtr s,const int ev )
 }
 void closeFd(int fd){
     close(fd);
-    if (isOn(getConfig("verbose"))) {
+    if (isOn(getConfig("verbose","off"))) {
         printf("close %d\n", fd);
     }
     return ;
