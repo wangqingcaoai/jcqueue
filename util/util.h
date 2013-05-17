@@ -11,4 +11,5 @@ char * allocString(const char* s);
 int freeString(char **s);
 int isEmptyString(const char * s);
 void* allocMem(int size);
+
 #endif

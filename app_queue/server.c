@@ -22,10 +22,10 @@ int initAppServer(AppServerPtr ptr){
     restoreBaseServer(ptr->baseServer);
     restoreSubscribes(ptr->subscribeServer);
     restorePushs(ptr->pushServer);
-    restoreTransfarServer(ptr->pushServer);
+    restoreTransfarServer(ptr->transfarServer);
     return APP_SERVER_SUCCESS;
 }
-int storeAppServer(AppServerPtr){
+int storeAppServer(AppServerPtr ptr){ 
 
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
@@ -56,4 +56,5 @@ int freeAppServer(AppServerPtr *pptr){
 }
 int processAppServer(AppServerPtr ptr){
     processConnect(ptr->transfarServer);
+    
 }

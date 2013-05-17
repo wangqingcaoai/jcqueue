@@ -1,4 +1,4 @@
-TARGET=jcqueue
+TARGET=jcqueue_server jcqueue_client 
 dirs = app_queue\
 	base_queue\
 	secure\
@@ -11,9 +11,13 @@ libs = $(dirs:%=lib%.a)
 libflag = $(dirs:%=-l% ) 
 CFLAGS = -g
 
-$(TARGET):$(libs) main.o build
-	$(CC) $(CFLAGS) -L. main.o $(libflag)  -o $@
+.PHONY:all
+all:$(TARGET)
 
+jcqueue_server:$(libs) jcqueue_server.o 
+	$(CC) $(CFLAGS) -L. jcqueue_server.o $(libflag)  -o $@
+jcqueue_client:$(libs) jcqueue_client.o 
+	$(CC) $(CFLAGS) -L. jcqueue_client.o $(libflag)  -o $@
 lib%.a: %/*.c
 	$(MAKE) -C  $(@:lib%.a=%)/ CFLAGS=$(CFLAGS)
 	ar rs  $@ $(@:lib%.a=%)/*.o 
