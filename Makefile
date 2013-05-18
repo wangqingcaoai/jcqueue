@@ -6,9 +6,9 @@ dirs = app_queue\
 	base_queue\
 	secure\
 	transfar\
-	util\
 	parser\
 	data\
+	util\
 	
 libs = $(dirs:%=lib%.a)
 libflag = $(dirs:%=-l% ) 
