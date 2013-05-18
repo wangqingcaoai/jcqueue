@@ -102,7 +102,8 @@ int freeConnect(ConnectPtr *c){
 int getRequestData(ConnectPtr ptr){
 	if(ptr == NULL)
 	{
-		return TRANSFAR_CONNECT_ERROR_PARAM_ERROR;
+		return CONNECT_ERROR_PARAM_ERROR;
 	}
+    return CONNECT_SUCCESS;
 	
 }
