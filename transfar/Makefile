@@ -1,6 +1,4 @@
-sources = sd-daemon.c\
-	server.c\
-	connect.c
+sources = $(wildcard *.c)
 
 OS = $(shell uname|tr A-Z a-z)
 server_test = server_test.c

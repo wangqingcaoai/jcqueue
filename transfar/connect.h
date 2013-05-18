@@ -25,8 +25,9 @@ typedef struct Connect{
 ConnectPtr buildConnect(const int cfd, const int state);
 int setConnectHostInfo(ConnectPtr ptr,const char * addr,const char *port);	
 void acceptConnect(TransfarServerPtr s,const int ev );
-int readData(ConnectPtr,void *buffer, int length);
-int writeData(ConnectPtr,void *buffer, int length);
+int getRequestData(ConnectPtr);
+int setSecretInfo(ConnectPtr );
+int sendResponseData(ConnectPtr);
 int connectClose(ConnectPtr);
 int connectTimeOut(ConnectPtr);
 void closeFd(int fd);

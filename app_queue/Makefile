@@ -1,5 +1,5 @@
 
-sources = $(wildcard *.c)
+surces = $(wildcard *.c)
 
 CFLAGS = 
 default:$(sources:.c=.o) 

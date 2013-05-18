@@ -1,6 +1,4 @@
-sources = log.c\
-	config.c\
-	util.c\
+sources = $(wildcard *.c)
 	
 
 target = log_test
