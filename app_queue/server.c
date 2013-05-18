@@ -2,6 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include "server.h"
+#include "user.h"
+#include "../transfar/server.h"
+#include "push.h"
+#include "../base_queue/server.h"
 AppServerPtr buildAppServer(){
     AppServerPtr ptr = allocMem(sizeof(AppServer));
     if(ptr == NULL){
@@ -14,8 +18,8 @@ AppServerPtr buildAppServer(){
     ptr->transfarServer = buildTransfarServer("127.0.0.1","11221");
     ptr->request = (Handle)processRequest;
 	ptr->response = (Handle)processResponse;
-	ptr->pushRequest=(Handle)processPushRequest;
-	ptr->pushResponse=(Handle)processPushResponse;
+	ptr->pusherRequest=(Handle)processPusherRequest;
+	ptr->pusherResponse=(Handle)processPusherResponse;
 	return ptr;
 }
 int initAppServer(AppServerPtr ptr){
@@ -59,7 +63,7 @@ int freeAppServer(AppServerPtr *pptr){
     return APP_SERVER_SUCCESS;
 }
 int processAppServer(AppServerPtr ptr){
-    processConnect(ptr->transfarServer);
+    //processConnect(ptr->transfarServer);
     
 }
 int processRequest(ConnectPtr ptr,int ev){

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "user.h"
 #include "../util/util.h"
+#include "../data/list.h"
 
 UserPtr buildUser(const char* userName,const char* userPassWord){
     if(isEmptyString(userName)|| isEmptyString(userPassWord)){
@@ -92,7 +93,7 @@ int addUser(ListPtr userList,const char* userName,const char* userPassWord ,int 
         UserPtr user = buildUser(userName,userPassWord);
         setUserPrivilege(user,privilege);
         setUserGroup(user,group);
-        int code = insertIntoList(userList,user);
+        int code = insertToList(userList,user);
         if(code == 1){
             return USER_SUCCESS;
         }else{
@@ -162,7 +163,7 @@ int delUser(ListPtr userList,const char* userName){
     if(userName == NULL){
         return USER_ERROR_PARAM_ERROR;
     }
-    int count = removeFromeList(userList,(Find)isUser,(void*)userName,(Free)freeUser);
+    int count = removeFromList(userList,(Find)isUser,(void*)userName,(Free)freeUser);
     if(count == -1){
         return USER_ERROR_PARAM_ERROR;
     }
@@ -193,7 +194,7 @@ int addChannel(UserPtr userPtr,ChannelPtr ptr ){
         return USER_ERROR_PARAM_ERROR;
     }
     if(userPtr->channels!=NULL){
-       insertIntoList(userPtr->channels,ptr);
+       insertToList(userPtr->channels,ptr);
        return USER_SUCCESS; 
     }else{
         return USER_ERROR_PARAM_ERROR;
@@ -218,7 +219,7 @@ int restoreUsers(ListPtr userList){
 
 }
 int storeUsers(ListPtr userList){
-    
+
 }
 
 

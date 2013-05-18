@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include "../util/log.h"
 #include "connect.h"
+#include "../parser/net_message.h"
 
 void acceptConnect(TransfarServerPtr s,const int ev )  
 {

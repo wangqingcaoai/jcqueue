@@ -21,8 +21,8 @@ typedef struct AppServer
     TransfarServerPtr transfarServer;
 	Handle request;
 	Handle response;
-	Handle pushRequest;
-	Handle pushResponse;
+	Handle pusherRequest;
+	Handle pusherResponse;
 	
 }AppServer , * AppServerPtr;
 AppServerPtr buildAppServer();

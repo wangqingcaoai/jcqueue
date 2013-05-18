@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "client.h"
 #include "server.h"
-#include "client.h"	
+	
 AppServerPtr buildAppClientServer(){
     AppServerPtr ptr = allocMem(sizeof(AppServer));
     if(ptr == NULL){
@@ -15,8 +16,8 @@ AppServerPtr buildAppClientServer(){
     ptr->transfarServer = buildTransfarServer("127.0.0.1","11221");
     ptr->request = (Handle)processClientRequest;
 	ptr->response = (Handle)processClientResponse;
-	ptr->pushRequest = (Handle)processClientPushRequest;
-	ptr->pushResponse = (Handle)processClientPushResponse;
+	ptr->pusherRequest = (Handle)processClientPusherRequest;
+	ptr->pusherResponse = (Handle)processClientPusherResponse;
 	return ptr;
 }
 int initAppClientServer(AppServerPtr ptr){
@@ -60,9 +61,17 @@ int freeAppClientServer(AppServerPtr *pptr){
     return APP_SERVER_SUCCESS;
 }
 int processAppClientServer(AppServerPtr ptr){
-    processConnect(ptr->transfarServer);
+    //processConnect(ptr->transfarServer);
 }
-int processClientRequest(ConnectPtr ptr,int ev);
-int processClientPusherResponse(ConnectPtr ptr,int ev);
-int processClientResponse(ConnectPtr ptr,int ev);
-int processClientPusherRequest(ConnectPtr ptr,int ev);
+int processClientRequest(ConnectPtr ptr,int ev){
+
+}
+int processClientPusherResponse(ConnectPtr ptr,int ev){
+
+}
+int processClientResponse(ConnectPtr ptr,int ev){
+
+}
+int processClientPusherRequest(ConnectPtr ptr,int ev){
+
+}

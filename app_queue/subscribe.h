@@ -52,10 +52,10 @@ typedef struct SubscribeServer
 
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer);
 int freeSubscribeServer(SubscribeServerPtr *);
-SubscribePtr bulidSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
+SubscribePtr buildSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
 int freeSubscribe(SubscribePtr *);
 int isSubscribeById(SubscribePtr ptr,const int *id);
-SubscribeTopicPtr bulidSubScribeTopic(const char* topicName,TopicPtr tptr);
+SubscribeTopicPtr buildSubScribeTopic(const char* topicName,TopicPtr tptr);
 int freeSubscribeTopic(SubscribeTopicPtr *pptr);
 int isSubscribeTopicById(SubscribeTopicPtr ptr,const int*  id);
 int isSubscribeTopicByTopicName(SubscribeTopicPtr ptr,const char* topicName);
