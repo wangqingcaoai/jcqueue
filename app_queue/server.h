@@ -12,7 +12,8 @@ typedef struct PushServer * PushServerPtr;
 typedef struct TransfarServer * TransfarServerPtr;
 typedef struct AppServer
 {
-    ListPtr usersList;
+
+	ListPtr usersList;
     BaseServerPtr baseServer ;
     SubscribeServerPtr subscribeServer;
     PushServerPtr pushServer;
@@ -23,5 +24,8 @@ int initAppServer(AppServerPtr);
 int storeAppServer(AppServerPtr);
 int freeAppServer(AppServerPtr *);
 int processAppServer(AppServerPtr);
-
+int processRequest(ConnectPtr ptr,int ev);
+int processPusherResponse(ConnectPtr ptr,int ev);
+int processResponse(ConnectPtr ptr,int ev);
+int processPusherRequest(ConnectPtr ptr,int ev);
 #endif
