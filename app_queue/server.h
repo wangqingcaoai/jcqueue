@@ -3,6 +3,7 @@
 #include "../base_queue/server.h"
 #include "subscribe.h"
 #include "push.h"
+#include "../transfar/sockets.h"
 #include "../transfar/server.h"
 #define APP_SERVER_SUCCESS 0
 #define APP_SERVER_ERROR_PARAM_ERROR 1;
@@ -18,6 +19,11 @@ typedef struct AppServer
     SubscribeServerPtr subscribeServer;
     PushServerPtr pushServer;
     TransfarServerPtr transfarServer;
+	Handle request;
+	Handle response;
+	Handle pushRequest;
+	Handle pushResponse;
+	
 }AppServer , * AppServerPtr;
 AppServerPtr buildAppServer();
 int initAppServer(AppServerPtr);

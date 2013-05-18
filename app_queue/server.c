@@ -12,7 +12,11 @@ AppServerPtr buildAppServer(){
     ptr->subscribeServer = buildSubscribeServer(ptr);
     ptr->pushServer = buildPushServer(ptr);
     ptr->transfarServer = buildTransfarServer("127.0.0.1","11221");
-    return ptr;
+    ptr->request = (Handle)processRequest;
+	ptr->response = (Handle)processResponse;
+	ptr->pushRequest=(Handle)processPushRequest;
+	ptr->pushResponse=(Handle)processPushResponse;
+	return ptr;
 }
 int initAppServer(AppServerPtr ptr){
     if(ptr == NULL){
@@ -57,4 +61,16 @@ int freeAppServer(AppServerPtr *pptr){
 int processAppServer(AppServerPtr ptr){
     processConnect(ptr->transfarServer);
     
+}
+int processRequest(ConnectPtr ptr,int ev){
+
+}
+int processPusherResponse(ConnectPtr ptr,int ev){
+
+}
+int processResponse(ConnectPtr ptr,int ev){
+
+}
+int processPusherRequest(ConnectPtr ptr,int ev){
+
 }
