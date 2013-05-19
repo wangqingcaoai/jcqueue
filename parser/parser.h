@@ -1,6 +1,7 @@
 #ifndef PARSER_H
 #define PARSER_H 
-int readMessage(int fd,NetMessage ptr);
-int writeMessage(int fd	,NetMessage ptr);
+#include "net_message.h"
+int readMessage(int fd,NetMessagePtr ptr);
+int writeMessage(int fd	,NetMessagePtr ptr);
 
 #endif
