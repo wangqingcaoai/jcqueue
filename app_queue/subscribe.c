@@ -180,11 +180,11 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
     if(netMessage == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    char * keyword = getEntraParam(netMessage,"keyword");
-    char * remoteHost = getEntraParam(netMessage,"remoteHost");
-    char * remotePort = getEntraParam(netMessage,"remotePort");
-    char * protocol = getEntraParam(netMessage,"protocol");
-    char* type = getEntraParam(netMessage ,"type");
+    char * keyword = getExtraParam(netMessage,"keyword");
+    char * remoteHost = getExtraParam(netMessage,"remoteHost");
+    char * remotePort = getExtraParam(netMessage,"remotePort");
+    char * protocol = getExtraParam(netMessage,"protocol");
+    char* type = getExtraParam(netMessage ,"type");
     SubscribePtr ptr = buildSubscribe( keyword,remoteHost,atoi(remotePort), protocol, type,userPtr);
     if(ptr == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
