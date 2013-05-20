@@ -3,7 +3,7 @@
 #include <string.h>
 #include "net_message.h"
 #include "jcq.h"
-
+#include "../util/util.h"
 int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
     if(ptr == NULL|| buf == NULL || length <0){
         return PARSER_ERROR_PARAM_ERROR;
@@ -17,7 +17,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 	{
 		
 		
-     	temp = allocMem(ptr->lastParserBufLength + length);
+     	temp = (void*)allocMem(ptr->lastParserBufLength + length);
      	memcpy(temp,ptr->lastParserBuf,ptr->lastParserBufLength);
      	memcpy(temp,buf,length);
 		realLength =length+ ptr->lastParserBufLength;
@@ -26,11 +26,13 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 		ptr->lastParserBuf =NULL;
 	}else{
 		temp = allocMem(length);
-		memcpy(temp,buf,length)
-		realLength = length;
-		
+		memcpy(temp,buf,length);
+		realLength = length;	
 	}
-	int readLength = 0,result =0,leavLength =0,error = 0;
+    
+    
+    Param param;
+	int readLength = 0,result =0,leavLength =0,error = PARSER_SUCCESS;
     while(readLength <realLength && !error){
 
         leavLength = realLength -readLength;
@@ -39,17 +41,16 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
             case NETMESSAGE_READSTATE_WAIT:
                 ptr->readState = NETMESSAGE_READSTATE_PARAM;
             case NETMESSAGE_READSTATE_PARAM:
-                Param param;l
                 param.paramName = NULL;
                 param.paramData = NULL;
 
-				if(isReadData(temp,leavLength)){
+				if(isJCQMessageData(temp+readLength,leavLength)){
 						ptr->readState = NETMESSAGE_READSTATE_DATA;
 						//need jump to data process
 						break;
 					}
 					
-                }
+                
                result = getJCQParamNameAndData(temp+readLength,&param,leavLength);
                 if(result == PARSER_ERROR_DATA_NEED_MORE){
                     // we need more data to parser the param so
@@ -73,7 +74,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 				// start point of data it means the begin is "data:"
 				if(ptr->length ==0){
 					//check
-					if(isReadData(temp+readLength,leavLength)){
+					if(isJCQMessageData(temp+readLength,leavLength)){
 						
                     	ptr->readState = NETMESSAGE_READSTATE_FINISH;
 						readLength += 5;
@@ -100,7 +101,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 				}else	{
 				
 					if(ptr->data == NULL){
-						if(isReadData(temp+readLength,leavLength)){
+						if(isJCQMessageData(temp+readLength,leavLength)){
 							ptr->data= allocMem(ptr->length);
 							ptr->readLength =0;
 							readLength+=5;
@@ -135,15 +136,28 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
                 break;
             case NETMESSAGE_READSTATE_FINISH:
 				//end with \r\n\r\n
-				if(isMessageEnd(ptr,temp+readLength,leavLength)){
+				if(isJCQMessageEnd(temp+readLength,leavLength)){
 					readLength+=4;
 					leavLength-=4;
-
-				
-				}
+                    if(leavLength != 0){
+                        setLastParamBuffer(ptr,temp+readLength,leavLength);
+                        readLength +=leavLength;
+                        leavLength = 0;
+                    }
+                    break;
+				}else{
+                    setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    readLength += leavLength;
+                    error = PARSER_ERROR_FORMAT_ERROR;
+                }
+                break;
+            default:
+                ptr->readState = NETMESSAGE_READSTATE_WAIT;
                 break;
         }
     }
+    free(temp);
+    return error;
         
 }
 int buildJCQMessage(NetMessagePtr ptr,void * buf, int length){
@@ -169,7 +183,7 @@ int getJCQParamNameAndData(char* ptr,ParamPtr param, int length){
             ptr[i] = '\0';
             ptr[i+1] = '\0';
             ptr[split] = '\0';
-            param->readLength = i+1;
+            param->readLength = i+2;
             param->paramName = ptr;
             param->paramData = ptr+split+1;
             return PARSER_SUCCESS;
@@ -178,8 +192,23 @@ int getJCQParamNameAndData(char* ptr,ParamPtr param, int length){
     }
     return PARSER_ERROR_DATA_NEED_MORE;
 }
-int isReadData(char * buf,int length){
-
+int isJCQMessageData(char * buf,int length){
+    if(length<5){
+        return 0;
+    }
+    if(!strncmp(buf,"data:",5)){
+        return 1;
+    }
+    return 0;
+}
+int isJCQMessageEnd(char* buf,int length){
+    if(length<4){
+        return 0;
+    }
+    if(!strncmp(buf,"\r\n\r\n",4)){
+        return 1;
+    }
+    return 0;   
 }
 int setLastParamBuffer(NetMessagePtr ptr,void * buf,int length){
 	if(ptr == NULL || buf == NULL || length <0){
@@ -189,4 +218,22 @@ int setLastParamBuffer(NetMessagePtr ptr,void * buf,int length){
     memcpy(ptr->lastParserBuf,buf,length);
     ptr->lastParserBufLength = length;
 	return PARSER_SUCCESS;
+}
+int isJCQMessage(NetMessagePtr ptr,void* buf,length){
+    if(ptr == NULL || buf == NULL || length<0){
+        return 0;
+    }
+    if(ptr->lastParserBuf!=NULL&& ptr->lastParserBufLength>0){
+        // has data in buffer
+        if(ptr->lastParserBufLength > 3){
+
+        }
+        if(!strncmp(ptr->lastParserBuf,"jcq",3)){
+            ptr->protocolType = allocString("jcq");
+            //
+            return 1;
+        }
+    }else{
+
+    }
 }

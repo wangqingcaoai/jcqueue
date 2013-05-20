@@ -67,23 +67,23 @@ int processAppServer(AppServerPtr ptr){
     
 }
 int processRequest(ConnectPtr ptr,int ev){
-	int result = getRequestData(ptr);
-	checkUser(ptr->netMessage);
-	aq_router(ptr->netMessage);
-	setResponseData(ptr->netMessage);
-	setSecretInfo(ptr->netMessage);
+	// int result = getRequestData(ptr);
+	// checkUser(ptr->netMessage);
+	// aq_router(ptr->netMessage);
+	// setResponseData(ptr->netMessage);
+	// setSecretInfo(ptr->netMessage);
 }
 int processResponse(ConnectPtr ptr,int ev){
-	sendResponseData(ptr);
+	//sendResponseData(ptr);
 }
 int processPusherResponse(ConnectPtr ptr,int ev){
-	int result =getRequestData(ptr);
+	// int result =getRequestData(ptr);
 
-	checkUser(ptr->netMessage);
-	pushResponse(ptr->netMessage);
+	// checkUser(ptr->netMessage);
+	// pushResponse(ptr->netMessage);
 
 }
 
 int processPusherRequest(ConnectPtr ptr,int ev){
-    sendResponseData(ptr);	
+//    sendResponseData(ptr);	
 }

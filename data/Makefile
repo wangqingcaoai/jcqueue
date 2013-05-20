@@ -1,10 +1,9 @@
-sources = heap.c\
-	list.c\
-	tree.c\
-	mysql.c
-target =  list_test
+sourcesFiles = $(wildcard *.c) 
+CFLAGS = 
+IgnoreFiles = %_test.c 
+sources = $(filter-out $(IgnoreFiles),$(sourcesFiles))
 default:$(sources:.c=.o)
-	
+
 $(target):$(sources:.c=.o)
 	gcc -g $^ -o  $@
 # include $(sources:.c=.d)

@@ -5,6 +5,7 @@
 #define PARSER_ERROR_PARAM_ERROR 1
 #define PARSER_ERROR_DATA_OUT_LINE 2
 #define PARSER_ERROR_DATA_NEED_MORE 3
+#define PARSER_ERROR_FORMAT_ERROR 4
 typedef struct Param
 {
     char* paramName;
@@ -13,5 +14,6 @@ typedef struct Param
 }Param,*ParamPtr;
 int parserJCQMessage(NetMessagePtr ptr,void * buf, int length);
 int buildJCQMessage(NetMessagePtr ptr,void * buf, int length);
+int isJCQMessage(NetMessagePtr ptr,void* buf,length);
 #endif
 

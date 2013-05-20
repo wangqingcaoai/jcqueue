@@ -6,6 +6,12 @@
 #define NETMESSAGE_READSTATE_DATA 3
 #define NETMESSAGE_READSTATE_FINISH 4
 
+#define NETMESSAGE_WRITESTATE_WAIT 1
+#define NETMESSAGE_WRITESTATE_FINISH 2
+#define NETMESSAGE_SUCCESS 0
+#define NETMESSAGE_ERROR_PARAM_ERROR 1
+
+#define NETMESSAGE_ERROR_UNKNOW_PARAM 2
 /**
  * 
  */
@@ -19,7 +25,7 @@ typedef struct NetMessage
     char* user;
     char* password;
     char* key;
-    char* entraParam ;
+    char* extraParam ;
     void* data;
     int length;
     void* lastParserBuf;
@@ -28,8 +34,8 @@ typedef struct NetMessage
 	int readState;// wait param data finish 
 	int delay;//
     int priority;
-    char* clientVersion;//
-    char* clientType;//
+    char* version;
+    char* protocolType;
     int64 timestamp;//
     int errcode;//
     char* clientCmd;//
@@ -39,9 +45,10 @@ typedef struct NetMessage
     int sendLength; //
 	int sendState;//
 	void* sendBuf;
-    char* clientKey;//
-    char* clientUser;//
-    char* clientPassword;//
+    int writedLength;
+    char* currentUserKey;//
+    char* currentUser;//
+    char* currentPassword;//
     int64 sendTime;//
 }NetMessage,* NetMessagePtr;
 /*
@@ -54,7 +61,7 @@ typedef struct NetMessage
  * password:
  * key:
  * delay:
- * preiority:
+ * priority:
  * timestamp:
  * extraParam:param1[value]param2[value2]
  * length:
@@ -76,16 +83,17 @@ typedef struct NetMessage
  *
  *
  * */
-char* NM_getCmd(NetMessagePtr);
-char* NM_getTarget(NetMessagePtr);
-int NM_setSendData(NetMessagePtr ptr,int errcode,char* clientCmd,char* clientTarget,char* sendData,int datalength);
-int NM_setSendUser(NetMessagePtr ptr,int clientUser,int clientKey,int clientPassword);
-NetMessagePtr NM_buildNetMessage();
-int NM_setError(NetMessagePtr ptr,int errcode,char* errorMessage,...);
+char* getCmd(NetMessagePtr);
+char* getTarget(NetMessagePtr);
+int setSendData(NetMessagePtr ptr,int errcode,char* clientCmd,char* clientTarget,char* sendData,int datalength);
+int setSendUser(NetMessagePtr ptr,int clientUser,int clientKey,int clientPassword);
+NetMessagePtr buildNetMessage();
+int setError(NetMessagePtr ptr,int errcode,char* errorMessage,...);
 char * getExtraParam(NetMessagePtr ptr,const char* paramName);
 int setExtraParam(NetMessagePtr ptr,const char* paramName,const char* paramValue);
 
 char * getSendExtraParam(NetMessagePtr ptr,const char* paramName);
 int setSendExtraParam(NetMessagePtr ptr,const char* paramName,const char* paramValue);
 int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* value);
+int displayNetMessage(NetMessagePtr ptr);
 #endif

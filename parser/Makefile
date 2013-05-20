@@ -1,7 +1,8 @@
-
-sources = $(wildcard *.c)
+sourcesFiles = $(wildcard *.c) 
 
 CFLAGS = 
+IgnoreFiles = %_test.c 
+sources = $(filter-out $(IgnoreFiles),$(sourcesFiles))
 default:$(sources:.c=.o) 
 
 # include $(sources:.c=.d)

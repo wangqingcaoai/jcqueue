@@ -1,13 +1,13 @@
 
-sources = user.c\
+sourcesFiles = $(wildcard *.c) 
 
-user_test = user_test.c
 CFLAGS = 
-target =  user_test
+IgnoreFiles = %_test.c 
+sources = $(filter-out $(IgnoreFiles),$(sourcesFiles))
 default:$(sources:.c=.o) 
 
 
-server_test:$(sources:.c=.o) $(server_test:.c=.o)
+secure_test:$(sources:.c=.o) $(secure_test:.c=.o)
 	gcc  $(CFLAGS)  $^ -o  $@
 # include $(sources:.c=.d)
 %.o:%.c

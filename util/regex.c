@@ -2,7 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <regex.h>
-#include <string>
+#include <string.h>
+#include "log.h"
 int isMatchedString(const char* string,const char* keyword){
     if(string == NULL){
         return REGEX_PARAM_ERROR;
@@ -22,12 +23,12 @@ int isMatchedString(const char* string,const char* keyword){
             result = REGEX_ERROR;
             char msgbuf[256];
             regerror(ret, &reg, msgbuf, sizeof(msgbuf));
-            addLog(LOG_ERROR,"regex error :%s",msgbuf);
+            addLog(LOG_ERROR,LOG_LAYER_UTIL,REGEX_LOG_POSITION_NAME,"regex error :%s",msgbuf);
         }
     }else{
         char msgbuf[256];
         regerror(ret, &reg, msgbuf, sizeof(msgbuf));
-        addLog(LOG_ERROR,"regex error :%s",msgbuf);
+        addLog(LOG_ERROR,LOG_LAYER_UTIL,REGEX_LOG_POSITION_NAME,"regex error :%s",msgbuf);
         result = REGEX_ERROR;
     }
     regfree(&reg);
