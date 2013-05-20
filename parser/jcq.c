@@ -10,59 +10,137 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
     }
     if(length == 0){
         return PARSER_SUCCESS;
-    }
-    int readLength = 0,result =0;
-    while(readLength <length){
+	}
+	void * temp = NULL;
+	int realLength = 0;
+	if(ptr->lastParserBuf != NULL && ptr->lastParserBufLength >0)
+	{
+		
+		
+     	temp = allocMem(ptr->lastParserBufLength + length);
+     	memcpy(temp,ptr->lastParserBuf,ptr->lastParserBufLength);
+     	memcpy(temp,buf,length);
+		realLength =length+ ptr->lastParserBufLength;
+		free(ptr->lastParserBuf);
+		ptr->lastParserBufLength =0;
+		ptr->lastParserBuf =NULL;
+	}else{
+		temp = allocMem(length);
+		memcpy(temp,buf,length)
+		realLength = length;
+		
+	}
+	int readLength = 0,result =0,leavLength =0,error = 0;
+    while(readLength <realLength && !error){
 
-        switch(ptr->readState)
+        leavLength = realLength -readLength;
+		switch(ptr->readState)
         {
             case NETMESSAGE_READSTATE_WAIT:
                 ptr->readState = NETMESSAGE_READSTATE_PARAM;
             case NETMESSAGE_READSTATE_PARAM:
-                Param param;
+                Param param;l
                 param.paramName = NULL;
                 param.paramData = NULL;
-                // has data in last parserbuffer ,need to process it;
-                if(ptr->lastParserBuf != NULL){
-                    // alloc a mem to store last and new 
-                    void * temp = allocMem(ptr->lastParserBufLength + length);
-                    memcpy(temp,ptr->lastParserBuf,ptr->lastParserBufLength);
-                    memcpy(temp,buf,length);
-                    free(ptr->lastParserBuf);
-                    ptr->lastParserBuf = NULL;
-                    // now get the param 
-                    getJCQParamNameAndData(temp,&param,ptr->lastParserBufLength + length);
+
+				if(isReadData(temp,leavLength)){
+						ptr->readState = NETMESSAGE_READSTATE_DATA;
+						//need jump to data process
+						break;
+					}
+					
                 }
-                int result = getJCQParamNameAndData(buf+readLength,&param,length - readLength);
+               result = getJCQParamNameAndData(temp+readLength,&param,leavLength);
                 if(result == PARSER_ERROR_DATA_NEED_MORE){
-                    // we need more data to parser the param so just save it in buffer
-                    ptr->lastParserBuf = allocMem(length - readLength);
-                    memcpy(ptr->lastParserBuf,buf+readLength,length -readLength);
-                    ptr->lastParserBufLength = length -readLength;
-                    readLength = length;
+                    // we need more data to parser the param so
+					// just save it in buffer
+					setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    readLength += leavLength;
+
+					error = PARSER_ERROR_DATA_NEED_MORE;
                 }else if(result == PARSER_SUCCESS){
                     readLength += param.readLength;
+					setNetMessageParam(ptr,param.paramName,param.paramData);
+					break;
                 }else if(result == PARSER_ERROR_PARAM_ERROR){
-
+				//save
+					setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    readLength += leavLength;
+					error= PARSER_ERROR_FORMAT_ERROR;
                 }
                 break;
             case NETMESSAGE_READSTATE_DATA:
-            //read data finish 
-                if(ptr->readLength  == ptr->length){
-                    ptr->readState = NETMESSAGE_READSTATE_FINISH;
-                //also can read data
-                }else if(ptr->readLength  < ptr->length){
-                    int copyLength = length;
-                    copyLength = (ptr->readLength + length <= ptr->length) ? length : ptr->length - ptr->readLength;
-                    memcpy(ptr->data + ptr->readLength, buf, copyLength);
-                    ptr->readLength += copyLength;
-                    readLength += copyLength;
-                //has error on read data
-                }else{
-                    return PARSER_ERROR_DATA_OUT_LINE;
-                }
+				// start point of data it means the begin is "data:"
+				if(ptr->length ==0){
+					//check
+					if(isReadData(temp+readLength,leavLength)){
+						
+                    	ptr->readState = NETMESSAGE_READSTATE_FINISH;
+						readLength += 5;
+						leavLength-= 5;
+					}else{
+					//could not come here;?
+					
+						setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    	readLength += leavLength;
+						error= PARSER_ERROR_FORMAT_ERROR;
+					
+					}
+					break;
+
+				}else if(ptr->length<0)
+				
+				
+				{
+					
+						setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    	readLength += leavLength;
+						error= PARSER_ERROR_FORMAT_ERROR;
+						break;
+				}else	{
+				
+					if(ptr->data == NULL){
+						if(isReadData(temp+readLength,leavLength)){
+							ptr->data= allocMem(ptr->length);
+							ptr->readLength =0;
+							readLength+=5;
+							leavLength-=5;
+						}
+					}
+
+					if(ptr->readLength  < ptr->length){ 
+                    	int copyLength = (ptr->readLength + leavLength<= ptr->length) ? leavLength:ptr->length - ptr->readLength;
+                    	memcpy(ptr->data + ptr->readLength, temp+readLength, copyLength);
+                    	ptr->readLength += copyLength;
+                    	readLength += copyLength;
+						leavLength -= copyLength;
+
+                	}
+				    if(ptr->readLength < ptr->length){
+						// need more data;
+						error= PARSER_ERROR_DATA_NEED_MORE;
+						break;
+					}
+					else if (ptr->readLength == ptr->length) {
+					
+                   		ptr->readState = NETMESSAGE_READSTATE_FINISH;
+						break;
+					}else if(ptr->readLength > ptr->length){
+				
+						setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    	readLength += leavLength;
+						error= PARSER_ERROR_DATA_OUT_LINE;
+               	}
+				}
                 break;
             case NETMESSAGE_READSTATE_FINISH:
+				//end with \r\n\r\n
+				if(isMessageEnd(ptr,temp+readLength,leavLength)){
+					readLength+=4;
+					leavLength-=4;
+
+				
+				}
                 break;
         }
     }
@@ -100,4 +178,15 @@ int getJCQParamNameAndData(char* ptr,ParamPtr param, int length){
     }
     return PARSER_ERROR_DATA_NEED_MORE;
 }
+int isReadData(char * buf,int length){
 
+}
+int setLastParamBuffer(NetMessagePtr ptr,void * buf,int length){
+	if(ptr == NULL || buf == NULL || length <0){
+		return PARSER_ERROR_PARAM_ERROR;
+	}
+	ptr->lastParserBuf = allocMem(length);
+    memcpy(ptr->lastParserBuf,buf,length);
+    ptr->lastParserBufLength = length;
+	return PARSER_SUCCESS;
+}

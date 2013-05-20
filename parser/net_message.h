@@ -58,8 +58,7 @@ typedef struct NetMessage
  * timestamp:
  * extraParam:param1[value]param2[value2]
  * length:
- * data:eerttyytwwerttewww
- * 
+ * data:eerttyytwwerttewww\r\n\r\n 
  *
  *
  *
@@ -88,5 +87,5 @@ int setExtraParam(NetMessagePtr ptr,const char* paramName,const char* paramValue
 
 char * getSendExtraParam(NetMessagePtr ptr,const char* paramName);
 int setSendExtraParam(NetMessagePtr ptr,const char* paramName,const char* paramValue);
-int setParam(NetMessagePtr ptr,const char* paramName,const char* value);
+int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* value);
 #endif
