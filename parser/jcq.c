@@ -3,14 +3,12 @@
 #include <string.h>
 #include "net_message.h"
 #include "jcq.h"
+#include "parser.h"
 #include "../util/util.h"
 int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
     if(ptr == NULL|| buf == NULL || length <0){
         return PARSER_ERROR_PARAM_ERROR;
     }
-    if(length == 0){
-        return PARSER_SUCCESS;
-	}
 	void * temp = NULL;
 	int realLength = 0;
 	if(ptr->lastParserBuf != NULL && ptr->lastParserBufLength >0)
@@ -19,12 +17,18 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 		
      	temp = (void*)allocMem(ptr->lastParserBufLength + length);
      	memcpy(temp,ptr->lastParserBuf,ptr->lastParserBufLength);
-     	memcpy(temp,buf,length);
+        if(length !=0){
+            memcpy(temp+ptr->lastParserBufLength,buf,length);    
+        }
+     	
 		realLength =length+ ptr->lastParserBufLength;
-		free(ptr->lastParserBuf);
+		freeMem((void**)&(ptr->lastParserBuf));
 		ptr->lastParserBufLength =0;
 		ptr->lastParserBuf =NULL;
 	}else{
+        if(length == 0){
+            return PARSER_SUCCESS;
+        }
 		temp = allocMem(length);
 		memcpy(temp,buf,length);
 		realLength = length;	
@@ -32,6 +36,9 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
     
     
     Param param;
+    int needMoreData = 0;
+    char* startFlag = "jcq 1.0\r\n";
+    char * protocol1 = NULL;
 	int readLength = 0,result =0,leavLength =0,error = PARSER_SUCCESS;
     while(readLength <realLength && !error){
 
@@ -39,7 +46,27 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 		switch(ptr->readState)
         {
             case NETMESSAGE_READSTATE_WAIT:
-                ptr->readState = NETMESSAGE_READSTATE_PARAM;
+                
+                // clear last error format data
+                
+                if(leavLength < strlen(startFlag)){
+                    needMoreData = 1;
+                }else{
+                    protocol1 = strnstr(temp+readLength,startFlag,leavLength);
+                    if(protocol1 == NULL){
+                        needMoreData = 1;
+                    }else{
+                        ptr->readState = NETMESSAGE_READSTATE_PARAM;
+                        readLength += ((void*)protocol1 -(temp+readLength))+strlen(startFlag);
+                        break; 
+                    }    
+                }
+                if(needMoreData){
+                    setLastParamBuffer(ptr,temp+readLength,leavLength);
+                    readLength += leavLength;
+                    error = PARSER_ERROR_DATA_NEED_MORE;
+                    break;
+                }
             case NETMESSAGE_READSTATE_PARAM:
                 param.paramName = NULL;
                 param.paramData = NULL;
@@ -76,7 +103,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 					//check
 					if(isJCQMessageData(temp+readLength,leavLength)){
 						
-                    	ptr->readState = NETMESSAGE_READSTATE_FINISH;
+                    	ptr->readState = NETMESSAGE_READSTATE_END;
 						readLength += 5;
 						leavLength-= 5;
 					}else{
@@ -124,7 +151,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
 					}
 					else if (ptr->readLength == ptr->length) {
 					
-                   		ptr->readState = NETMESSAGE_READSTATE_FINISH;
+                   		ptr->readState = NETMESSAGE_READSTATE_END;
 						break;
 					}else if(ptr->readLength > ptr->length){
 				
@@ -134,7 +161,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
                	}
 				}
                 break;
-            case NETMESSAGE_READSTATE_FINISH:
+            case NETMESSAGE_READSTATE_END:
 				//end with \r\n\r\n
 				if(isJCQMessageEnd(temp+readLength,leavLength)){
 					readLength+=4;
@@ -144,6 +171,7 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
                         readLength +=leavLength;
                         leavLength = 0;
                     }
+                    ptr->readState = NETMESSAGE_READSTATE_FINISH;
                     break;
 				}else{
                     setLastParamBuffer(ptr,temp+readLength,leavLength);
@@ -151,19 +179,55 @@ int parserJCQMessage(NetMessagePtr ptr,void * buf, int length){
                     error = PARSER_ERROR_FORMAT_ERROR;
                 }
                 break;
+            case NETMESSAGE_READSTATE_FINISH:
+            
             default:
                 ptr->readState = NETMESSAGE_READSTATE_WAIT;
+                freeMem((void**)&(ptr->data));
+                ptr->length = 0;
+                ptr->data = NULL;
+                ptr->readLength = 0;
                 break;
         }
     }
-    free(temp);
+    freeMem((void**)&temp);
     return error;
         
 }
-int buildJCQMessage(NetMessagePtr ptr,void * buf, int length){
-
+int reparserJCQMessage(NetMessagePtr ptr,char * protocolType, char* version){
+    if(ptr== NULL || protocolType == NULL || version == NULL){
+        return PARSER_ERROR_PARAM_ERROR;
+    }if(ptr->sendBuf == NULL){
+        ptr->sendBuf = allocMem(NETMESSAGE_DEFAULT_SEND_BUF_SIZE);
+    }
+    int writedLength = snprintf(ptr->sendBuf,NETMESSAGE_DEFAULT_SEND_BUF_SIZE,JCQ_FORMAT,
+        protocolType,
+        version,
+        ptr->sendCmd,
+        ptr->sendTarget,
+        ptr->sendTargetType,
+        ptr->currentUser,
+        ptr->currentPassword,
+        ptr->currentUserKey,
+        ptr->sendErrcode,
+        ptr->sendTime,
+        ptr->sendExtraParam,
+        ptr->sendLength);
+    int leavLength = NETMESSAGE_DEFAULT_SEND_BUF_SIZE  -writedLength;
+    int endLength = strlen(JCQ_FORMAT_END);
+    if(leavLength< ptr->length+endLength){   
+        void* temp = allocMem(writedLength+ptr->length+endLength);
+        memcpy(temp,ptr->sendBuf,writedLength);
+        freeMem(&(ptr->sendBuf));
+        ptr->sendBuf = temp;
+    }
+    memcpy(ptr->sendBuf+writedLength,ptr->data,ptr->length);
+    writedLength +=ptr->length;
+    memcpy(ptr->sendBuf+writedLength,JCQ_FORMAT_END,endLength);
+    writedLength +=endLength;
+    ptr->sendBufLength =  writedLength;
+    return PARSER_SUCCESS;
 }
-
 int getJCQParamNameAndData(char* ptr,ParamPtr param, int length){
     if(ptr == NULL || param == NULL){
         return PARSER_ERROR_PARAM_ERROR;
@@ -196,7 +260,7 @@ int isJCQMessageData(char * buf,int length){
     if(length<5){
         return 0;
     }
-    if(!strncmp(buf,"data:",5)){
+    if(!memcmp(buf,"data:",5)){
         return 1;
     }
     return 0;
@@ -205,7 +269,7 @@ int isJCQMessageEnd(char* buf,int length){
     if(length<4){
         return 0;
     }
-    if(!strncmp(buf,"\r\n\r\n",4)){
+    if(!memcmp(buf,"\r\n\r\n",4)){
         return 1;
     }
     return 0;   
@@ -219,21 +283,42 @@ int setLastParamBuffer(NetMessagePtr ptr,void * buf,int length){
     ptr->lastParserBufLength = length;
 	return PARSER_SUCCESS;
 }
-int isJCQMessage(NetMessagePtr ptr,void* buf,length){
+int isJCQMessage(NetMessagePtr ptr,void* buf,int length){
     if(ptr == NULL || buf == NULL || length<0){
         return 0;
     }
-    if(ptr->lastParserBuf!=NULL&& ptr->lastParserBufLength>0){
-        // has data in buffer
-        if(ptr->lastParserBufLength > 3){
-
-        }
-        if(!strncmp(ptr->lastParserBuf,"jcq",3)){
-            ptr->protocolType = allocString("jcq");
-            //
-            return 1;
-        }
+    char * temp = NULL;
+    int realLength = 0;
+    if(ptr->lastParserBuf != NULL && ptr->lastParserBufLength >0)
+    {
+        
+        
+        temp = (char*)allocMem(ptr->lastParserBufLength + length);
+        memcpy(temp,ptr->lastParserBuf,ptr->lastParserBufLength);
+        memcpy(temp,buf,length);
+        realLength =length+ ptr->lastParserBufLength;
     }else{
-
+        if(length == 0){
+            return 0;
+        }
+        temp = (char*)allocMem(length);
+        memcpy(temp,buf,length);
+        realLength = length;    
     }
+    char* proFlag = "jcq 1.0\r\n";
+    int result = 0;
+    if(realLength<strlen(proFlag)){
+        result =0;
+    }else{
+        char* protocol1 = strnstr(temp,proFlag,realLength);
+        if(protocol1 == NULL){
+            result = 0;
+        }else{  
+            ptr->protocolType = allocString("jcq");
+            ptr->version = allocString("1.0");   
+            result =1;
+        }
+    }
+    free(temp);
+    return result;
 }

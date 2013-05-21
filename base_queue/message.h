@@ -10,7 +10,7 @@ typedef enum  MessageState{
 }MessageState;
 typedef struct Message
 {
-    int messageid;//消息id
+    int64 messageid;//消息id
     MessageState state;//消息状态
     void* data;//消息体
     int64 timestamp;//外部时间
@@ -28,7 +28,7 @@ void * getMessageData(MessagePtr );
 MessageState getMessageState(MessagePtr);
 int MessageLess(MessagePtr , MessagePtr);
 void MessageRecord(MessagePtr, int);
-int isMessage(MessagePtr,int* messageid);
+int isMessage(MessagePtr,int64* messageid);
 void setMessageDelay(MessagePtr ptr,int delay);
 int isMessageWaitFinished(MessagePtr ptr,int64 timestamp);
 #endif

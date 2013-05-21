@@ -1,6 +1,7 @@
 #ifndef AQ_CHANNEL_H
 #define AQ_CHANNEL_H
 #include "../transfar/connect.h"
+typedef struct Connect * ConnectPtr;
 typedef struct Channel
 {
     ConnectPtr connect;//对应的连接

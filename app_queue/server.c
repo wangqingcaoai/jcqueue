@@ -26,11 +26,11 @@ int initAppServer(AppServerPtr ptr){
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
-    restoreUsers(ptr->usersList);
-    restoreBaseServer(ptr->baseServer);
-    restoreSubscribes(ptr->subscribeServer);
-    restorePushs(ptr->pushServer);
-    restoreTransfarServer(ptr->transfarServer);
+    // restoreUsers(ptr->usersList);
+    // restoreBaseServer(ptr->baseServer);
+    // restoreSubscribes(ptr->subscribeServer);
+    // restorePushs(ptr->pushServer);
+    // restoreTransfarServer(ptr->transfarServer);
     return APP_SERVER_SUCCESS;
 }
 int storeAppServer(AppServerPtr ptr){ 
@@ -38,11 +38,11 @@ int storeAppServer(AppServerPtr ptr){
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
-    storeUsers(ptr->usersList);
-    storeBaseServer(ptr->baseServer);
-    storeSubscribes(ptr->subscribeServer);
-    storePushs(ptr->pushServer);
-    storeTransfarServer(ptr->transfarServer);
+    // storeUsers(ptr->usersList);
+    // storeBaseServer(ptr->baseServer);
+    // storeSubscribes(ptr->subscribeServer);
+    // storePushs(ptr->pushServer);
+    // storeTransfarServer(ptr->transfarServer);
     return APP_SERVER_SUCCESS;
 }
 int freeAppServer(AppServerPtr *pptr){
@@ -58,8 +58,8 @@ int freeAppServer(AppServerPtr *pptr){
     freeSubscribeServer(&(ptr->subscribeServer));
     freePushServer(&(ptr->pushServer));
     freeTransfarServer(&(ptr->transfarServer));
-    free(ptr);
-    (*pptr) = ptr = NULL;
+    freeMem((void**)&ptr);
+    (*pptr) = ptr ;
     return APP_SERVER_SUCCESS;
 }
 int processAppServer(AppServerPtr ptr){
@@ -67,11 +67,40 @@ int processAppServer(AppServerPtr ptr){
     
 }
 int processRequest(ConnectPtr ptr,int ev){
-	// int result = getRequestData(ptr);
-	// checkUser(ptr->netMessage);
-	// aq_router(ptr->netMessage);
-	// setResponseData(ptr->netMessage);
-	// setSecretInfo(ptr->netMessage);
+	int result = getRequestData(ptr);
+    switch(result){
+        case CONNECT_STATE_READ_MESSAGE_READY:
+            break;
+        case CONNECT_STATE_READ_WAIT_DATA:
+            return APP_SERVER_SUCCESS;
+        case CONNECT_STATE_READ_FORMAT_ERROR:
+        //setNetMessageError()
+            return;
+    }
+    //check user
+    if(result == CONNECT_STATE_READ_MESSAGE_READY){
+        if(ptr->netMessage->user != NULL){
+            if(ptr->user == NULL){
+                ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
+            }
+            if(ptr->user == NULL){
+                //setNetMessageError user not exists
+                return;
+            }else{
+                int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
+                if(checkState == USER_SUCCESS){
+                    //success
+                    aq_router(ptr->netMessage);
+                }else{
+                    //setNetMessageError  usercheck not pass
+                }
+            }    
+        }
+    }
+
+	//setResponseData(ptr->netMessage);
+	//setSecureInfo(ptr->netMessage);
+    return APP_SERVER_SUCCESS;
 }
 int processResponse(ConnectPtr ptr,int ev){
 	//sendResponseData(ptr);

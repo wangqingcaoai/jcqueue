@@ -14,6 +14,8 @@
 #define BQ_ADD_TOPIC "add-topic"
 #define BQ_DEL_TOPIC "del-topic"
 #define BQ_CLEAN_TOPIC "clean-topic"
+
+#define BQ_CLIENT_OK "ok"
 int bq_router(BaseServerPtr serverPtr, NetMessagePtr ptr);
 static int bq_empty_baseServer(BaseServerPtr serverPtr,NetMessagePtr ptr);
 static int bq_unknow_cmd(BaseServerPtr serverPtr,NetMessagePtr ptr);

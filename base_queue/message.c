@@ -4,7 +4,7 @@
 #include "message.h"
 
 MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* data,int length,int delay){
-    static int messageid;
+    static int64 messageid;
     
     MessagePtr ptr = (MessagePtr)allocMem(sizeof(Message));
     if(ptr == NULL){
@@ -24,9 +24,8 @@ MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* d
         if(ptr->data != NULL){
             memcpy(ptr->data,data,length);
         }else{
-            free(ptr);
+            freeMem((void**)&ptr);
             messageid --;
-            ptr = NULL;
         }
         
     }else{
@@ -55,8 +54,8 @@ int freeMessage(MessagePtr *p){
         free(ptr->data);
         ptr->data = NULL;
     }
-    free(ptr);
-    (*p)=ptr=NULL;
+    freeMem((void**)&ptr);
+    (*p)=NULL;
     return 1; 
 }
 
@@ -91,14 +90,14 @@ int isMessageWaitFinished(MessagePtr ptr,int64 timestamp){
    return 0;
 }
 //判断消息id 是否等于传入的id
-int isMessage(MessagePtr ptr,int* messageid){  
+int isMessage(MessagePtr ptr,int64* messageid){  
     if(messageid == NULL){
         return 0;
     }
     if(ptr == NULL){
         return 0;
     }
-    int id = (int)(*messageid);  
+    int64 id = (int64)(*messageid);  
     if(ptr->messageid == id){
         return 1;
     }

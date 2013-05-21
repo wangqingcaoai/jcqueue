@@ -1,4 +1,4 @@
-
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
@@ -40,6 +40,9 @@ char * allocString(const char* s){
         return NULL;
     }
     char* ptr = allocMem(strlen(s)+1);
+    if(ptr == NULL){
+        return NULL;
+    }
     strcpy(ptr,s);
     return ptr;
 }
@@ -99,4 +102,59 @@ void* allocMem(int size){
         return NULL;
     }
     return ptr;
+}
+int freeMem(void**s){
+    if(s == NULL){
+        return -1;
+    }else{
+        void* ptr = (*s);
+        if(ptr == NULL ){
+            return -1;
+        }else{
+            free(ptr);
+            ptr = NULL;
+            *s = NULL;
+            return 1;
+        }
+    }
+}
+#ifndef __HAVE_ARCH_STRNSTR   
+/** 
+ * strnstr - Find the first substring in a length-limited string 
+ * @s1: The string to be searched 
+ * @s2: The string to search for 
+ * @len: the maximum number of characters to search 
+ */  
+char *strnstr(const char *s1, const char *s2, int len)  
+{  
+    size_t l2;  
+  
+    l2 = strlen(s2);  
+    if (!l2)  
+        return (char *)s1;  
+    while (len >= l2) {  
+        len--;  
+        if (!memcmp(s1, s2, l2))  
+            return (char *)s1;  
+        s1++;  
+    }  
+    return NULL;  
+}  
+//EXPORT_SYMBOL(strnstr);  
+#endif   
+
+
+char* int64ToString(int64 i,char *buf,int length){
+    if(buf == NULL||length<=0){
+        return NULL;
+    }
+    snprintf(buf,length,"%" PRId64 "",i);
+    return buf;
+}
+char* intToString(int i,char *buf,int length){
+    if(buf == NULL||length<=0){
+        return NULL;
+    }
+    snprintf(buf,length,"%d",i);
+    return buf;
 }

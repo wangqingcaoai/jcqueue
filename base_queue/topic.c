@@ -9,7 +9,7 @@ TopicPtr buildTopic(const char* topicName){
     if(isEmptyString(topicName)){
         return NULL;
     }
-    static int topicid;
+    static int64 topicid;
     
     //创建topic内存对象
     TopicPtr ptr= (TopicPtr)allocMem(sizeof(Topic));
@@ -49,7 +49,7 @@ MessagePtr getReadyMessage(TopicPtr topic){
 
 }
 
-int sleepMessage(TopicPtr topic,int messageid){
+int sleepMessage(TopicPtr topic,int64 messageid){
     //休眠的消息在使用队列中
     int i= heapFindIndex(topic->using_pool,(Find)isMessage,&messageid);
     if(i==-1){
@@ -64,7 +64,7 @@ int sleepMessage(TopicPtr topic,int messageid){
     }
     return 1;
 }
-int reuseMessage(TopicPtr topic,int messageid,int delay){
+int reuseMessage(TopicPtr topic,int64 messageid,int delay){
     int i= heapFindIndex(topic->using_pool,(Find)isMessage,&messageid);
     if(i==-1){
         return -1;
@@ -78,7 +78,7 @@ int reuseMessage(TopicPtr topic,int messageid,int delay){
     }
     return 1;
 }
-int delMessage(TopicPtr topic, int messageid){
+int delMessage(TopicPtr topic, int64 messageid){
     int i= heapFindIndex(topic->using_pool,(Find)isMessage,&messageid);
     if(i!=-1){
         MessagePtr ptr = heapremove(topic->using_pool,i);
@@ -92,7 +92,7 @@ int delMessage(TopicPtr topic, int messageid){
     return -1;
 }
 //唤醒某个消息。可指定唤醒时间
-int wakeUpMessage(TopicPtr topic,int messageid,int delay){
+int wakeUpMessage(TopicPtr topic,int64 messageid,int delay){
     int i= heapFindIndex(topic->sleep_queue,(Find)isMessage,&messageid);
     if(i==-1){
         return -1;
@@ -137,9 +137,8 @@ int freeTopic(TopicPtr *topic){
     freeHeap(&(tptr->sleep_queue),(Free)freeMessage);
 
     freeString(&(tptr->topicName));
-    free(tptr);
+    freeMem((void**)&tptr);
     (*topic)=NULL;
-    tptr = NULL;
 }
 char* getTopicName(TopicPtr ptr){
     return ptr->topicName;
@@ -148,5 +147,8 @@ int backupTopic(TopicPtr ptr){
 
 }//还未撰写
 int isSameTopicName(TopicPtr ptr,const char* topicName){
-
+    if(ptr == NULL || topicName == NULL){
+        return 0;
+    }
+    return isSameString(ptr->topicName,topicName);
 }

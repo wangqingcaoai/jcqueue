@@ -23,7 +23,8 @@ int freePushServer(PushServerPtr * pptr){
 		return PUSH_PARAM_ERROR;
 	}
 	freeList(&(ptr->pushers),(Free)freePusher);
-	free(ptr);
+	freeMem((void**)&ptr);
+	(*pptr)==NULL;
 	return PUSH_SUCCESS;
 }
 PusherPtr buildPusher(SubscribePtr subscribe){

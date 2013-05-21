@@ -25,7 +25,7 @@ int freeBaseServer(BaseServerPtr * p){
     }
     ListPtr lptr =ptr->topicList;
     freeList(&lptr,(Free)freeTopic);
-    free(ptr);
+    freeMem((void**)&ptr);
     (*p) = NULL;
     
 }

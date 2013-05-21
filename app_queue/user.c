@@ -4,8 +4,8 @@
 #include "../util/util.h"
 #include "../data/list.h"
 
-UserPtr buildUser(const char* userName,const char* userPassWord){
-    if(isEmptyString(userName)|| isEmptyString(userPassWord)){
+UserPtr buildUser(const char* userName,const char* userPassword){
+    if(isEmptyString(userName)|| isEmptyString(userPassword)){
         return NULL;
     }
     static int user_id;
@@ -17,7 +17,7 @@ UserPtr buildUser(const char* userName,const char* userPassWord){
     ptr->userId = user_id;
     ptr->userName = allocString(userName);
     ptr->userSecretKey = NULL;
-    ptr->userPassWord = allocString(userPassWord);
+    ptr->userPassword = allocString(userPassword);
     ptr->privilege = USER_PRIVILEGE_DEFAULT;
     ptr->group = USER_GROUP_DEFAULT;
     ptr->keyUpdateTime = USER_DEFAULT_UPDATE_TIME;
@@ -25,14 +25,14 @@ UserPtr buildUser(const char* userName,const char* userPassWord){
     return ptr;
 }
 
-int setUserPassWord(UserPtr ptr, const char* userPassWord){
+int setUserPassWord(UserPtr ptr, const char* userPassword){
     if(ptr == NULL){
         return USER_ERROR_PARAM_ERROR;
     }else{
-        if(ptr->userPassWord != NULL){
-            freeString(&(ptr->userPassWord));
+        if(ptr->userPassword != NULL){
+            freeString(&(ptr->userPassword));
         }
-        ptr->userPassWord = allocString(userPassWord);
+        ptr->userPassword = allocString(userPassword);
         return USER_SUCCESS;
     }
 
@@ -73,15 +73,16 @@ int freeUser(UserPtr *pptr){
         return USER_ERROR_PARAM_ERROR;
     }else{
         freeString(&(ptr->userName));
-        freeString(&(ptr->userPassWord));
+        freeString(&(ptr->userPassword));
         freeString(&(ptr->userSecretKey));
         freeList(&(ptr->channels),(Free)freeChannel);
-        free(ptr);
+        freeMem((void**)&ptr);
+        *pptr = NULL;
         return USER_SUCCESS;      
     }
 }
 
-int addUser(ListPtr userList,const char* userName,const char* userPassWord ,int privilege , int group ){
+int addUser(ListPtr userList,const char* userName,const char* userPassword ,int privilege , int group ){
     if(userList == NULL){
         return USER_ERROR_PARAM_ERROR;
     }
@@ -90,7 +91,7 @@ int addUser(ListPtr userList,const char* userName,const char* userPassWord ,int 
     }
     UserPtr user = findUser(userList,userName);
     if(user == NULL){
-        UserPtr user = buildUser(userName,userPassWord);
+        UserPtr user = buildUser(userName,userPassword);
         setUserPrivilege(user,privilege);
         setUserGroup(user,group);
         int code = insertToList(userList,user);
@@ -105,7 +106,7 @@ int addUser(ListPtr userList,const char* userName,const char* userPassWord ,int 
     //password can be empty
     
 }
-int checkUser(UserPtr userPtr,const char* userSecretKey,const char* userPassWord){
+int checkUser(UserPtr userPtr,const char* userSecretKey,const char* userPassword){
     if(userPtr == NULL){
         return USER_ERROR_PARAM_ERROR;
     }
@@ -125,16 +126,16 @@ int checkUser(UserPtr userPtr,const char* userSecretKey,const char* userPassWord
         }
     }
     if(needCheckPasswd){
-        if(userPassWord == NULL){
-            if(userPtr->userPassWord == NULL){
+        if(userPassword == NULL){
+            if(userPtr->userPassword == NULL){
                 result = USER_SUCCESS;
             }else{
                 result = USER_ERROR_PASSWD_FAILED;
             }
         }else{
-            if(userPtr->userPassWord == NULL){
+            if(userPtr->userPassword == NULL){
                 result = USER_ERROR_PASSWD_FAILED;
-            }else if(!strcmp(userPtr->userPassWord,userPassWord)){
+            }else if(!strcmp(userPtr->userPassword,userPassword)){
                 result = USER_SUCCESS;
             }else{
                 result = USER_ERROR_PASSWD_FAILED;

@@ -1,6 +1,6 @@
 #ifndef BQ_ERRORS_H
 #define BQ_ERRORS_H 
-#define BQ_ERRORS_MARK 0x11
+#define BQ_ERRORS_MARK 1
 
 #define BQ_EMPTY_BASESERVER 1
 #define BQ_EMPTY_BASESERVER_MSG "base server is empty ,please check it!"
@@ -26,21 +26,42 @@
 
 #define BQ_EMPTY_MESSAGE_ID_MSG "message id not give "
 
-#define BQ_SUCCESS_MARK 0x12
+#define BQ_EMPTY_TOPIC_NAME 9 
+
+#define BQ_EMPTY_TOPIC_NAME_MSG "topicname not give "
+
+#define BQ_EXISTS_TOPIC_NAME 9 
+
+#define BQ_EXISTS_TOPIC_NAME_MSG "topicname %s is exists! "
+
+#define BQ_UNKNOW_ERROR 10
+#define BQ_UNKNOW_ERROR_MSG "unknow error happened! please contant us!"
+
+#define BQ_SUCCESS_MARK 2
 #define BQ_ADD_SUCCESS 1
 #define BQ_ADD_SUCCESS_MSG "add success"
 
-#define BQ_SLEEP_SUCCESS 2
-#define BQ_SLEEP_SUCCESS_MSG "sleep message %d success "
+#define BQ_GET_SUCCESS 2
+#define BQ_GET_SUCCESS_MSG ""
 
-#define BQ_REUSE_SUCCESS 3
-#define BQ_REUSE_SUCCESS_MSG "reuse message %d success "
+#define BQ_SLEEP_SUCCESS 3
+#define BQ_SLEEP_SUCCESS_MSG "sleep message %" PRId64 " success "
 
-#define BQ_DEL_SUCCESS 4
-#define BQ_DEL_SUCCESS_MSG "del message %d success "
+#define BQ_REUSE_SUCCESS 4
+#define BQ_REUSE_SUCCESS_MSG "reuse message %" PRId64 " success "
+
+#define BQ_DEL_SUCCESS 5
+#define BQ_DEL_SUCCESS_MSG "del message %" PRId64 " success "
 
 
-#define BQ_WAKEUP_SUCCESS 5
-#define BQ_WAKEUP_SUCCESS_MSG "wakeup message %d success "
+#define BQ_WAKEUP_SUCCESS 6
+#define BQ_WAKEUP_SUCCESS_MSG "wakeup message %" PRId64 " success "
+
+#define BQ_ADD_TOPIC_SUCCESS 7
+#define BQ_ADD_TOPIC_SUCCESS_MSG "add topic %s success "
+
+
+#define BQ_DEL_TOPIC_SUCCESS 8
+#define BQ_DEL_TOPIC_SUCCESS_MSG "del topic %s success, remove count %d "
 
 #endif

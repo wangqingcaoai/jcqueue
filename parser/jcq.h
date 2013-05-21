@@ -1,11 +1,7 @@
 #ifndef PARSER_JCQ_H
 #define PARSER_JCQ_H
 #include "net_message.h"
-#define PARSER_SUCCESS 0
-#define PARSER_ERROR_PARAM_ERROR 1
-#define PARSER_ERROR_DATA_OUT_LINE 2
-#define PARSER_ERROR_DATA_NEED_MORE 3
-#define PARSER_ERROR_FORMAT_ERROR 4
+
 typedef struct Param
 {
     char* paramName;
@@ -13,7 +9,12 @@ typedef struct Param
     int readLength;
 }Param,*ParamPtr;
 int parserJCQMessage(NetMessagePtr ptr,void * buf, int length);
-int buildJCQMessage(NetMessagePtr ptr,void * buf, int length);
-int isJCQMessage(NetMessagePtr ptr,void* buf,length);
+int reparserJCQMessage(NetMessagePtr ptr,char * protocolType, char* version);
+int isJCQMessage(NetMessagePtr ptr,void* buf,int length);
+int getJCQParamNameAndData(char* ptr,ParamPtr param, int length);
+int isJCQMessageData(char * buf,int length);
+int isJCQMessageEnd(char* buf,int length);
+int setLastParamBuffer(NetMessagePtr ptr,void * buf,int length);
+int isJCQMessage(NetMessagePtr ptr,void* buf,int length);
 #endif
 

@@ -5,12 +5,15 @@
 #include "push.h"
 #include "../transfar/sockets.h"
 #include "../transfar/server.h"
+#include "../transfar/connect.h"
 #define APP_SERVER_SUCCESS 0
 #define APP_SERVER_ERROR_PARAM_ERROR 1;
 
 typedef struct SubscribeServer * SubscribeServerPtr ;
 typedef struct PushServer * PushServerPtr;
 typedef struct TransfarServer * TransfarServerPtr;
+typedef struct Connect * ConnectPtr ;
+
 typedef struct AppServer
 {
 

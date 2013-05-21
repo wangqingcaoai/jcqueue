@@ -2,9 +2,11 @@
 #define SERVER_H
 #include "sockets.h"
 #include "../data/heap.h"
+#include "../app_queue/server.h"
 #define TRANSFAR_SERVER_POSITION_NAME "socket_server"
 #define TRANSFAR_SERVER_SUCCESS 0
 #define TRANSFAR_SERVER_ERROR_PARAM_ERROR 1
+typedef struct AppServer * AppServerPtr;
 typedef struct TransfarServer {
     int id;
     char *port;
@@ -12,6 +14,7 @@ typedef struct TransfarServer {
     int eventQueue;
     Socket sock;
     HeapPtr   conns;//这个server上的连接
+    AppServerPtr appServer;
 }TransfarServer,*TransfarServerPtr;
 //创建服务端套接字
 int makeServerSocket(const char* host,const char*port);

@@ -11,5 +11,8 @@ char * allocString(const char* s);
 int freeString(char **s);
 int isEmptyString(const char * s);
 void* allocMem(int size);
-
+char *strnstr(const char *s1, const char *s2, int len);
+int freeMem(void**pptr);
+char* int64ToString(int64 i,char *buf,int length);
+char* intToString(int i,char *buf,int length);
 #endif

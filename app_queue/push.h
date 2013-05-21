@@ -8,6 +8,7 @@
  #include "../transfar/connect.h"
  #include "../data/list.h"
  #include "subscribe.h"
+ typedef struct Connect * ConnectPtr;
  typedef struct Subscribe * SubscribePtr;
  typedef struct PushServer
  {

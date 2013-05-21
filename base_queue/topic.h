@@ -6,7 +6,7 @@
 //指一类型消息的集合，
 typedef struct Topic
 {
-    int topicId;
+    int64 topicId;
     char * topicName;
     Heap* ready_queue;//就绪队列 有优先级
     Heap* delay_queue;//延迟队列 有优先级
@@ -16,10 +16,10 @@ typedef struct Topic
 TopicPtr buildTopic(const char* topicName);//新建topic
 int addMessage(TopicPtr topic,MessagePtr message,int delay);//添加消息
 MessagePtr getReadyMessage(TopicPtr topic);//获取消息
-int sleepMessage(TopicPtr topic,int messageid);
-int reuseMessage(TopicPtr topic,int messageid,int delay);
-int delMessage(TopicPtr topic, int messageid);
-int wakeUpMessage(TopicPtr topic,int messageid,int delay);//唤醒某个消息。可指定唤醒时间
+int sleepMessage(TopicPtr topic,int64 messageid);
+int reuseMessage(TopicPtr topic,int64 messageid,int delay);
+int delMessage(TopicPtr topic, int64 messageid);
+int wakeUpMessage(TopicPtr topic,int64 messageid,int delay);//唤醒某个消息。可指定唤醒时间
 int tickTopic(TopicPtr topic,int64 timestamp);//对延迟队列和休眠队列进行检查进行处理
 int freeTopic(TopicPtr *topic);
 char* getTopicName(TopicPtr ptr);

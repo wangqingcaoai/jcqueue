@@ -82,7 +82,7 @@ int heapinsert(Heap *h, void *x)
         }
 
         memcpy(ndata, h->data, sizeof(void*)*h->len);
-        free(h->data);
+        freeMem((void**)&(h->data));
         h->data = ndata;
         h->cap = ncap;
     }
@@ -136,9 +136,8 @@ void freeHeap(HeapPtr * h,Free freeMem){
                 (*freeMem)(&ptr->data[i]);
             }
         }
-        free(ptr->data);
-        free(ptr);
-        ptr = NULL;
+        freeMem((void**)&(ptr->data));
+        freeMem((void**)&ptr);
         (*h) =NULL;
     }
 

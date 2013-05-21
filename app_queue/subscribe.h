@@ -9,6 +9,7 @@
 #include "../base_queue/message.h"
 #include "../base_queue/topic.h"
 #include "push.h"
+#include "../parser/net_message.h"
 #define SUBSCRIBE_SUCCESS 0
 #define SUBSCRIBE_ERROR_PARAM_ERROR 1
 #define SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND 2
@@ -21,6 +22,9 @@
 #define SUBSCRIBE_ERROR_SUBSCRIBE_TOPIC_NOT_FOUND 6
 typedef struct Pusher* PusherPtr;
 typedef struct AppServer * AppServerPtr;
+typedef struct NetMessage * NetMessagePtr;
+typedef struct User * UserPtr;
+typedef struct Channel * ChannelPtr;
 typedef struct Subscribe
 {
     int subscribeId;

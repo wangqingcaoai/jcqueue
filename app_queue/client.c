@@ -56,8 +56,8 @@ int freeAppClientServer(AppServerPtr *pptr){
     //freeSubscribeServer(&(ptr->subscribeServer));
     //freePushServer(&(ptr->pushServer));
     freeTransfarServer(&(ptr->transfarServer));
-    free(ptr);
-    (*pptr) = ptr = NULL;
+    freeMem((void**)(void**)&ptr);
+    (*pptr) = ptr ;
     return APP_SERVER_SUCCESS;
 }
 int processAppClientServer(AppServerPtr ptr){

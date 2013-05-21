@@ -36,8 +36,7 @@ ListPtr buildList(){
     
     list->header = (ListNodePtr)allocMem(sizeof(ListNode));
     if(list->header == NULL){
-        free(list);
-        list =NULL;
+        freeMem((void**)&list);
         return NULL;
     }
     list_id ++;
@@ -264,7 +263,7 @@ int freeList(ListPtr *l,Free freeMem){
         ptr = tmp;
         tmp = NULL;
     }
-    free(l);
+    freeMem((void**)&list);
     (*l)=NULL;
     list =NULL;
     return freeNum;
@@ -369,7 +368,7 @@ int freeListNode(ListNodePtr *node,Free freeMem){
             (*(freeMem))(&ptr->data);
         }
     }
-    free(ptr);
+    freeMem((void**)&ptr);
     ptr = NULL;
     (*node) ==NULL;
 }

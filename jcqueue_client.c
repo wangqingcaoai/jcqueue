@@ -45,25 +45,34 @@ int main(int argc, char  *argv[])
     //     tick();
     // }
 
-char *ptr= "cmd:\r\ntarget:test\r\ntargetType:test\r\nuser:test\r\npassword:test\r\nkey:test\r\ndelay:0\r\npriority:1\r\ntimestamp:\r\nextraParam:param1[value]param2[value2]参数3[]\r\nlength:18\r\ndata:eerttyytwwerttewww\r\n\r\n ";
-    
+char *ptr= "cmd:\r\ntarget:test\r\njcq 1.0\r\ntargetType:test\r\nuser:test\r\npassword:test\r\nkey:test\r\ndelay:0\r\npriority:1\r\ntimestamp:\r\nextraParam:param1[value]param2[value2]参数3[]\r\nlength:18\r\ndata:eerttyytwwerttewww\r\n\r\ncmd:\r\ntarget:test\r\njcq 1.0\r\ntargetType:test2\r\nuser:test\r\npassword:test\r\nkey:test\r\ndelay:0\r\npriority:1\r\ntimestamp:\r\nextraParam:param1[value]param2[value2]参数3[]\r\nlength:18\r\ndata:eerttyytwwerttewww\r\n\r\n ";
+
     char *test = malloc(strlen(ptr)+1);
+
     strcpy(test,ptr);
     NetMessagePtr nm = buildNetMessage();
     //displayNetMessage(&nm);
-    //parserJCQMessage(&nm,test,strlen(ptr)+1);
-    //displayNetMessage(&nm);
+    int result = isJCQMessage(nm,test,strlen(ptr));
+    printf("%d\n", result);
+
+    parserJCQMessage(nm,test,strlen(ptr)+1);
+    displayNetMessage(nm);
+    printf("%s\n","next message" );
+    parserJCQMessage(nm,test,strlen(ptr)+1);
+    displayNetMessage(nm);
+    parserJCQMessage(nm,test,0);
+    displayNetMessage(nm);
     //getExtraParam(&nm,"参数3");
-    setSendExtraParam(nm,"test","value");
-    displayNetMessage(nm);
-    setSendExtraParam(nm,"param1","test");
-    displayNetMessage(nm);
-    setSendExtraParam(nm,"param1","test2");
-    displayNetMessage(nm);
-    setSendExtraParam(nm,"test","new");
-    displayNetMessage(nm);
-    setSendExtraParam(nm,"test","long teste");
-    displayNetMessage(nm);
+    // setSendExtraParam(nm,"test","value");
+    // displayNetMessage(nm);
+    // setSendExtraParam(nm,"param1","test");
+    // displayNetMessage(nm);
+    // setSendExtraParam(nm,"param1","test2");
+    // displayNetMessage(nm);
+    // setSendExtraParam(nm,"test","new");
+    // displayNetMessage(nm);
+    // setSendExtraParam(nm,"test","long teste");
+    // displayNetMessage(nm);
 
     return 0;
 }

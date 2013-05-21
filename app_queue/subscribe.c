@@ -34,8 +34,7 @@ int freeSubscribeServer(SubscribeServerPtr *pptr){
     SubscribeServerPtr ptr = (*pptr);
     freeList(&(ptr->subscribeTopics),NULL);
     freeList(&(ptr->subscribes),(Free)freeSubscribe);
-    free(ptr);
-    ptr =NULL;
+    freeMem((void**)&ptr);
     (*pptr)=NULL;
     return SUBSCRIBE_SUCCESS;
 }
@@ -92,8 +91,7 @@ int freeSubscribe(SubscribePtr *pptr){
 
     freeList(&(ptr->subscribedTopicLists),NULL);//free
     freePusher(&(ptr->pusher));
-    free(ptr);
-    ptr = NULL;
+    freeMem((void**)&ptr);
     (*pptr) = NULL;
     return SUBSCRIBE_SUCCESS;
 }
@@ -136,8 +134,7 @@ int freeSubscribeTopic(SubscribeTopicPtr *pptr){
     }
     freeList(&(ptr->subscribesList),NULL);
     freeString(&(ptr->topicName));
-    free(ptr);
-    ptr = NULL;
+    freeMem((void**)&ptr);
     (*pptr) = NULL;
     return SUBSCRIBE_SUCCESS;
 }
