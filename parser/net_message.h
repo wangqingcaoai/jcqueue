@@ -9,14 +9,27 @@
 #define NETMESSAGE_READSTATE_FINISH 5
 
 #define NETMESSAGE_WRITESTATE_WAIT 1
-#define NETMESSAGE_WRITESTATE_FINISH 2
+#define NETMESSAGE_WRITESTATE_WRITING 2
+#define NETMESSAGE_WRITESTATE_FINISH 3
 #define NETMESSAGE_SUCCESS 0
 #define NETMESSAGE_ERROR_PARAM_ERROR 1
 
 #define NETMESSAGE_ERROR_UNKNOW_PARAM 2
 #define NETMESSAGE_DEFAULT_ERROR_BUF_SIZE 512
+
 #define NETMESSAGE_DEFAULT_SEND_BUF_SIZE 512
+#define NETMESSAGE_DEFAULT_PARAM_BUF_SIZE 30
+#define NETMESSAGE_DEFAULT_PARAM_VALUE_BUF_SIZE 120
+#define NETMESSAGE_TYPE_JCQ "jcq"
+#define NETMESSAGE_TYPE_CMD "cmd"
+#define NETMESSAGE_TYPE_HTTP "http"
 typedef struct User * UserPtr;
+typedef struct Param
+{
+    char* paramName;
+    char* paramData;
+    int readLength;
+}Param,*ParamPtr;
 /**
  * 
  */
@@ -112,6 +125,22 @@ typedef struct NetMessage
  *
  *
  * */
+ /**
+  * cmd format
+  * cmd target targetType param1[value1]param2[] data:dfdfdf\n
+  */
+#define CMD_READ_FORMAT "%s %s %s %s %s \n"
+#define CMD_WRITE_FORMAT  "cmd:%s\r\n"\
+    "target:%s\r\n"\
+    "targetType:%s\r\n"\
+    "user:%s\r\n"\
+    "password:%s\r\n"\
+    "key:%s\r\n"\
+    "errcode:%d\r\n"\
+    "timestamp:%" PRId64 "\r\n"\
+    "extraParam:%s\r\n"\
+    "length:%d\r\n"\
+    "data:"
 int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,char* sendTarget,char* sendTargetType,void* sendData,int datalength);
 int setNetMessageSendUser(NetMessagePtr ptr,UserPtr uptr);
 NetMessagePtr buildNetMessage();
@@ -126,4 +155,5 @@ int displayNetMessage(NetMessagePtr ptr);
 static char* findParamValueByString(const char* string,const char* paramName );
 static int setParamByValue(char** pptr,const char* paramName,const char* paramValue);
 int freeNetMessage(NetMessagePtr* pptr);
+int isExtraParamFormatRight(char*buf,int length);
 #endif

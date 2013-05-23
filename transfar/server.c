@@ -14,8 +14,13 @@
 #include "sd-daemon.h"
 #include "server.h"
 #include "connect.h"
+#include "console.h"
 
-TransfarServerPtr buildTransfarServer(const char* addr,const char* port){
+TransfarServerPtr buildTransfarServer(AppServerPtr app,const char* addr,const char* port){
+    
+    if(app == NULL){
+        return NULL;
+    }
     if(isEmptyString(addr) || isEmptyString(port) ){
         return NULL;
     }
@@ -27,11 +32,19 @@ TransfarServerPtr buildTransfarServer(const char* addr,const char* port){
     }
     id++;
     ptr->id = id;
+    ptr->appServer = app;
     ptr->addr = allocString(addr);
     ptr->port = allocString(port);
-    ptr->eventQueue = 0;//TODO need change
+    ptr->eventQueue = sockinit();//TODO need change
+    if (ptr->eventQueue == -1) {
+        addLog(LOG_ERROR,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sockinit");
+        exit(1);
+    }
     ptr->sock.fd = makeServerSocket(addr,port);
+    ptr->sock.x = ptr;
+    ptr->sock.f = (Handle)srvaccept;
     ptr->conns = buildHeap(NULL,(Less)compareConnect);
+    ptr->console = buildConsole(ptr);
     return ptr;
 }
 
@@ -49,6 +62,7 @@ int freeTransfarServer(TransfarServerPtr *pptr){
         close(ptr->sock.fd);
     }
     freeHeap(&(ptr->conns),(Free)freeConnect);
+    freeConsole(&(ptr->console));
     free(ptr);
     ptr = NULL;
     (*pptr) = NULL;
@@ -190,69 +204,83 @@ makeServerSocket(const char *host,const char *port)
 
 
 void
-srvserve(TransfarServer *s)
+srvStart(TransfarServerPtr s)
 {
         int r;
-        Socket *sock;
-        int64 period = 10*1000000; // 10ms
-
-        if (sockinit() == -1) {
-                addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sockinit");
-                exit(1);
-        }
-
-        s->sock.x = s;
-        s->sock.f = (Handle)srvaccept;
-        // s->conns.less = (Less)connless;
-        // s->conns.rec = (Record)connrec;
-
+   
         r = listen(s->sock.fd, 1024);
         if (r == -1) {
                 addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"listen");
                 return;
         }
-
-        r = sockwant(&s->sock, 'r');
+        if(s->eventQueue <0){
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"eventQueue id is not right");
+                return;
+        }
+        r = sockwant(s->eventQueue,&s->sock, 'r');
         if (r == -1) {
                 addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sockwant");
                 printf("%d %s\n",errno ,strerror(errno));
                 exit(2);
         }
-
-
-        int64 t = nanoseconds();
-        for (;;) {
-            //循环处理
-                int rw = socknext(&sock, period);
-                if (rw == -1) {
-                        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"socknext");
-                        exit(1);
-                }
-
-                int64 t1 = nanoseconds();
-                if (t1-t > period) {
-                        srvtick(s);
-                        t = t1;
-                }
-
-                if (rw) {
-                        sock->f(sock->x, rw);
-                }
-        }
+        
 }
+void srvProcess(TransfarServerPtr s ){
+    if(s == NULL){
+        return ;
+    }
+    if(s->eventQueue <0){
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"eventQueue id is not right");
+                return;
+    }
+    Socket *sock;
+    s->lastServerTime = nanoseconds();
+    int rw = socknext(s->eventQueue ,&sock, s->period);
+    if (rw == -1) {
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"socknext");
+            exit(1);
+    }
+
+    int64 t1 = nanoseconds();
+    if (t1-s->lastServerTime > s->period) {
+        if(s->appServer == NULL){
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"appServer   is empty ");
+            exit(1);
+        }
+        if(s->appServer->tick!=NULL){
+            s->appServer->tick(s->appServer);
+            s->lastServerTime = t1;
+        }else{
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"appServer tick method is empty ");
+            exit(1);
+        }
+            
+    }
+
+    if (rw) {
+        if(sock->f!=NULL){
+            sock->f(sock->x, rw);
+        }else{
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"socket handle is empty");
+            exit(1);
+        }
+            
+    }
+}
+
 /**
  * 连接接入处理
  */
 void
-srvaccept(TransfarServer *s, int ev)
+srvaccept(TransfarServerPtr s, int ev)
 {
-        acceptConnect(s,ev);    
+    acceptConnect(s,ev);    
 }
 /**
  * 心跳处理
  */
-void srvtick(TransfarServer *s){
-
+void srvtick(TransfarServerPtr s){
+    
 }
 int makeClientSocket(const char* host,const char*port){
         int fd = -1, flags, r;
@@ -262,28 +290,6 @@ int makeClientSocket(const char* host,const char*port){
         /* See if we got a listen fd from systemd. If so, all socket options etc
          * are already set, so we check that the fd is a TCP listen socket and
          * return. */
-        r = sd_listen_fds(1);
-        if (r < 0) {
-                return addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sd_listen_fds"), -1;
-        }
-        if (r > 0) {
-                if (r > 1) {
-                        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"inherited more than one listen socket;ignoring all but the first");
-                        r = 1;
-                }
-                fd = SD_LISTEN_FDS_START;
-                r = sd_is_socket_inet(fd, 0, SOCK_STREAM, 1, 0);
-                if (r < 0) {
-                        errno = -r;
-                        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sd_is_socket_inet");
-                        return -1;
-                }
-                if (!r) {
-                        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"inherited fd is not a TCP listen socket");
-                        return -1;
-                }
-                return fd;
-        }
 //初始化数据
         memset(&hints, 0, sizeof(hints));
         hints.ai_family = PF_UNSPEC;
@@ -358,13 +364,8 @@ int makeClientSocket(const char* host,const char*port){
                             printf("connect %d %s:%s\n", fd, h, p);
                     }
             }
-            //绑定socket
+            //socket
             r = connect(fd, ai->ai_addr, ai->ai_addrlen);
-            if (r == -1) {
-                addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"connect failed");
-                close(fd);
-                continue;
-            }
             break;
         }
 

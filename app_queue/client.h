@@ -6,13 +6,17 @@
 #include "../transfar/server.h"
 
 typedef struct TransfarServer * TransfarServerPtr;
-AppServerPtr buildAppClientServer();
-int initAppClientServer(AppServerPtr);
-int storeAppClientServer(AppServerPtr);
-int freeAppClientServer(AppServerPtr *);
-int processAppClientServer(AppServerPtr);
+AppServerPtr buildClientAppServer(const char* host,const char* port);
+int initClientAppServer(AppServerPtr);
+int storeClientAppServer(AppServerPtr);
+int freeClientAppServer(AppServerPtr *);
+int processClientAppServer(AppServerPtr);
 int processClientRequest(ConnectPtr ptr,int ev);
 int processClientPusherResponse(ConnectPtr ptr,int ev);
 int processClientResponse(ConnectPtr ptr,int ev);
 int processClientPusherRequest(ConnectPtr ptr,int ev);
+int processClientConsoleIn(ConsolePtr ptr,int ev);
+int processClientConsoleOut(ConsolePtr ptr,int ev);
+
+int tickClientAppServer(AppServerPtr ptr);
 #endif

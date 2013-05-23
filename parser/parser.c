@@ -18,7 +18,11 @@ int parserNetMessage(NetMessagePtr ptr,void* buf,int length){
 }
 
 int reparserNetMessage(NetMessagePtr ptr){
-    if(!strcmp(ptr->protocolType,"jcq" )){
+    if(isSameString(ptr->protocolType,NETMESSAGE_TYPE_JCQ )){
         reparserJCQMessage(ptr,ptr->protocolType,ptr->version);
+    }else if(isSameString(ptr->protocolType,NETMESSAGE_TYPE_HTTP)){
+
+    }else if(isSameString(ptr->protocolType,NETMESSAGE_TYPE_CMD)){
+        reparserCMDMessage(ptr,ptr->protocolType,ptr->version);
     }
 }

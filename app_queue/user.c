@@ -122,7 +122,7 @@ int checkUser(UserPtr userPtr,const char* userSecretKey,const char* userPassword
             needCheckPasswd = 0;
         }else{
             result = USER_ERROR_SECRET_FAILED;
-            needCheckPasswd = 0;
+            needCheckPasswd = 1;
         }
     }
     if(needCheckPasswd){

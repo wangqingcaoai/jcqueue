@@ -16,7 +16,7 @@ enum
     Infinity = 1 << 30
 };
 
-static int  kq;
+//static int  kq;
 static char buf0[512]; /* buffer of zeros */
 
 
@@ -47,12 +47,12 @@ sockinit(void)
         addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SOCKET_POSITION_NAME,"kqueue");
         return -1;
     }
-    return 0;
+    return kq;
 }
 
 
 int
-sockwant(Socket *s, int rw)
+sockwant(int kq,Socket *s, int rw)
 {
     int n = 0;
     struct kevent evs[2] = {}, *ev = evs;
@@ -93,7 +93,7 @@ sockwant(Socket *s, int rw)
 
 
 int
-socknext(Socket **s, int64 timeout)
+socknext(int kq,Socket **s, int64 timeout)
 {
     int r;
     struct kevent ev;

@@ -473,6 +473,64 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
     ptr->sendTime = 0;
     freeMem((void**)&ptr);
     *pptr = NULL;
-    return NETMESSAGE_SUCCESS;
-    
+    return NETMESSAGE_SUCCESS;  
  }
+
+int isExtraParamFormatRight(char*buf,int length){
+    if(buf == NULL || length<0){
+        return 0;
+    }
+    if(isEmptyString(buf)){
+        return 1;
+    }
+    //param[value]
+    char* temp = allocMem(length+1);
+    memcpy(temp,buf,length);
+    temp[length]='\0';
+    char *ptr = temp,*key,*value,*split1,*split2,*more;
+    int result = 0;
+    while(ptr!=NULL){
+        key = ptr;
+        split1 = strstr(key,"[");
+        if(split1 == NULL){
+            result = 0;
+            break;
+        }
+        if(split1 == key){
+            result = 0;
+            break;
+        }
+        split1[0]='\0';
+        //printf("%s\n",key );
+        more = strnstr(key,"]",split1-key);//between start and first end of '[' has other ']'
+        if(more!=NULL){
+            result = 0;
+            break;
+        }
+        value = ++split1;
+        if(value[0]=='\0'){
+            result = 0;
+            break;
+        }
+        split2 = strstr(value,"]");
+        if(split2 == NULL){
+            result = 0;
+            break;
+        }
+        split2[0]='\0';
+       // printf("%s\n",value );
+        more = strnstr(value,"[",split2-value);
+        if(more!=NULL){
+            result =0;
+            break;
+        }
+        ptr = ++split2;
+        if(ptr[0]=='\0'){
+            result =1;
+            break;
+        }
+    }
+    freeMem((void*)&temp);
+    return result;
+}
+ 

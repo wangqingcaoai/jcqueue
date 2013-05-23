@@ -407,3 +407,23 @@ ListNodePtr getListEnd(ListPtr ptr){
     return ptr->header;
 }
 
+void* popFromList(ListPtr list){
+    if(list==NULL){
+        return NULL;
+    }
+    if(isEmptyList(list)){
+        return NULL;
+    }
+    ListNodePtr header = list->header;
+
+    ListNodePtr temp = header->next;
+    header->next =header->next->next;
+    header->next->prev = header;
+    void* data =temp->data;
+    freeListNode(&temp,NULL);
+    list->count--;
+    return data;
+}
+int pushToList(ListPtr ptr, void*data){
+    return insertToList(ptr,data);
+}

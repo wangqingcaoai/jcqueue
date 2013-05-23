@@ -1,0 +1,5 @@
+#ifndef SECURE_ERROR_H
+#define SECURE_ERROR_H 
+#define SECURE_ERROR_MARK 1000
+#define SECURE_SUCCESS_MARK 2000
+#endif

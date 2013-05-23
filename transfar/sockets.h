@@ -12,7 +12,7 @@ typedef struct Socket{
 //套接字事件队列初始化
 int sockinit(void);
 //获取下一个连接
-int socknext(SocketPtr *s, int64 timeout);
+int socknext(int eq,SocketPtr *s, int64 timeout);
 //期望在该链接发生什么事件时通知
-int sockwant(SocketPtr s, int rw);
+int sockwant(int eq,SocketPtr s, int rw);
 #endif

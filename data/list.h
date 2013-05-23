@@ -49,6 +49,8 @@ int removeFromList(ListPtr List,Find find,void*arg,Free freeMem);
 int freeList(ListPtr *l,Free freeMem);
 int removeByIdFromList(ListPtr list,int id,Free freeMem);
 int freeListNode(ListNodePtr *node,Free freeMem);
+void* popFromList(ListPtr p);
+int pushToList(ListPtr, void*data);
 ListNodePtr getListHeader(ListPtr);
 ListNodePtr getListEnd(ListPtr);
 //todo 带条件连续查找

@@ -14,5 +14,6 @@ static int aq_subscribe_del(AppServerPtr serverPtr, NetMessagePtr ptr);
 static int aq_system_state(AppServerPtr serverPtr, NetMessagePtr ptr);
 static int aq_unknow_cmd(AppServerPtr serverPtr, NetMessagePtr ptr);
 static int aq_empty_appServer(AppServerPtr serverPtr, NetMessagePtr ptr);
+int aq_client_router(AppServerPtr serverPtr,NetMessagePtr ptr);
 
 #endif

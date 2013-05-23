@@ -1,6 +1,9 @@
 #ifndef BQ_ERRORS_H
 #define BQ_ERRORS_H 
-#define BQ_ERRORS_MARK 1
+#define BQ_ERRORS_MARK 10
+
+#define BQ_SUCCESS_MARK 20
+
 
 #define BQ_EMPTY_BASESERVER 1
 #define BQ_EMPTY_BASESERVER_MSG "base server is empty ,please check it!"
@@ -37,7 +40,6 @@
 #define BQ_UNKNOW_ERROR 10
 #define BQ_UNKNOW_ERROR_MSG "unknow error happened! please contant us!"
 
-#define BQ_SUCCESS_MARK 2
 #define BQ_ADD_SUCCESS 1
 #define BQ_ADD_SUCCESS_MSG "add success"
 

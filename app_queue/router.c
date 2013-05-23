@@ -40,3 +40,17 @@ static aq_subscribe_del(AppServerPtr serverPtr, NetMessagePtr ptr){
 static aq_system_state(AppServerPtr serverPtr, NetMessagePtr ptr){
 
 }
+int aq_client_router(AppServerPtr serverPtr, NetMessagePtr ptr){
+    if(serverPtr == NULL){
+        aq_empty_appServer(serverPtr,ptr);
+    }
+    if(ptr == NULL){
+        return -1;
+    }
+    if(ptr->cmd == NULL){
+        return aq_unknow_cmd(serverPtr, ptr);
+    }
+    int result = 0;
+    return result;
+    
+}

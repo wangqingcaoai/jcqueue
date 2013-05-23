@@ -100,8 +100,11 @@ int initConfig(char * fileName){
 }
 
 int setConfig(char* configName, char* configData){
-    configName = trim(configName);
-    configData = trim(configData);
+
+    char * configNameTemp = allocString(configName);
+    configName = trim(configNameTemp);
+    char* configDataTemp = allocString(configData);
+     configData = trim(configDataTemp);
     ConfigPtr ptr = globalConfig;
     if(NULL == ptr){
         globalConfig= allocMem(sizeof(Config));
@@ -130,6 +133,8 @@ int setConfig(char* configName, char* configData){
     ptr->next = NULL;
     ptr->name = allocString(configName);
     ptr->data = allocString(configData);
+    freeString(&configNameTemp);
+    freeString(&configDataTemp);
     return 1;
 }
 int destoryConfig(){

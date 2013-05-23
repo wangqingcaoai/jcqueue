@@ -3,7 +3,7 @@
 #include <string.h>
 #include "topic_router.h"
 #include "router.h"
-#include "errors.h"
+#include "../errors.h"
 
 
 int bq_router(BaseServerPtr serverPtr,NetMessagePtr ptr){

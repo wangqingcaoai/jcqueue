@@ -12,22 +12,20 @@
 #define EPOLLRDHUP 0x2000
 #endif
 
-static int epfd ;
-
 int
 sockinit(void)
 {
-    epfd = epoll_create(1);
+    int epfd = epoll_create(1);
     if (epfd == -1) {
         addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SOCKET_POSITION_NAME,"epoll_create");
         return -1;
     }
-    return 0;
+    return epfd;
 }
 
 
 int
-sockwant(Socket *s, int rw)
+sockwant(int epfd,Socket *s, int rw)
 {
     int op;
     struct epoll_event ev = {};
@@ -59,7 +57,7 @@ sockwant(Socket *s, int rw)
 
 
 int
-socknext(Socket **s, int64 timeout)
+socknext(int epfd ,Socket **s, int64 timeout)
 {
     int r;
     struct epoll_event ev;

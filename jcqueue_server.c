@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
 #include "app_queue/server.h"
+#include "util/config.h"
 char *l_opt_arg;  
 char* const short_options = "h:p:c:";  
 struct option long_options[] = {  
@@ -20,10 +22,12 @@ int main(int argc, char  *argv[])
         {
             case 'h':
                 l_opt_arg = optarg;
+                setConfig("host",l_opt_arg);
                 printf("%s\n", l_opt_arg);
                 break;
             case 'p':
                 l_opt_arg = optarg;
+                setConfig("port",l_opt_arg);
                 printf("%s\n ",l_opt_arg);
                 break;
             case 'c':
@@ -36,12 +40,12 @@ int main(int argc, char  *argv[])
                 break;            
         }
     }
-    setConfig();
-    AppServerPtr serverPtr = buildAppServer();
-    // while(true){
-    //     processServer();
-    //     tick();
-    // }
+    //setConfig();
+    char* host = getConfig("host","127.0.0.1");
+    char* port = getConfig("port","12221");
+    AppServerPtr serverPtr = buildAppServer(host,port);
+    processAppServer(serverPtr);
+    
 
     return 0;
 }
