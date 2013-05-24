@@ -8,4 +8,5 @@ int cleanTopic(BaseServerPtr,const char* topicName);//清空topic
 TopicPtr useTopic(BaseServerPtr,const char*topicName);
 ListPtr getTopicListByKeyword(BaseServerPtr ,const char* keyword);
 int isMatchTopicName(TopicPtr , const char* keyword);
+int tickTopics(BaseServerPtr );
 #endif

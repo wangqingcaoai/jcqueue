@@ -35,52 +35,53 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
     }
     char* line = strnstr(temp,"\n",realLength);
     int error = PARSER_SUCCESS;
-    if(line = NULL){
+    if(line == NULL){
+
         setLastParamBuffer(ptr,temp,realLength);
         error = PARSER_ERROR_DATA_NEED_MORE;
     }else{
         int readLength = line-temp+1;
-        setLastParamBuffer(ptr,line+1,realLength-readLength); 
-        char bufcmd[CONSOLE_BUF_CMD_SIZE];
-        char bufTarget[CONSOLE_BUF_TARGET_SIZE];
-        char bufTargetType[CONSOLE_BUF_TARGETTYPE_SIZE];
-        char bufExtraParam[CONSOLE_BUF_EXTRAPARAM_SIZE];
-        char bufData[CONSOLE_BUF_DATA_SIZE];
-        sscanf(temp,CMD_READ_FORMAT,bufcmd,bufTarget,bufTargetType,bufExtraParam,bufData);
-        if(isEmptyString(bufcmd)
-            ||isEmptyString(bufTarget)
-            ||isEmptyString(bufTargetType)
-            ||isEmptyString(bufExtraParam)
-            ||isEmptyString(bufData)){
+        setLastParamBuffer(ptr,line+1,realLength-readLength);
+        int leavLength = realLength-readLength; 
+        char bufcmd[leavLength+1];
+        char bufTarget[leavLength+1];
+        char bufTargetType[leavLength+1];
+        char bufExtraParam[leavLength+1];
+        char bufData[leavLength+1];
+        memset(bufcmd,'\0',leavLength+1);
+
+        memset(bufExtraParam,'\0',leavLength+1);
+
+        memset(bufData,'\0',leavLength+1);
+        
+        sscanf(temp,CMD_READ_FORMAT,bufcmd,bufExtraParam,bufData);
+        if(isEmptyString(bufcmd)){
             error = PARSER_ERROR_FORMAT_ERROR;
         }else{
             if(isSameString(bufcmd,"-")){
                 error = PARSER_ERROR_FORMAT_ERROR;
             }else{
                 setNetMessageParam(ptr,"cmd",bufcmd);
-                setNetMessageParam(ptr,"target",isSameString(bufTarget,"-")?"":bufTarget);
-
-                setNetMessageParam(ptr,"targetType",isSameString(bufTargetType,"-")?"":bufTargetType);
                 if(!isSameString(bufExtraParam,"-")){
                     if(isExtraParamFormatRight(bufExtraParam,strlen(bufExtraParam))){
                         setNetMessageParam(ptr,"extraParam",bufExtraParam);    
                     }else{
                         error = PARSER_ERROR_FORMAT_ERROR;
                     }    
+                }else{
+                    setNetMessageParam(ptr,"extraParam","");
                 }
                 
                 
                 if(ptr->data!=NULL){
                     freeMem(&(ptr->data));
                 }
-                if(isSameString(bufData,"-")){
+                if(isEmptyString(bufData)||isSameString(bufData,"-")){
                     ptr->data = allocString("");
                     ptr->length = 0;
                 }else if(!strncmp(bufData,"data:",5)){
                     ptr->data = allocString(bufData+5);
                     ptr->length = strlen(bufData+5);
-                }else{
-                    error = PARSER_ERROR_FORMAT_ERROR;
                 }
             }
         }
@@ -93,13 +94,13 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
 int reparserCMDMessage(NetMessagePtr ptr,char * protocolType, char* version){
     if(ptr== NULL || protocolType == NULL || version == NULL){
         return PARSER_ERROR_PARAM_ERROR;
-    }if(ptr->sendBuf == NULL){
+    }
+    if(ptr->sendBuf == NULL){
         ptr->sendBuf = allocMem(NETMESSAGE_DEFAULT_SEND_BUF_SIZE);
     }
+    ptr->sendTime = nanoseconds();
     int writedLength = snprintf(ptr->sendBuf,NETMESSAGE_DEFAULT_SEND_BUF_SIZE,CMD_WRITE_FORMAT,
         ptr->sendCmd,
-        ptr->sendTarget,
-        ptr->sendTargetType,
         ptr->currentUser,
         ptr->currentPassword,
         ptr->currentUserKey,
@@ -107,16 +108,27 @@ int reparserCMDMessage(NetMessagePtr ptr,char * protocolType, char* version){
         ptr->sendTime,
         ptr->sendExtraParam,
         ptr->sendLength);
-    int leavLength = NETMESSAGE_DEFAULT_SEND_BUF_SIZE  -writedLength;
-    int endLength = strlen(JCQ_FORMAT_END);
-    if(leavLength< ptr->length+endLength){   
-        void* temp = allocMem(writedLength+ptr->length+endLength);
-        memcpy(temp,ptr->sendBuf,writedLength);
-        freeMem(&(ptr->sendBuf));
-        ptr->sendBuf = temp;
+
+    int leavLength = NETMESSAGE_DEFAULT_SEND_BUF_SIZE  - writedLength;
+    int endLength = strlen(JCQ_FORMAT_END)+1;
+    
+    if(ptr->sendData!=NULL || ptr->sendLength>0){
+        if(leavLength< ptr->sendLength+endLength){   
+            void* temp = allocMem(writedLength + ptr->sendLength + endLength);
+            memcpy(temp,ptr->sendBuf,writedLength);
+            freeMem(&(ptr->sendBuf));
+            ptr->sendBuf = temp;
+        } 
+        memcpy(ptr->sendBuf+writedLength,ptr->sendData,ptr->sendLength);
+        writedLength +=ptr->sendLength;
+    }else{
+        if(leavLength < endLength){
+            void* temp = allocMem(writedLength + endLength);
+            memcpy(temp,ptr->sendBuf,writedLength);
+            freeMem(&(ptr->sendBuf));
+            ptr->sendBuf = temp;
+        }
     }
-    memcpy(ptr->sendBuf+writedLength,ptr->data,ptr->length);
-    writedLength +=ptr->length;
     memcpy(ptr->sendBuf+writedLength,JCQ_FORMAT_END,endLength);
     writedLength +=endLength;
     ptr->sendBufLength =  writedLength;

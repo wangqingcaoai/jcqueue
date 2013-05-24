@@ -5,7 +5,7 @@
 #include "../util/type.h"
 #include "../util/util.h"
 #include "net_message.h"
-int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,char* sendTarget,char* sendTargetType ,void* sendData,int datalength){
+int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,void* sendData,int datalength){
     if(ptr==NULL){
         return NETMESSAGE_ERROR_PARAM_ERROR;
     }
@@ -14,15 +14,6 @@ int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,char* send
         freeString(&(ptr->sendCmd));
     }
     ptr->sendCmd = allocString(sendCmd);
-    if(ptr->sendTarget!=NULL){
-        freeString(&(ptr->sendTarget));
-    }
-    ptr->sendTarget = allocString(sendTarget);
-    
-    if(ptr->sendTargetType!=NULL){
-        freeString(&(ptr->sendTargetType));
-    }
-    ptr->sendTargetType = allocString(sendTargetType);
     
     if(ptr->sendData!=NULL){
         freeMem(&(ptr->sendData));
@@ -59,7 +50,7 @@ int setNetMessageSendUser(NetMessagePtr ptr,UserPtr uptr){
     return NETMESSAGE_SUCCESS;
 }
 NetMessagePtr buildNetMessage(){
-    static int id;
+    static int64 id;
     NetMessagePtr ptr= allocMem(sizeof(NetMessage));
     if(ptr == NULL){
         return NULL;
@@ -67,8 +58,6 @@ NetMessagePtr buildNetMessage(){
     id++;
     ptr->id = id; 
     ptr->cmd = NULL;
-    ptr->target = NULL;
-    ptr->targetType = NULL;
     ptr->user = NULL;
     ptr->password = NULL;
     ptr->key = NULL;
@@ -90,8 +79,6 @@ NetMessagePtr buildNetMessage(){
     
 
     ptr->sendCmd = NULL;
-    ptr->sendTarget = NULL;
-    ptr->sendTargetType = NULL;
     ptr->currentUserKey = NULL;
     ptr->currentUser = NULL;
     ptr->currentPassword = NULL;
@@ -250,16 +237,6 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
             freeString(&(ptr->cmd));
         }
         ptr->cmd = allocString(paramValue);
-    }else if(!strcmp(paramName,"target")){
-        if(ptr->target!=NULL){
-            freeString(&(ptr->target));
-        }
-        ptr->target = allocString(paramValue);
-    }else if(!strcmp(paramName,"targetType")){
-        if(ptr->targetType!=NULL){
-            freeString(&(ptr->targetType));
-        }
-        ptr->targetType = allocString(paramValue);
     }else if(!strcmp(paramName,"user")){
         if(ptr->user!=NULL){
             freeString(&(ptr->user));
@@ -311,16 +288,6 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
             freeString(&(ptr->sendCmd));
         }
         ptr->sendCmd = allocString(paramValue);
-    }else if(!strcmp(paramName,"sendTarget")){
-        if(ptr->sendTarget!=NULL){
-            freeString(&(ptr->sendTarget));
-        }
-        ptr->sendTarget = allocString(paramValue);
-    }else if(!strcmp(paramName,"sendTargetType")){
-        if(ptr->sendTargetType!=NULL){
-            freeString(&(ptr->sendTargetType));
-        }
-        ptr->sendTarget = allocString(paramValue);
     }else if(!strcmp(paramName,"currentUserKey")){
         if(ptr->currentUserKey!=NULL){
             freeString(&(ptr->currentUserKey));
@@ -361,8 +328,6 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
     }
 
     printf("%s:%s\n", "cmd",ptr->cmd?ptr->cmd:"NULL");
-    printf("%s:%s\n", "target",ptr->target?ptr->target:"NULL" );
-    printf("%s:%s\n", "targetType",ptr->targetType ?ptr->targetType:"NULL");
     printf("%s:%s\n", "host",ptr->host?ptr->host:"NULL" );
     printf("%s:%s\n", "port",ptr->port ?ptr->port:"NULL");
     printf("%s:%s\n", "user",ptr->user ?ptr->user:"NULL");
@@ -398,7 +363,6 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
     printf("%s:%" PRId64 "\n", "timestamp",ptr->timestamp );
     printf("%s:%d\n", "errcode",ptr->errcode );
     printf("%s:%s\n", "sendCmd",ptr->sendCmd ?ptr->sendCmd:"NULL");
-    printf("%s:%s\n", "sendTarget",ptr->sendTarget ?ptr->sendTarget:"NULL");
     printf("%s:%s\n", "sendExtraParam",ptr->sendExtraParam ?ptr->sendExtraParam:"NULL");
     //printf("%s:%s\n", "sendData",ptr->sendData ?(char*)ptr->sendData:"NULL");
     if(ptr->sendData!=NULL&& ptr->sendLength>0){
@@ -439,8 +403,6 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
         return NETMESSAGE_ERROR_PARAM_ERROR;
     }
     freeString(&(ptr->cmd ));
-    freeString(&(ptr->target ));
-    freeString(&(ptr->targetType ));
     freeString(&(ptr->host ));
     freeString(&(ptr->port ));
     freeString(&(ptr->user ));
@@ -459,7 +421,6 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
     ptr->timestamp = 0;
     ptr->errcode = 0;
     freeString(&(ptr->sendCmd ));
-    freeString(&(ptr->sendTarget ));
     freeString(&(ptr->sendExtraParam ));
     freeMem(&(ptr->sendData ));
     ptr->sendLength =0;
@@ -534,3 +495,33 @@ int isExtraParamFormatRight(char*buf,int length){
     return result;
 }
  
+
+int setNetMessageJustSendData(NetMessagePtr ptr,void *data,int length){
+    if(ptr == NULL || data == NULL ||length <0){
+        return NETMESSAGE_ERROR_PARAM_ERROR;
+    }
+    if(ptr->sendData!=NULL){
+        freeMem(&ptr->sendData);
+    }
+    ptr->sendData = allocMem(length);
+    ptr->sendLength = length;
+    memcpy(ptr->sendData,data,length);
+    return NETMESSAGE_SUCCESS;
+}
+int setNetMessageSendCMDData(NetMessagePtr ptr,int errcode,char* sendCmd){
+    if(ptr==NULL){
+        return NETMESSAGE_ERROR_PARAM_ERROR;
+    }
+    ptr->sendErrcode = errcode;
+    if(ptr->sendCmd!=NULL){
+        freeString(&(ptr->sendCmd));
+    }
+    ptr->sendCmd = allocString(sendCmd);
+    
+}
+int setNetMessageSendState(NetMessagePtr ptr,int state){
+    if(ptr == NULL){
+        return NETMESSAGE_ERROR_PARAM_ERROR;
+    }
+    ptr->sendState = state;
+}

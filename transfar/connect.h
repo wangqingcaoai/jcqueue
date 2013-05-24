@@ -32,6 +32,9 @@ typedef struct Connect{
     char *addr;
 	char *port;
     UserPtr user;
+    int halfClose;
+    Handle read;
+    Handle write;
 
 }Connect, *ConnectPtr ;
 ConnectPtr buildConnect(const int cfd, const int state);
@@ -45,11 +48,10 @@ int connectTimeOut(ConnectPtr);
 void closeFd(int fd);
 int freeConnect(ConnectPtr *);
 int compareConnect(ConnectPtr ,ConnectPtr);
-ConnectPtr buildRequestConnect(TransfarServerPtr ptr,const char* addr,const char * port);
+ConnectPtr buildRequestConnect(TransfarServerPtr ptr,const char* addr,const char * port,Handle read,Handle write);
 void checkConnectError(ConnectPtr c, const char *s);
 char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
 char *get_port_str(const struct sockaddr *sa, char *s, size_t maxlen);
 int tickConnects(TransfarServerPtr ptr);
-int sendRequestData(ConnectPtr ptr);//push
-int getResponseDate(ConnectPtr ptr);
+
 #endif

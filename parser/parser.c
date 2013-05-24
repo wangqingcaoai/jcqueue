@@ -10,6 +10,8 @@ int parserNetMessage(NetMessagePtr ptr,void* buf,int length){
     if(isJCQMessage(ptr,buf,length)){
         return parserJCQMessage(ptr,buf,length);
         
+    }else if(isCMDMessage(ptr,buf,length)){
+        return parserCMDMessage(ptr,buf,length);
     }else{
         return PARSER_ERROR_DATA_NEED_MORE;
     }
@@ -23,6 +25,7 @@ int reparserNetMessage(NetMessagePtr ptr){
     }else if(isSameString(ptr->protocolType,NETMESSAGE_TYPE_HTTP)){
 
     }else if(isSameString(ptr->protocolType,NETMESSAGE_TYPE_CMD)){
+        
         reparserCMDMessage(ptr,ptr->protocolType,ptr->version);
     }
 }

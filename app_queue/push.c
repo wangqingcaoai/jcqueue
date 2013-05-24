@@ -82,18 +82,23 @@ int pushToTarget(PushServerPtr server, PusherPtr ptr){
 	if(ptr == NULL || server == NULL){
 		return PUSH_PARAM_ERROR;
 	}
-	if(ptr->state == PUSH_STATE_FINISH){
-		int bufSize = 25;
-		char buf[bufSize];
-		if(ptr->connect == NULL){
-			ptr->connect = buildRequestConnect(server->appServer->transfarServer,ptr->subscribe->remoteHost,intToString(ptr->subscribe->remotePort,buf,bufSize));
-		}
+	char buf[UTIL_NUM_BUF_SIZE];
+	int bufSize = UTIL_NUM_BUF_SIZE;
+	if(ptr->connect == NULL){
+		ptr->connect = buildRequestConnect(server->appServer->transfarServer,ptr->subscribe->remoteHost,intToString(ptr->subscribe->remotePort,buf,bufSize),
+			server->appServer->pusherResponse,server->appServer->pusherRequest
+			);
+		ptr->connect->user = ptr->subscribe->user;
+		ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_FINISH;    
+    
+	}
+	if(ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_FINISH){
 		MessagePtr mPtr= popFromList(ptr->messageReady);
 		if(mPtr == NULL){
 			return PUSH_SUCCESS;
 		}else{
 			NetMessagePtr nmptr = ptr->connect->netMessage;
-			setNetMessageSendData(nmptr,buildErrorCode(PUSH_SUCCESS_MARK,PUSH_PUSH_SUCCESS),PUSH_TO_CLIENT_CMD,nmptr->target,nmptr->targetType,mPtr->data,mPtr->length);
+			setNetMessageSendData(nmptr,buildErrorCode(PUSH_SUCCESS_MARK,PUSH_PUSH_SUCCESS),PUSH_TO_CLIENT_CMD,mPtr->data,mPtr->length);
             
             setSendExtraParam(nmptr,"message_id",int64ToString(mPtr->messageid,buf,bufSize));
             
@@ -104,6 +109,8 @@ int pushToTarget(PushServerPtr server, PusherPtr ptr){
             setSendExtraParam(nmptr,"activetime",int64ToString(mPtr->activetime,buf,bufSize));
 
             setSendExtraParam(nmptr,"timestamp",int64ToString(mPtr->timestamp,buf,bufSize));
+			ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_WAIT;
+        
 		}
 	}
 	
@@ -119,5 +126,9 @@ int processPush(PushServerPtr server){
 		pushToTarget(server,pusher);
 		pusher = nextFromList(&start,end,NULL,NULL);
 	}
+}
 
+
+int tickPushServer(PushServerPtr server){
+	return processPush(server);
 }

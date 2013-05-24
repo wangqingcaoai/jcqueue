@@ -79,4 +79,17 @@ ListPtr getTopicListByKeyword(BaseServerPtr ptr ,const char* keyword){
     }
     return lptr;
 }
+int tickTopics(BaseServerPtr ptr){
 
+    ListNodePtr start = getListHeader(ptr->topicList);
+    ListNodePtr end = getListEnd(ptr->topicList);
+    if(start == NULL || end == NULL){
+        return -1;
+    }
+    TopicPtr tptr = nextFromList(&start,end,NULL,NULL);
+    while(tptr!= NULL){
+        tickTopic(tptr,nanoseconds());
+        tptr = nextFromList(&start,end,NULL,NULL);
+    }
+    return 0;
+}

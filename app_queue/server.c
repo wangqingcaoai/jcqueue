@@ -13,19 +13,27 @@ AppServerPtr buildAppServer(const char* host,const char*port){
     if(ptr == NULL){
         return ptr;
     }
+    ptr->request = (Handle)processRequest;
+    ptr->response = (Handle)processResponse;
+    ptr->requestOut = (Handle)processRequestOut;
+    ptr->responseOut = (Handle)processResponseOut;
+    
+    ptr->pusherRequest=(Handle)processPusherRequest;
+    ptr->pusherResponse=(Handle)processPusherResponse;
+    ptr->consoleIn = (Handle)processConsoleIn;
+    ptr->consoleOut = (Handle)processConsoleOut;
+    ptr->tick = (TickHandle)tickAppServer;
     ptr->usersList = buildList();
     ptr->admin = buildUser(getConfig("adminUser","admin"),getConfig("adminPassword","jcqueue"));
     ptr->sendUser =buildUser(getConfig("sendUser","sender"),getConfig("senderPassword","send"));
     ptr->acceptUser = NULL;
-    ptr->baseServer = buildBaseServer();
+    ptr->requestServer = NULL;
+    ptr->baseServer = buildBaseServer(ptr);
     ptr->subscribeServer = buildSubscribeServer(ptr);
     ptr->pushServer = buildPushServer(ptr);
     ptr->transfarServer = buildTransfarServer(ptr,host,port);
-    ptr->request = (Handle)processRequest;
-	ptr->response = (Handle)processResponse;
-	ptr->pusherRequest=(Handle)processPusherRequest;
-	ptr->pusherResponse=(Handle)processPusherResponse;
-    ptr->tick = (TickHandle)tickAppServer;
+    
+
 	return ptr;
 }
 int initAppServer(AppServerPtr ptr){
@@ -70,6 +78,7 @@ int freeAppServer(AppServerPtr *pptr){
 }
 int processAppServer(AppServerPtr ptr){
     srvStart(ptr->transfarServer);
+    consoleStart(ptr->transfarServer);
     while(1){
         sleep(1);
         srvProcess(ptr->transfarServer);   
@@ -77,61 +86,144 @@ int processAppServer(AppServerPtr ptr){
     //tick
 }
 int processRequest(ConnectPtr ptr,int ev){
-	int result = getRequestData(ptr);
-    switch(result){
-        case CONNECT_STATE_READ_MESSAGE_READY:
-            break;
-        case CONNECT_STATE_READ_WAIT_DATA:
-            return APP_SERVER_SUCCESS;
-        case CONNECT_STATE_READ_FORMAT_ERROR:
-            setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
-            return APP_SERVER_SUCCESS;
-    }
-    //check user
-    if(result == CONNECT_STATE_READ_MESSAGE_READY){
-        if(ptr->netMessage->user != NULL){
-            if(ptr->user == NULL){
-                ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
-            }
-            if(ptr->user == NULL){
-                setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
-        
+    if(ev == 'r'){    
+    	int result = getRequestData(ptr);
+        switch(ptr->state){
+            case CONNECT_STATE_READ_MESSAGE_READY:
+                break;
+            case CONNECT_STATE_READ_WAIT_DATA:
                 return APP_SERVER_SUCCESS;
-            }else{
-                int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
-                if(checkState == USER_SUCCESS){
-                    //success
-                    aq_router(ptr->netMessage);
-                }else{
-                    setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
-                }
-            }    
+            case CONNECT_STATE_READ_FORMAT_ERROR:
+                setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+                
+                setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+                return APP_SERVER_SUCCESS;
         }
+        //check user
+        if(ptr->state == CONNECT_STATE_READ_MESSAGE_READY){
+            if(ptr->netMessage->user != NULL){
+                if(ptr->user == NULL){
+                    ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
+                }
+                if(ptr->user == NULL){
+                    setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
+            
+                    return APP_SERVER_SUCCESS;
+                }else{
+                    int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
+                    if(checkState == USER_SUCCESS){
+                        //success
+                        aq_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                    }else{
+                        setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
+                    }
+                }    
+            }else{
+
+                setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
+            }
+            setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+                
+        }
+    }else if(ev =='h'){
+        ptr->halfClose =1;
     }
     return APP_SERVER_SUCCESS;
 }
 int processResponse(ConnectPtr ptr,int ev){
-    setNetMessageSendUser(ptr->netMessage,ptr->tServer->appServer->sendUser);
-    sendResponseData(ptr);
+    if(ev == 'w'){
+        setNetMessageSendUser(ptr->netMessage,ptr->tServer->appServer->sendUser);
+        sendResponseData(ptr);   
+    }else if(ev == 'h'){
+        ptr->halfClose =1;
+    }
 }
 int processPusherResponse(ConnectPtr ptr,int ev){
-	// int result =getRequestData(ptr);
-
-	// checkUser(ptr->netMessage);
-	// pushResponse(ptr->netMessage);
-
+    if(ev =='r'){
+    	int result =getRequestData(ptr);
+    	switch(ptr->state){
+            case CONNECT_STATE_READ_MESSAGE_READY:
+                break;
+            case CONNECT_STATE_READ_WAIT_DATA:
+                return APP_SERVER_SUCCESS;
+            case CONNECT_STATE_READ_FORMAT_ERROR:
+                setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+                
+                setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+                return APP_SERVER_SUCCESS;
+        }
+        //check user
+        if(ptr->state == CONNECT_STATE_READ_MESSAGE_READY){
+            if(ptr->netMessage->user != NULL){
+                if(ptr->user == NULL){
+                    ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
+                }
+                if(ptr->user == NULL){
+                    setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
+            
+                    return APP_SERVER_SUCCESS;
+                }else{
+                    int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
+                    if(checkState == USER_SUCCESS){
+                        //success
+                        aq_push_client_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                    }else{
+                        setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
+                    }
+                }    
+            }else{
+                setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
+            }
+            setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+        }
+    }else if(ev == 'h'){
+        ptr->halfClose =1;
+    }
 }
 
-int processPusherRequest(ConnectPtr ptr,int ev){
-//    sendResponseData(ptr);	
+int processPusherRequest(ConnectPtr ptr,int ev){//send to target
+    if(ev == 'w'){
+        setNetMessageSendUser(ptr->netMessage,ptr->tServer->appServer->sendUser);
+        sendResponseData(ptr);
+    }else if(ev == 'h'){
+        ptr->halfClose =1;
+    }
 }
 
 int tickAppServer(AppServerPtr ptr){
-    printf("tick\n");
+    tickUser(ptr->usersList);
+    tickBaseServer(ptr->baseServer);
+    tickSubscribeServer(ptr->subscribeServer);
+    tickPushServer(ptr->pushServer);
+    tickTransfarServer(ptr->transfarServer);
 }
 int processConsoleIn(ConsolePtr ptr,int ev){
-
+    int result = getConsoleData(ptr);
+    switch(ptr->state){
+        case CONSOLE_STATE_READ_MESSAGE_READY:
+            break;
+        case CONSOLE_STATE_READ_WAIT_DATA:
+            return APP_SERVER_SUCCESS;
+        case CONSOLE_STATE_READ_FORMAT_ERROR:
+            setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+                
+            setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+            return APP_SERVER_SUCCESS;
+    }
+    //check user
+    if(ptr->state == CONSOLE_STATE_READ_MESSAGE_READY){
+        aq_server_router(ptr->tServer->appServer,ptr->netMessage,ptr->tServer->appServer->sendUser);
+    }
+    setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+                
+    processConsoleOut(ptr,'w');    
 }
 int processConsoleOut(ConsolePtr ptr,int ev){
+    sendConsoleData(ptr);
+}
+int processRequestOut(ConnectPtr ptr,int ev){
+
+}
+int processResponseOut(ConnectPtr ptr,int ev){
 
 }

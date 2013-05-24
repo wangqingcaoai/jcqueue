@@ -4,5 +4,5 @@
 #define PARSER_SUCCESS_MARK 200
 
 #define PARSER_ERROR_FORMAT_ERROR 1
-#define PARSER_ERROR_FORMAT_ERROR_MSG "messge format error !"
+#define PARSER_ERROR_FORMAT_ERROR_MSG "message format error !"
 #endif

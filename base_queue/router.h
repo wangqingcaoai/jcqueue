@@ -1,4 +1,4 @@
-#ifndef BQ_ROUTER_H
+ #ifndef BQ_ROUTER_H
 #define BQ_ROUTER_H
 #include "server.h"
 #include "../parser/net_message.h"

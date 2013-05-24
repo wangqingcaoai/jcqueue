@@ -44,6 +44,7 @@ ListPtr buildList(){
     list->listId = list_id; 
     list->header->id= LIST_HEADER_ID;
     list->header->prev = list->header->next = list->header;
+    list->header->data = NULL;
     return list;
 }
 
@@ -182,7 +183,7 @@ void * preFromList(ListNodePtr *node,ListNodePtr endNode,Find find,void*arg){
 
 }
 
-int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
+int removeFromList(ListPtr list,Find find,void*arg,Free freeHandle){
     if(!checklist(list)){
         return LIST_COUNT_ERROR;
     }
@@ -193,7 +194,7 @@ int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
         ptr->prev ->next = ptr->next;
         ptr->next->prev = ptr->prev;
         prev = ptr->prev;;
-        freeListNode(&ptr,freeMem);
+        freeListNode(&ptr,freeHandle);
         removeNum++;
         removeOne(list);
         //获取下一个
@@ -216,14 +217,14 @@ int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
         
 //         if((*(find))(ptr->data,arg)){
 //             updateNum++;
-//             if(ptr->freeMem==NULL){
+//             if(ptr->freeHandle==NULL){
 //                 if(ptr->data!=NULL){
 //                     free(ptr->data);
 //                 }
 //             }else{
 //                 if (ptr->data!=NULL)
 //                 {
-//                     (*(ptr->freeMem))(ptr->data);
+//                     (*(ptr->freeHandle))(ptr->data);
 //                     free(ptr->data);
 //                 }
 //             }
@@ -247,7 +248,7 @@ int removeFromList(ListPtr list,Find find,void*arg,Free freeMem){
 // }
 
 //会释放根节点
-int freeList(ListPtr *l,Free freeMem){
+int freeList(ListPtr *l,Free freeHandle){
     ListPtr list= (*l);
     if(!checklist(list)){
         return LIST_ERROR;
@@ -259,7 +260,7 @@ int freeList(ListPtr *l,Free freeMem){
     while(ptr!= NULL){
         freeNum++;
         tmp = ptr->next;
-        freeListNode(&ptr,freeMem);
+        freeListNode(&ptr,freeHandle);
         ptr = tmp;
         tmp = NULL;
     }
@@ -339,7 +340,7 @@ ListNodePtr getPtrByIdFromList(ListPtr list,int id){
     }
 }
 
-int removeByIdFromList(ListPtr list,int id,Free freeMem){
+int removeByIdFromList(ListPtr list,int id,Free freeHandle){
     if(!checklist(list)){
         return LIST_COUNT_ERROR;
     }
@@ -350,13 +351,13 @@ int removeByIdFromList(ListPtr list,int id,Free freeMem){
     if(ptr == NULL){
         return 0;
     }else{
-        freeListNode(&ptr,freeMem);
+        freeListNode(&ptr,freeHandle);
     }
     return 1;
 }
-int freeListNode(ListNodePtr *node,Free freeMem){
+int freeListNode(ListNodePtr *node,Free freeHandle){
     ListNodePtr ptr =(*node);
-    if(freeMem==NULL){
+    if(freeHandle==NULL){
         if(ptr->data!=NULL){
             //free(ptr->data);
             //并不知道传入的是分配的内存还是 何处的指针
@@ -365,7 +366,7 @@ int freeListNode(ListNodePtr *node,Free freeMem){
     }else{
         if (ptr->data!=NULL)
         {
-            (*(freeMem))(&ptr->data);
+            (*(freeHandle))(&ptr->data);
         }
     }
     freeMem((void**)&ptr);

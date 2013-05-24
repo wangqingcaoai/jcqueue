@@ -23,6 +23,9 @@
 #define NETMESSAGE_TYPE_JCQ "jcq"
 #define NETMESSAGE_TYPE_CMD "cmd"
 #define NETMESSAGE_TYPE_HTTP "http"
+#define NETMESSAGE_VERSION_CMD "1.0"
+#define NETMESSAGE_VERSION_JCQ "1.0"
+#define NETMESSAGE_VERSION_HTTP "1.1"
 typedef struct User * UserPtr;
 typedef struct Param
 {
@@ -35,11 +38,9 @@ typedef struct Param
  */
 typedef struct NetMessage
 {
-    int id;
+    int64 id;
     //recv
     char* cmd ;
-    char* target;
-    char* targetType;
     char* user;
     char* password;
     char* key;
@@ -62,8 +63,6 @@ typedef struct NetMessage
     //response
     
     char* sendCmd;//
-    char* sendTarget;//
-    char* sendTargetType;
     char* currentUserKey;//
     char* currentUser;//
     char* currentPassword;//
@@ -104,8 +103,6 @@ typedef struct NetMessage
  * */
  #define JCQ_FORMAT  "%s %s\r\n"\
     "cmd:%s\r\n"\
-    "target:%s\r\n"\
-    "targetType:%s\r\n"\
     "user:%s\r\n"\
     "password:%s\r\n"\
     "key:%s\r\n"\
@@ -129,10 +126,8 @@ typedef struct NetMessage
   * cmd format
   * cmd target targetType param1[value1]param2[] data:dfdfdf\n
   */
-#define CMD_READ_FORMAT "%s %s %s %s %s \n"
+#define CMD_READ_FORMAT "%s  %s %s \n"
 #define CMD_WRITE_FORMAT  "cmd:%s\r\n"\
-    "target:%s\r\n"\
-    "targetType:%s\r\n"\
     "user:%s\r\n"\
     "password:%s\r\n"\
     "key:%s\r\n"\
@@ -141,7 +136,7 @@ typedef struct NetMessage
     "extraParam:%s\r\n"\
     "length:%d\r\n"\
     "data:"
-int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,char* sendTarget,char* sendTargetType,void* sendData,int datalength);
+int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,void* sendData,int datalength);
 int setNetMessageSendUser(NetMessagePtr ptr,UserPtr uptr);
 NetMessagePtr buildNetMessage();
 int setNetMessageError(NetMessagePtr ptr,int errcode,char* errorMessage,...);
@@ -156,4 +151,8 @@ static char* findParamValueByString(const char* string,const char* paramName );
 static int setParamByValue(char** pptr,const char* paramName,const char* paramValue);
 int freeNetMessage(NetMessagePtr* pptr);
 int isExtraParamFormatRight(char*buf,int length);
+int setNetMessageJustData(NetMessagePtr ptr,void *data,int length);
+int setNetMessageSendCMDData(NetMessagePtr ptr,int errcode,char* sendCmd);
+int setNetMessageSendState(NetMessagePtr ptr,int state);
+
 #endif

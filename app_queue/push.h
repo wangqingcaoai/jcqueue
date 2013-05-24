@@ -37,4 +37,5 @@ int addPusher(PushServerPtr server,SubscribePtr subscribe);
 int addMessageToPusher(PusherPtr ,MessagePtr message);
 int pushToTarget(PushServerPtr server, PusherPtr ptr);
 int processPush(PushServerPtr );
+int tickPushServer(PushServerPtr);
  #endif

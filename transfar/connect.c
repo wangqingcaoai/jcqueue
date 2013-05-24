@@ -36,8 +36,7 @@ void acceptConnect(TransfarServerPtr s,const int ev )
     get_ip_str((struct sockaddr *)&addr,ip,CONNECT_MAX_IP_SIZE);
     get_port_str((struct sockaddr *)&addr,port,CONNECT_MAX_PORT_SIZE);
     if (isOn(getConfig("verbose","off"))) {
-        printf("fdfd\n");
-        
+    
         printf("accept client %d, ip %s p:%s\n", cfd,ip,port);
     }
     flags = fcntl(cfd, F_GETFL, 0);
@@ -74,7 +73,10 @@ void acceptConnect(TransfarServerPtr s,const int ev )
     c->tServer = s;
     c->sock.x = c;
     c->sock.f = s->appServer->request;//set request
+    c->read = s->appServer->request;
+    c->write = s->appServer->response;
     c->sock.fd = cfd;
+    c->halfClose=0;
 //TODO
     r = sockwant(s->eventQueue,&c->sock, 'r');
     heapinsert(c->tServer->conns,c);
@@ -102,14 +104,23 @@ ConnectPtr buildConnect(const int cfd, const int state){
     if(ptr == NULL){
         return NULL;
     }
+    id++;
     ptr->id = id;
     ptr->tServer = NULL;
     ptr->state = state;
+    ptr->sock.fd = cfd;
+    ptr->sock.f = NULL;
+    ptr->sock.added = 0;
+    ptr->sock.x = ptr;
     ptr->netMessage = buildNetMessage();
     ptr->offlineTime = -1;
     ptr->addr  = NULL;
     ptr->port = NULL;
-    return ptr;
+    ptr->halfClose =0;
+    ptr->read =NULL;
+    ptr->write = NULL;
+    ptr->user =NULL;
+        return ptr;
 }
 
 int freeConnect(ConnectPtr *c){
@@ -132,14 +143,14 @@ int getRequestData(ConnectPtr ptr){
 	}
     char buf[CONNECT_RECV_BUF_SIZE];
     int recvlength=0;
-    int result =0;
+    int result =CONNECT_SUCCESS;
     if(isOn(getConfig("verbose","off"))){
         printf("read data\n" );
     }
     while(1){
         recvlength =read(ptr->sock.fd,buf,CONNECT_RECV_BUF_SIZE);
         if(recvlength == -1){
-            checkConnectError(ptr," read failed");
+            checkConnectError(ptr," read  data failed");
             break;
         }else if(recvlength == 0){
             //end 
@@ -169,10 +180,17 @@ int getRequestData(ConnectPtr ptr){
             printf("message ready data\n" );
         }
         ptr->state = CONNECT_STATE_READ_MESSAGE_READY;
+        int r = sockwant(ptr->tServer->eventQueue,&(ptr->sock),'w');
+        ptr->sock.f= ptr->write;
+        if (r == -1) {
+            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"sockwant failed");
+
+        }
     }
-    return CONNECT_SUCCESS;
+    return result;
 	
 }
+
 int setConnectHostInfo(ConnectPtr ptr,const char * addr,const char *port){
     if(ptr == NULL || addr ==NULL || port == NULL){
         return CONNECT_ERROR_PARAM_ERROR;
@@ -203,7 +221,7 @@ void checkConnectError(ConnectPtr c, const char *s)
     if (errno == EINTR) return;
     if (errno == EWOULDBLOCK) return;
 
-    addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"error happened on connect :%s",s);
+    addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"error happened on connect %s:%s,%s",c->addr,c->port,s);
     connectClose(c);
     return;
 }
@@ -218,16 +236,36 @@ int sendResponseData(ConnectPtr ptr){
     if(mptr->sendState == NETMESSAGE_WRITESTATE_FINISH){
         return CONNECT_SUCCESS;
     }
-    if(!(mptr->sendBuf !=NULL && mptr->sendBufLength)){
+    if(mptr->sendState == NETMESSAGE_WRITESTATE_WAIT){
         reparserNetMessage(ptr->netMessage);
-    }
-    int writeLength = write(ptr->sock.fd,mptr->sendBuf+mptr->writedLength,mptr->sendBufLength-mptr->writedLength);
-    mptr->writedLength += writeLength;
-    if(mptr->writedLength == mptr->sendBufLength){
-        mptr->sendState = NETMESSAGE_WRITESTATE_FINISH;
-    }else{
         mptr->sendState = NETMESSAGE_WRITESTATE_WRITING;
+        if(isOn(getConfig("verbose","off"))){
+            printf("send  data\n" );
+        } 
     }
+    if(mptr->sendState == NETMESSAGE_WRITESTATE_WRITING){
+        
+        int writeLength = write(ptr->sock.fd,mptr->sendBuf+mptr->writedLength,mptr->sendBufLength-mptr->writedLength);
+        if(writeLength <0 ){
+            printf("w%d,wd%d\n",writeLength,mptr->writedLength);
+            checkConnectError(ptr,"send Data failed");
+            return CONNECT_SUCCESS;
+        }
+        mptr->writedLength += writeLength;
+        if(mptr->writedLength == mptr->sendBufLength){
+            mptr->sendState = NETMESSAGE_WRITESTATE_FINISH;
+            if(isOn(getConfig("verbose","off"))){
+                printf("send  data success\n" );
+            }
+            int r = sockwant(ptr->tServer->eventQueue,&(ptr->sock),'r');
+            ptr->sock.f = ptr->read;
+            if (r == -1) {
+                addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"sockwant failed");
+
+            }
+        }  
+    }
+    
     return CONNECT_SUCCESS;
 }
 int connectClose(ConnectPtr ptr){
@@ -235,6 +273,8 @@ int connectClose(ConnectPtr ptr){
     if(ptr == NULL){
         return CONNECT_ERROR_PARAM_ERROR;
     }
+    sockwant(ptr->tServer->eventQueue,&ptr->sock, 0);
+    closeFd(ptr->sock.fd);
     //TODO
 }
 int compareConnect(ConnectPtr con1,ConnectPtr con2){
@@ -287,43 +327,27 @@ char *get_port_str(const struct sockaddr *sa, char *s, size_t maxlen)
     }
     return s;
 }
-ConnectPtr buildRequestConnect(TransfarServerPtr ptr,const char* addr,const char * port){
+ConnectPtr buildRequestConnect(TransfarServerPtr ptr,const char* addr,const char * port,Handle read,Handle write){
     if(ptr == NULL || addr == NULL || port == NULL){
         return NULL;
     }
     int fd = makeClientSocket(addr,port);
     ConnectPtr cPtr =buildConnect(fd,CONNECT_STATE_SEND_CONNECTING);
+    cPtr->tServer = ptr;
+    cPtr->addr = allocString(addr);
+    cPtr->port = allocString(port);
+    cPtr->read = read;
+    cPtr->write =write;
+    int r = sockwant(ptr->eventQueue,&cPtr->sock, 'w');
+    cPtr->sock.f = cPtr->write;
+    heapinsert(ptr->conns,cPtr);
+    if (r == -1) {
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"sockwant failed");
+    }
+
     return cPtr;
 }
 
 int tickConnects(TransfarServerPtr ptr){
-
-}
-int sendRequestData(ConnectPtr ptr){
-
-    if(ptr == NULL){
-        return CONNECT_ERROR_PARAM_ERROR;
-    }
-    if(ptr->state == CONNECT_STATE_SEND_CONNECTING){
-        
-    }
-    NetMessagePtr mptr = ptr->netMessage;
-
-    if(mptr->sendState == NETMESSAGE_WRITESTATE_FINISH){
-        return CONNECT_SUCCESS;
-    }
-    if(!(mptr->sendBuf !=NULL && mptr->sendBufLength)){
-        reparserNetMessage(ptr->netMessage);
-    }
-    int writeLength = write(ptr->sock.fd,mptr->sendBuf+mptr->writedLength,mptr->sendBufLength-mptr->writedLength);
-    mptr->writedLength += writeLength;
-    if(mptr->writedLength == mptr->sendBufLength){
-        mptr->sendState = NETMESSAGE_WRITESTATE_FINISH;
-    }else{
-        mptr->sendState = NETMESSAGE_WRITESTATE_WRITING;
-    }
-    return CONNECT_SUCCESS;
-}
-int getResponseDate(ConnectPtr ptr){
 
 }

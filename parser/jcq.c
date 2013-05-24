@@ -199,13 +199,11 @@ int reparserJCQMessage(NetMessagePtr ptr,char * protocolType, char* version){
         return PARSER_ERROR_PARAM_ERROR;
     }if(ptr->sendBuf == NULL){
         ptr->sendBuf = allocMem(NETMESSAGE_DEFAULT_SEND_BUF_SIZE);
-    }
+    }ptr->sendTime = nanoseconds();
     int writedLength = snprintf(ptr->sendBuf,NETMESSAGE_DEFAULT_SEND_BUF_SIZE,JCQ_FORMAT,
         protocolType,
         version,
         ptr->sendCmd,
-        ptr->sendTarget,
-        ptr->sendTargetType,
         ptr->currentUser,
         ptr->currentPassword,
         ptr->currentUserKey,
@@ -215,14 +213,24 @@ int reparserJCQMessage(NetMessagePtr ptr,char * protocolType, char* version){
         ptr->sendLength);
     int leavLength = NETMESSAGE_DEFAULT_SEND_BUF_SIZE  -writedLength;
     int endLength = strlen(JCQ_FORMAT_END);
-    if(leavLength< ptr->length+endLength){   
-        void* temp = allocMem(writedLength+ptr->length+endLength);
-        memcpy(temp,ptr->sendBuf,writedLength);
-        freeMem(&(ptr->sendBuf));
-        ptr->sendBuf = temp;
+    
+    if(ptr->sendData!=NULL || ptr->sendLength>0){
+        if(leavLength< ptr->sendLength+endLength){   
+            void* temp = allocMem(writedLength + ptr->sendLength + endLength);
+            memcpy(temp,ptr->sendBuf,writedLength);
+            freeMem(&(ptr->sendBuf));
+            ptr->sendBuf = temp;
+        } 
+        memcpy(ptr->sendBuf+writedLength,ptr->sendData,ptr->sendLength);
+        writedLength +=ptr->sendLength;
+    }else{
+        if(leavLength < endLength){
+            void* temp = allocMem(writedLength + endLength);
+            memcpy(temp,ptr->sendBuf,writedLength);
+            freeMem(&(ptr->sendBuf));
+            ptr->sendBuf = temp;
+        }
     }
-    memcpy(ptr->sendBuf+writedLength,ptr->data,ptr->length);
-    writedLength +=ptr->length;
     memcpy(ptr->sendBuf+writedLength,JCQ_FORMAT_END,endLength);
     writedLength +=endLength;
     ptr->sendBufLength =  writedLength;

@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include "server.h"
 #include "topic.h"
-BaseServerPtr buildBaseServer(){
+BaseServerPtr buildBaseServer(AppServerPtr app){
     static int baseserver_id;
     
     BaseServerPtr ptr = (BaseServerPtr)allocMem(sizeof(BaseServer));
@@ -11,6 +11,7 @@ BaseServerPtr buildBaseServer(){
     }
     baseserver_id++;
     ptr->baseserver_id = baseserver_id;
+    ptr->appServer = app;
     ptr->topicList = buildList(NULL,NULL);
     return ptr;
 }
@@ -28,4 +29,10 @@ int freeBaseServer(BaseServerPtr * p){
     freeMem((void**)&ptr);
     (*p) = NULL;
     
+}
+int tickBaseServer(BaseServerPtr ptr){
+    if(ptr == NULL){
+        return -1;
+    }
+    return tickTopics(ptr);
 }

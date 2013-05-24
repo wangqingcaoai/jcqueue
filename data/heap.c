@@ -8,7 +8,10 @@
 static void set(Heap *h, int k, void *x)
 {
     h->data[k] = x;
-    h->rec(x, k);
+    if(h->rec!=NULL){
+        
+        h->rec(x, k);   
+    }
 }
 
 
@@ -108,7 +111,10 @@ void * heapremove(Heap *h, int k)
     set(h, k, h->data[h->len]);
     siftdown(h, k);
     siftup(h, k);
-    h->rec(x, -1);
+    if(h->rec!=NULL){
+
+        h->rec(x, -1);   
+    }
     return x;
 }
 

@@ -48,7 +48,7 @@ SubscribePtr buildSubscribe(const char* subscribeKeyWord,const char* remoteHost,
     if(user ==NULL){
         return NULL;
     }
-    static int subscribe_id;
+    static int64 subscribe_id;
     
     SubscribePtr ptr = (SubscribePtr)allocMem(sizeof(Subscribe));
     if(ptr == NULL){
@@ -138,7 +138,7 @@ int freeSubscribeTopic(SubscribeTopicPtr *pptr){
     (*pptr) = NULL;
     return SUBSCRIBE_SUCCESS;
 }
-int isSubscribeById(SubscribePtr ptr,const int *id){
+int isSubscribeById(SubscribePtr ptr,const int64 *id){
     if(ptr == NULL ||id == NULL){
         return 0;
     }
@@ -148,7 +148,7 @@ int isSubscribeById(SubscribePtr ptr,const int *id){
         return 0;
     }
 }
-int isSubscribeTopicById(SubscribeTopicPtr ptr,const int* id){
+int isSubscribeTopicById(SubscribeTopicPtr ptr,const int64* id){
     if(ptr == NULL || id == NULL){
         return 0;
     }
@@ -182,54 +182,74 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
     char * remotePort = getExtraParam(netMessage,"remotePort");
     char * protocol = getExtraParam(netMessage,"protocol");
     char* type = getExtraParam(netMessage ,"type");
+
     SubscribePtr ptr = buildSubscribe( keyword,remoteHost,atoi(remotePort), protocol, type,userPtr);
+    char buf[UTIL_NUM_BUF_SIZE];
+    setSendExtraParam(netMessage,"subscribe_id",int64ToString(ptr->subscribeId,buf,UTIL_NUM_BUF_SIZE));
+    int result = SUBSCRIBE_SUCCESS;
     if(ptr == NULL){
-        return SUBSCRIBE_ERROR_PARAM_ERROR;
-    }
-    insertToList(server->subscribes,ptr);
-    if(server->appServer == NULL){
-        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"no appServer defined on subscribeServer, could not find topic");
-        return SUBSCRIBE_ERROR_PARAM_ERROR;
-    }
-    ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,keyword);
-    if(topicList!=NULL){
-        if(!isEmptyList(topicList)){
-            //将topic信息更新到topic列表当中，
-            addSubscribeTopicsByList(server, topicList,  ptr);
+        result =SUBSCRIBE_ERROR_PARAM_ERROR;
+    }else {
+        insertToList(server->subscribes,ptr);
+        if(server->appServer == NULL){
+            addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"no appServer defined on subscribeServer, could not find topic");
+            result =  SUBSCRIBE_ERROR_PARAM_ERROR;
+            
+        }else{
+            ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,keyword);
+            if(topicList!=NULL){
+                if(!isEmptyList(topicList)){
+                    //将topic信息更新到topic列表当中，
+                    addSubscribeTopicsByList(server, topicList,  ptr);
+                }
+                freeList(&topicList,NULL);
+            }       
         }
-        freeList(&topicList,NULL);
+         
     }
-    return SUBSCRIBE_SUCCESS;
+    freeString(&keyword);
+    freeString(&remoteHost);
+    freeString(&remotePort);
+    freeString(&protocol);
+    freeString(&type);
+    return result;
 
 } 
-int delSubscribe(SubscribeServerPtr server,int  subscribeId){
+int delSubscribe(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr mptr){
     if(server == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(server->subscribes == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
-    int removeNum =removeFromList(server->subscribes,(Find)isSubscribeById,&subscribeId,(Free)freeSubscribe);
+
+    char buf[UTIL_NUM_BUF_SIZE];
+    char* param = getExtraParam(mptr,"subscribe_id");
+    int64 subscribe_id = atoll(param);
+
+    int removeNum =removeFromList(server->subscribes,(Find)isSubscribeById,&subscribe_id,(Free)freeSubscribe);
     if(removeNum == 0){
         return SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND;
     }else{
         return SUBSCRIBE_SUCCESS;
     }
-
-
 }
-int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr netMessage){
+int delSubscribeByUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr netMessage){
 
 }
 int delSubscribebyKeywordAndUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr netPtr){
 
 }
-int getSubscribeIdsByUser(SubscribeServerPtr server){
+int getSubscribeIdsByUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr nmptr){
 
 }
-int getSubscribeTopicIdsByUser(SubscribeServerPtr server){
+int getSubscribeTopicIdsByUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr nmptr){
 
 }
+int getSubscribeInfoById(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr nmptr){
+
+}
+
 
 int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, SubscribePtr subscribe){
     if(subscribeServer == NULL || tptr == NULL || subscribe == NULL){
@@ -395,4 +415,8 @@ int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,Mess
         sptr = nextFromList(&start,end,NULL,NULL);
     }
     return SUBSCRIBE_SUCCESS;
+}
+
+int tickSubscribeServer(SubscribeServerPtr ptr){
+    return processSubscribeTopic(ptr);
 }

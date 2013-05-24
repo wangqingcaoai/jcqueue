@@ -222,7 +222,9 @@ int restoreUsers(ListPtr userList){
 int storeUsers(ListPtr userList){
 
 }
-
+int tickUser(ListPtr userList){
+    //did nothing
+}
 
 
 

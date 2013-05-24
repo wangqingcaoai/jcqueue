@@ -26,6 +26,7 @@ ConsolePtr buildConsole(TransfarServerPtr tServer){
     ptr->state = CONSOLE_STATE_READ_WAIT_DATA;
     ptr->netMessage = buildNetMessage();
     ptr->netMessage->protocolType = NETMESSAGE_TYPE_CMD;
+    ptr->netMessage->version = NETMESSAGE_VERSION_CMD;
     //SET USER
     setOnBlock(STDOUT_FILENO);
     setOnBlock(STDIN_FILENO);
@@ -64,9 +65,9 @@ int getConsoleData(ConsolePtr ptr){
     }
     char buf[CONSOLE_RECV_BUF_SIZE];
     int recvlength=0;
-    int result =0;
+    int result =CONSOLE_SUCCESS;
     if(isOn(getConfig("verbose","off"))){
-        printf("read data\n" );
+        printf("read console data\n" );
     }
     while(1){
         recvlength =read(ptr->in.fd,buf,CONSOLE_RECV_BUF_SIZE);
@@ -76,6 +77,7 @@ int getConsoleData(ConsolePtr ptr){
             //end 
             break;
         }else{
+
             result = parserNetMessage(ptr->netMessage,buf,recvlength);
             if(result == PARSER_ERROR_DATA_NEED_MORE){
                 continue;
@@ -86,7 +88,7 @@ int getConsoleData(ConsolePtr ptr){
     }
     if(result == PARSER_ERROR_DATA_NEED_MORE){
         if(isOn(getConfig("verbose","off"))){
-            printf("need more data\n" );
+            printf("need more console data\n" );
         }
         ptr->state = CONSOLE_STATE_READ_WAIT_DATA;//等待继续读取数据
     }
@@ -101,7 +103,7 @@ int getConsoleData(ConsolePtr ptr){
         }
         ptr->state = CONSOLE_STATE_READ_MESSAGE_READY;
     }
-    return CONSOLE_SUCCESS;
+    return result;
     
 }
 
@@ -115,12 +117,18 @@ int sendConsoleData(ConsolePtr ptr){
     if(mptr->sendState == NETMESSAGE_WRITESTATE_FINISH){
         return CONSOLE_SUCCESS;
     }
-    if(!(mptr->sendBuf !=NULL && mptr->sendBufLength)){
+    if(!(mptr->sendBuf !=NULL && mptr->sendBufLength > 0)){
         reparserNetMessage(ptr->netMessage);
     }
     int writeLength = write(ptr->out.fd,mptr->sendBuf+mptr->writedLength,mptr->sendBufLength-mptr->writedLength);
+    if(writeLength <0 ){
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"send data failed");
+        return CONNECT_SUCCESS;
+    }
     mptr->writedLength += writeLength;
     if(mptr->writedLength == mptr->sendBufLength){
+        freeMem((void**)&mptr->sendBuf);
+        mptr->writedLength = 0;
         mptr->sendState = NETMESSAGE_WRITESTATE_FINISH;
     }else{
         mptr->sendState = NETMESSAGE_WRITESTATE_WRITING;
@@ -143,11 +151,11 @@ int consoleStart(TransfarServerPtr ptr){
             exit(2);
     }
 
-    r = sockwant(ptr->eventQueue,&(ptr->console->out), 'w');
-    if (r == -1) {
-            addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sockwant");
-            printf("%d %s\n",errno ,strerror(errno));
-            exit(2);
-    }
+    // r = sockwant(ptr->eventQueue,&(ptr->console->out), 'w');
+    // if (r == -1) {
+    //         addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"sockwant");
+    //         printf("%d %s\n",errno ,strerror(errno));
+    //         exit(2);
+    // }
     return CONSOLE_SUCCESS;
 }

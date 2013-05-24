@@ -27,7 +27,7 @@ typedef struct User * UserPtr;
 typedef struct Channel * ChannelPtr;
 typedef struct Subscribe
 {
-    int subscribeId;
+    int64 subscribeId;
     char* subscribeKeyWord;//订阅,匹配的关键字
     char* remoteHost;//远端接收host 可以是ip
     unsigned int remotePort;//远端接收端口
@@ -39,7 +39,7 @@ typedef struct Subscribe
     PusherPtr pusher;
 }Subscribe,*SubscribePtr;
 typedef struct SubscribeTopic{
-    int id;
+    int64 id;
     TopicPtr topic;
     char* topicName;
     ListPtr subscribesList;//指向订阅
@@ -58,18 +58,19 @@ SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer);
 int freeSubscribeServer(SubscribeServerPtr *);
 SubscribePtr buildSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
 int freeSubscribe(SubscribePtr *);
-int isSubscribeById(SubscribePtr ptr,const int *id);
+int isSubscribeById(SubscribePtr ptr,const int64 *id);
 SubscribeTopicPtr buildSubScribeTopic(const char* topicName,TopicPtr tptr);
 int freeSubscribeTopic(SubscribeTopicPtr *pptr);
-int isSubscribeTopicById(SubscribeTopicPtr ptr,const int*  id);
+int isSubscribeTopicById(SubscribeTopicPtr ptr,const int64*  id);
 int isSubscribeTopicByTopicName(SubscribeTopicPtr ptr,const char* topicName);
 int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr );
-int delSubscribe(SubscribeServerPtr server,int  subscribeId);
-int delSubscribeByUser(SubscribeServerPtr server,UserPtr UserPtr,NetMessagePtr);
-int getSubscribeIdsByUser(SubscribeServerPtr server);
-// int getSubscribeTopicIdsByUser(SubscribeServerPtr server);
-int delSubscribebyKeywordAndUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr netPtr);
 
+int delSubscribe(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr nmptr);
+int delSubscribeByUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr);
+int delSubscribebyKeywordAndUser(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr netPtr);
+int getSubscribeIdsByUser(SubscribeServerPtr server,UserPtr user,NetMessagePtr);
+int getSubscribeTopicIdsByUser(SubscribeServerPtr server,UserPtr user,NetMessagePtr);
+int getSubscribeInfoById(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr );
 
 int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, SubscribePtr subscribe);
 int addSubscribeTopicsByList(SubscribeServerPtr subscribeServer,ListPtr topicList, SubscribePtr subscribe);
@@ -85,4 +86,5 @@ int isMatchSubscribeByTopicName(SubscribePtr ,const char* topicName);
 int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message);
 
 int restoreSubscribes(SubscribeServerPtr);
+int tickSubscribeServer(SubscribeServerPtr);
 #endif

@@ -8,8 +8,8 @@
 #define USER_PRIVILEGE_CUSTOMER 3
 #define USER_PRIVILEGE_DEFAULT 4
 #define USER_GROUP_ADMIN 1
-#define USER_GROUP_DEFAULT 2
-#define USER_GROUP_USER 3
+#define USER_GROUP_USER 2
+#define USER_GROUP_DEFAULT 3
 #define USER_DEFAULT_UPDATE_TIME 3600*24
 
 #define USER_SUCCESS 0
@@ -47,5 +47,6 @@ int addChannel(UserPtr userPtr,ChannelPtr ptr );
 int isUser(UserPtr userPtr,const char* userName);
 int restoreUsers(ListPtr userList);
 int storeUsers(ListPtr userList);
+int tickUser(ListPtr userList);
 //更新时备份功能
 #endif

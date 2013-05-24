@@ -15,7 +15,7 @@ typedef struct TransfarServer * TransfarServerPtr;
 typedef struct Connect * ConnectPtr ;
 typedef struct Console * ConsolePtr ;
 typedef struct User * UserPtr ;
-
+typedef struct RequestServer * RequestServerPtr;
 typedef struct AppServer
 {
 
@@ -27,12 +27,15 @@ typedef struct AppServer
     SubscribeServerPtr subscribeServer;
     PushServerPtr pushServer;
     TransfarServerPtr transfarServer;
+    RequestServerPtr requestServer;
 	Handle request;
 	Handle response;
 	Handle pusherRequest;
 	Handle pusherResponse;
     Handle consoleIn;
     Handle consoleOut;
+    Handle requestOut;
+    Handle responseOut;
     TickHandle tick;
 	
 }AppServer , * AppServerPtr;
@@ -47,5 +50,8 @@ int processResponse(ConnectPtr ptr,int ev);
 int processPusherRequest(ConnectPtr ptr,int ev);
 int processConsoleIn(ConsolePtr ptr,int ev);
 int processConsoleOut(ConsolePtr ptr,int ev);
+
+int processRequestOut(ConnectPtr ptr,int ev);
+int processResponseOut(ConnectPtr ptr,int ev);
 int tickAppServer(AppServerPtr);
 #endif

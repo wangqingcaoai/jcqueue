@@ -248,6 +248,7 @@ void srvProcess(TransfarServerPtr s ){
             exit(1);
         }
         if(s->appServer->tick!=NULL){
+
             s->appServer->tick(s->appServer);
             s->lastServerTime = t1;
         }else{
@@ -280,7 +281,11 @@ srvaccept(TransfarServerPtr s, int ev)
  * 心跳处理
  */
 void srvtick(TransfarServerPtr s){
-    
+    if(s == NULL){
+        return ;
+    }
+    //
+
 }
 int makeClientSocket(const char* host,const char*port){
         int fd = -1, flags, r;
@@ -377,4 +382,11 @@ int makeClientSocket(const char* host,const char*port){
 
         return fd;
 
+}
+int tickTransfarServer(TransfarServerPtr ptr){
+    if(ptr == NULL){
+        return TRANSFAR_SERVER_ERROR_PARAM_ERROR;
+    }
+    srvtick(ptr);
+    return TRANSFAR_SERVER_SUCCESS;
 }

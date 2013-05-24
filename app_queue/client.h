@@ -12,8 +12,13 @@ int storeClientAppServer(AppServerPtr);
 int freeClientAppServer(AppServerPtr *);
 int processClientAppServer(AppServerPtr);
 int processClientRequest(ConnectPtr ptr,int ev);
-int processClientPusherResponse(ConnectPtr ptr,int ev);
 int processClientResponse(ConnectPtr ptr,int ev);
+
+int processClientRequestOut(ConnectPtr ptr,int ev);
+int processClientResponseOut(ConnectPtr ptr,int ev);
+
+
+int processClientPusherResponse(ConnectPtr ptr,int ev);
 int processClientPusherRequest(ConnectPtr ptr,int ev);
 int processClientConsoleIn(ConsolePtr ptr,int ev);
 int processClientConsoleOut(ConsolePtr ptr,int ev);
