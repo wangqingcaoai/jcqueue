@@ -33,18 +33,16 @@ typedef struct Requester
     char* version;//订阅类型
     int state;
 }Requester,*RequesterPtr; 
-typedef struct MircoNetMessage
+typedef struct MicroNetMessage
 {
     int64 id;
     //recv
     char* cmd ;
-    char* target;
-    char* targetType;
     char* extraParam ;
     void* data;
     int length;
     int errcode;//
-}MircoNetMessage,*MircoNetMessagePtr;
+}MicroNetMessage,*MicroNetMessagePtr;
 
 RequestServerPtr buildRequestServer(AppServerPtr ptr);
 int freeRequestServer(RequestServerPtr * pptr);
@@ -56,8 +54,8 @@ int addMessageToRequester(RequesterPtr ,NetMessagePtr ptr);
 int requestToTarget(RequestServerPtr server, RequesterPtr ptr);
 int processRequestServer(RequestServerPtr server );
 int changeCurrentRequester(RequestServerPtr,int requesterId);
-MircoNetMessagePtr buildMircoNetMessage(NetMessagePtr ptr);
-int freeMircoNetMessage(MircoNetMessagePtr *ptr);
+MicroNetMessagePtr buildMicroNetMessage(NetMessagePtr ptr);
+int freeMicroNetMessage(MicroNetMessagePtr *ptr);
 int isRequester(RequesterPtr ptr,int* requesterId);
 
 int getRequesterList(RequestServerPtr server,NetMessagePtr message);

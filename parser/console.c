@@ -49,7 +49,6 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
         char bufExtraParam[leavLength+1];
         char bufData[leavLength+1];
         memset(bufcmd,'\0',leavLength+1);
-
         memset(bufExtraParam,'\0',leavLength+1);
 
         memset(bufData,'\0',leavLength+1);
@@ -71,8 +70,6 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
                 }else{
                     setNetMessageParam(ptr,"extraParam","");
                 }
-                
-                
                 if(ptr->data!=NULL){
                     freeMem(&(ptr->data));
                 }
@@ -83,6 +80,7 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
                     ptr->data = allocString(bufData+5);
                     ptr->length = strlen(bufData+5);
                 }
+                ptr->readState = NETMESSAGE_READSTATE_FINISH;
             }
         }
             

@@ -67,7 +67,7 @@ int freeRequester(RequesterPtr * pptr){
     if(ptr == NULL){
         return REQEUST_PARAM_ERROR;
     }
-    freeList(&(ptr->messageReady),(Free)freeMircoNetMessage);
+    freeList(&(ptr->messageReady),(Free)freeMicroNetMessage);
     connectClose(ptr->connect);
     //removeConnect(ptr->connect);
     freeMem((void**)pptr);
@@ -96,7 +96,7 @@ int addMessageToRequester(RequesterPtr ptr,NetMessagePtr message){
     if(ptr == NULL || message == NULL){
         return REQEUST_PARAM_ERROR;
     }
-    MircoNetMessagePtr messagePtr = buildMircoNetMessage(message);
+    MicroNetMessagePtr messagePtr = buildMicroNetMessage(message);
     insertToList(ptr->messageReady,messagePtr);
     return REQEUST_SUCCESS;
 }
@@ -121,7 +121,7 @@ int requestToTarget(RequestServerPtr server, RequesterPtr ptr){
     if(ptr->connect->netMessage->sendState == NETMESSAGE_WRITESTATE_FINISH){
         
         
-        MircoNetMessagePtr mPtr= popFromList(ptr->messageReady);
+        MicroNetMessagePtr mPtr= popFromList(ptr->messageReady);
         if(mPtr == NULL){
             return REQEUST_SUCCESS;
         }else{
@@ -151,13 +151,13 @@ int processRequestServer(RequestServerPtr server){
     }
 
 }
-MircoNetMessagePtr buildMircoNetMessage(NetMessagePtr ptr){
+MicroNetMessagePtr buildMicroNetMessage(NetMessagePtr ptr){
        
     if(ptr == NULL){
         return NULL;
     }
     static int64 id;
-    MircoNetMessagePtr mptr = allocMem(sizeof(MircoNetMessage));
+    MicroNetMessagePtr mptr = allocMem(sizeof(MicroNetMessage));
     if(mptr == NULL){
         return NULL;
     }
@@ -171,11 +171,11 @@ MircoNetMessagePtr buildMircoNetMessage(NetMessagePtr ptr){
     mptr->errcode = ptr->errcode;
     return mptr;
 }
-int freeMircoNetMessage(MircoNetMessagePtr *pptr){
+int freeMicroNetMessage(MicroNetMessagePtr *pptr){
     if(pptr == NULL){
         return REQEUST_PARAM_ERROR;
     }
-    MircoNetMessagePtr ptr= (*pptr);
+    MicroNetMessagePtr ptr= (*pptr);
     if(ptr == NULL){
         return REQEUST_PARAM_ERROR;
     }

@@ -182,31 +182,40 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
     char * remotePort = getExtraParam(netMessage,"remotePort");
     char * protocol = getExtraParam(netMessage,"protocol");
     char* type = getExtraParam(netMessage ,"type");
-
-    SubscribePtr ptr = buildSubscribe( keyword,remoteHost,atoi(remotePort), protocol, type,userPtr);
-    char buf[UTIL_NUM_BUF_SIZE];
-    setSendExtraParam(netMessage,"subscribe_id",int64ToString(ptr->subscribeId,buf,UTIL_NUM_BUF_SIZE));
     int result = SUBSCRIBE_SUCCESS;
-    if(ptr == NULL){
-        result =SUBSCRIBE_ERROR_PARAM_ERROR;
-    }else {
-        insertToList(server->subscribes,ptr);
-        if(server->appServer == NULL){
-            addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"no appServer defined on subscribeServer, could not find topic");
-            result =  SUBSCRIBE_ERROR_PARAM_ERROR;
-            
-        }else{
-            ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,keyword);
-            if(topicList!=NULL){
-                if(!isEmptyList(topicList)){
-                    //将topic信息更新到topic列表当中，
-                    addSubscribeTopicsByList(server, topicList,  ptr);
-                }
-                freeList(&topicList,NULL);
-            }       
-        }
-         
+    if(isEmptyString(keyword)||
+        isEmptyString(remoteHost)||
+        isEmptyString(remotePort)||
+        isEmptyString(protocol)||
+        isEmptyString(type)){
+        result = SUBSCRIBE_ERROR_PARAM_EMPTY;
+    }else{
+        SubscribePtr ptr = buildSubscribe( keyword,remoteHost,atoi(remotePort), protocol, type,userPtr);
+        char buf[UTIL_NUM_BUF_SIZE];
+        setSendExtraParam(netMessage,"subscribe_id",int64ToString(ptr->subscribeId,buf,UTIL_NUM_BUF_SIZE));
+       
+        if(ptr == NULL){
+            result =SUBSCRIBE_ERROR_PARAM_ERROR;
+        }else {
+            insertToList(server->subscribes,ptr);
+            if(server->appServer == NULL){
+                addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"no appServer defined on subscribeServer, could not find topic");
+                result =  SUBSCRIBE_ERROR_PARAM_ERROR;
+                
+            }else{
+                ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,keyword);
+                if(topicList!=NULL){
+                    if(!isEmptyList(topicList)){
+                        //将topic信息更新到topic列表当中，
+                        addSubscribeTopicsByList(server, topicList,  ptr);
+                    }
+                    freeList(&topicList,NULL);
+                }       
+            }
+             
+        }    
     }
+    
     freeString(&keyword);
     freeString(&remoteHost);
     freeString(&remotePort);

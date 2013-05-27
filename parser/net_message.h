@@ -15,6 +15,7 @@
 #define NETMESSAGE_ERROR_PARAM_ERROR 1
 
 #define NETMESSAGE_ERROR_UNKNOW_PARAM 2
+#define NETMESSAGE_ERROR_PARAM_VALUE_FORMAT_ERROR 3
 #define NETMESSAGE_DEFAULT_ERROR_BUF_SIZE 512
 
 #define NETMESSAGE_DEFAULT_SEND_BUF_SIZE 512
@@ -150,7 +151,7 @@ int displayNetMessage(NetMessagePtr ptr);
 static char* findParamValueByString(const char* string,const char* paramName );
 static int setParamByValue(char** pptr,const char* paramName,const char* paramValue);
 int freeNetMessage(NetMessagePtr* pptr);
-int isExtraParamFormatRight(char*buf,int length);
+int isExtraParamFormatRight(const char*buf,int length);
 int setNetMessageJustData(NetMessagePtr ptr,void *data,int length);
 int setNetMessageSendCMDData(NetMessagePtr ptr,int errcode,char* sendCmd);
 int setNetMessageSendState(NetMessagePtr ptr,int state);

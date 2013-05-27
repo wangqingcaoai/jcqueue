@@ -256,7 +256,13 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
         if(ptr->extraParam!=NULL){
             freeString(&(ptr->extraParam));
         }
-        ptr->extraParam = allocString(paramValue);
+        if(isExtraParamFormatRight(paramValue,strlen(paramValue))){
+            ptr->extraParam = allocString(paramValue);    
+        }
+        else{
+            return NETMESSAGE_ERROR_PARAM_VALUE_FORMAT_ERROR;
+
+        }
     }else if(!strcmp(paramName,"length")){
         ptr->length = atoi(paramValue);
     }else if(!strcmp(paramName,"version")){
@@ -307,7 +313,12 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
         if(ptr->sendExtraParam!=NULL){
             freeString(&(ptr->sendExtraParam));
         }
-        ptr->sendExtraParam = allocString(paramValue);
+        if(isExtraParamFormatRight(paramValue,strlen(paramValue))){
+            ptr->sendExtraParam = allocString(paramValue);    
+        }
+        else{
+            return NETMESSAGE_ERROR_PARAM_VALUE_FORMAT_ERROR;
+        }
     }else if(!strcmp(paramName,"sendLength")){
         ptr->sendLength = atoi(paramValue);
     }else if(!strcmp(paramName,"sendTime")){
@@ -437,7 +448,7 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
     return NETMESSAGE_SUCCESS;  
  }
 
-int isExtraParamFormatRight(char*buf,int length){
+int isExtraParamFormatRight(const char*buf,int length){
     if(buf == NULL || length<0){
         return 0;
     }

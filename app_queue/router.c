@@ -50,7 +50,13 @@ static int aq_subscribe_add(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr up
     if(serverPtr == NULL || ptr == NULL || uptr==NULL){
         return -1;
     }
-    addSubscribe(serverPtr->subscribeServer,uptr,ptr);
+    int result = addSubscribe(serverPtr->subscribeServer,uptr,ptr);
+    if(result == SUBSCRIBE_ERROR_PARAM_EMPTY){
+        setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_DEL_SUBSCRIBE_SUCCESS),AQ_DEL_SUBSCRIBE_SUCCESS_MSG);
+    }else if(result == SUBSCRIBE_SUCCESS){
+        return setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_DEL_SUBSCRIBE_SUCCESS),AQ_DEL_SUBSCRIBE_SUCCESS_MSG);
+
+    }
     return setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_ADD_SUBSCRIBE_SUCCESS),AQ_ADD_SUBSCRIBE_SUCCESS_MSG);
 }
 

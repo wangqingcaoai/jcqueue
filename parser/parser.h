@@ -7,7 +7,7 @@
 #define PARSER_ERROR_DATA_OUT_LINE 2
 #define PARSER_ERROR_DATA_NEED_MORE 3
 #define PARSER_ERROR_FORMAT_ERROR 4
-
+#define PARSER_ERROR_NO_DATA 5
 int parserNetMessage(NetMessagePtr ptr,void* buf,int length);
 int reparserNetMessage(NetMessagePtr ptr);
 

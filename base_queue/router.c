@@ -64,11 +64,18 @@ static int bq_add(BaseServerPtr serverPtr,NetMessagePtr ptr){
         return setNetMessageError(ptr,buildErrorCode(BQ_ERRORS_MARK,BQ_UNKNOW_TOPIC),BQ_UNKNOW_TOPIC_MSG,param);
     }else{
         freeString(&param);
-          param = getExtraParam(ptr,"delay");
-        int delay  = atoi(param);
+        param = getExtraParam(ptr,"delay");
+        int delay = 0;
+        if(param != NULL){
+            delay  = atoi(param);
+        }
+        
         freeString(&param);
         param = getExtraParam(ptr,"priority");
-        int priority  = atoi(param);
+        int priority  = 0;
+        if(param!=NULL){
+            priority = atoi(param);
+        }
         freeString(&param);
         MessagePtr mPtr = buildMessage(delay==0?MS_READY:MS_DELAY,ptr->sendTime,priority,ptr->data,ptr->length,delay );
         if(mPtr == NULL){
@@ -163,7 +170,10 @@ static int bq_reuse(BaseServerPtr serverPtr,NetMessagePtr ptr){
         int64 messageId  = atoll(param);
         freeString(&param);
         param = getExtraParam(ptr,"delay");
-        int delay  = atoi(param);
+        int delay = 0;
+        if(param != NULL){
+            delay  = atoi(param);
+        }
         freeString(&param);
         int code = reuseMessage(tPtr,messageId,delay);
         if(code == -1){
@@ -220,7 +230,10 @@ static int bq_wakeup(BaseServerPtr serverPtr,NetMessagePtr ptr){
         int64 messageId  = atoll(param);
         freeString(&param);
         param = getExtraParam(ptr,"delay");
-        int delay = atoi(param);
+        int delay = 0;
+        if(param != NULL){
+            delay  = atoi(param);
+        }
         freeString(&param);
         int code = wakeUpMessage(tPtr,messageId,delay);
         if(code == -1){

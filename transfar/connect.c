@@ -164,6 +164,7 @@ int getRequestData(ConnectPtr ptr){
             }
         }
     }
+    int needWrite =0;
     if(result == PARSER_ERROR_DATA_NEED_MORE){
         if(isOn(getConfig("verbose","off"))){
             printf("need more data\n" );
@@ -175,11 +176,23 @@ int getRequestData(ConnectPtr ptr){
             printf(" data format error\n" );
         }
         ptr->state = CONNECT_STATE_READ_FORMAT_ERROR;
+        needWrite =1;
     }else if(result == PARSER_SUCCESS){
-        if(isOn(getConfig("verbose","off"))){
-            printf("message ready data\n" );
+        if(ptr->netMessage->readState == NETMESSAGE_READSTATE_FINISH){
+
+            if(isOn(getConfig("verbose","off"))){
+                printf("message ready data\n" );
+            }
+            ptr->state = CONNECT_STATE_READ_MESSAGE_READY;
+            needWrite = 1;   
+        }else{
+            if(isOn(getConfig("verbose","off"))){
+                printf("?\n" );
+            }
         }
-        ptr->state = CONNECT_STATE_READ_MESSAGE_READY;
+    }
+    if(needWrite){
+
         int r = sockwant(ptr->tServer->eventQueue,&(ptr->sock),'w');
         ptr->sock.f= ptr->write;
         if (r == -1) {
