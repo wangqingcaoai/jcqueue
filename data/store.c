@@ -11,9 +11,11 @@
 int initStore(){
     if(isOn(getConfig("store","on"))){
         if(OFF==isOn(getConfig("store_ignore","off"))){
-            FILE* file = findStoreFile();
+            storeFile = findStoreFile();
+            startOffset = strlen(DEFAULT_STORE_HEADER);
+
         }else{
-            //ignore backup file . dont read data
+            //ignore backup file . don't need read data
         } 
     }else{
         addLog(LOG_NOTICE,LOG_LAYER_DATA,STORE_POSITION_NAME," store function is closed ,the program while lose the data after you close it");

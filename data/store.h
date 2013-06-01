@@ -6,7 +6,9 @@
 #define STORE_FILE_OPEN_MODE "wb+"
 #define DEFAULT_STORE_PATH "~/.jcq/"
 #define DEFAULT_STORE_PATH_SIZE 512
+#define DEFAULT_STORE_HEADER "JCQ 1.0 "
 static FILE * storeFile;
+static int startOffset;
 typedef struct Store{
     int offset;// to find where data is
     int state ;// data state;
