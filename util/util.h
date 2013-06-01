@@ -16,4 +16,5 @@ char *strnstr(const char *s1, const char *s2, int len);
 int freeMem(void**pptr);
 char* int64ToString(int64 i,char *buf,int length);
 char* intToString(int i,char *buf,int length);
+char* getStrTime(char* buf,int length,char* format);
 #endif

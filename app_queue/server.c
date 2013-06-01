@@ -8,6 +8,7 @@
 #include "../base_queue/server.h"
 #include "../errors.h"
 #include "../util/config.h"
+#include "../data/store.h"
 AppServerPtr buildAppServer(const char* host,const char*port){
     AppServerPtr ptr = allocMem(sizeof(AppServer));
     if(ptr == NULL){
@@ -40,6 +41,7 @@ int initAppServer(AppServerPtr ptr){
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
+    initStore();
     // restoreUsers(ptr->usersList);
     // restoreBaseServer(ptr->baseServer);
     // restoreSubscribes(ptr->subscribeServer);
@@ -124,6 +126,8 @@ int processRequest(ConnectPtr ptr,int ev){
             }
             setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
                 
+        }else{
+            printf("error connect state %d\n",ptr->state);
         }
     }else if(ev =='h'){
         ptr->halfClose =1;

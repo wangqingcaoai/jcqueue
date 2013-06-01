@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <sys/time.h>
+#include <time.h>
 #include <ctype.h>
 #include <string.h>
 #include "type.h"
@@ -39,11 +40,13 @@ char * allocString(const char* s){
     if(s==NULL){
         return NULL;
     }
-    char* ptr = allocMem(strlen(s)+1);
+    int allocLength = strlen(s)+1;
+    char* ptr = allocMem(allocLength);
     if(ptr == NULL){
         return NULL;
     }
     strcpy(ptr,s);
+    ptr[allocLength-1] = '\0';
     return ptr;
 }
 
@@ -156,5 +159,16 @@ char* intToString(int i,char *buf,int length){
         return NULL;
     }
     snprintf(buf,length,"%d",i);
+    return buf;
+}
+
+char* getStrTime(char* buf,int length,char* format){
+    if(buf == NULL ||length<=0 || format == NULL){
+        return NULL;
+    }
+    time_t timep;
+    time(&timep);
+    struct tm *p = localtime(&timep); /*取得当地时间*/    
+    strftime (buf,length,format, p);
     return buf;
 }

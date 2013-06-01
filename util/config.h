@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #define BUF_SIZE 512
-#define ANNOTATION ';'
+#define ANNOTATION '#'
 #include "../config_list.h"
 #define CURRENT_DIR_CONFIG_FILE "./jcqueue.conf"
 #define DEFAULT_CONFIG_FILE "/etc/jcqueue/jcqueue.conf"

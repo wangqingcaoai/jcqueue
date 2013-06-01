@@ -44,6 +44,7 @@ int main(int argc, char  *argv[])
     char* host = getConfig("host","127.0.0.1");
     char* port = getConfig("port","12221");
     AppServerPtr serverPtr = buildAppServer(host,port);
+    initAppServer(serverPtr);
     processAppServer(serverPtr);
     
 

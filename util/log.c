@@ -43,7 +43,7 @@ int addLog(LogLevel level,LogLayer layer,const char* position ,const char* logMe
         }
         if(file == NULL){
             int error =errno;
-            printf("open log file error errno.%02d : %s\n", error, strerror(error));
+            printf("open log file[%s] error errno.%02d : %s\n", logPath,error, strerror(error));
             errno = 0;
             return 1;
         }else{
