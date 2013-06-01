@@ -7,6 +7,7 @@
 #define DEFAULT_STORE_PATH "~/.jcq/"
 #define DEFAULT_STORE_PATH_SIZE 512
 #define DEFAULT_STORE_HEADER "JCQ 1.0 "
+#define DEFAULT_STORE_BUF_SIZE 512
 static FILE * storeFile;
 static int startOffset;
 typedef struct Store{

@@ -13,8 +13,14 @@ int initStore(){
         if(OFF==isOn(getConfig("store_ignore","off"))){
             storeFile = findStoreFile();
             startOffset = strlen(DEFAULT_STORE_HEADER);
-
-        }else{
+			char format[startOffset+1];
+			fread(storeFile,format,startOffset);
+			format[startOffset]='\0';
+			if(!isSameString(format,DEFAULT_STORE_HEADER)){
+        		addLog(LOG_ERRORE,LOG_LAYER_DATA,STORE_POSITION_NAME," store file format not support!");
+				exit(1);
+			}
+		}else{
             //ignore backup file . don't need read data
         } 
     }else{
@@ -146,4 +152,21 @@ static char*  getRealPath(char*buf,int length,char*path){
     }
     
     return buf;
+}
+
+int store(StorePtr ptr,char * format,...){
+	if(ptr==NULL||storeFile==NULL||format==NULL){
+		return -1;
+	}
+	if(ptr->offset==0){
+		fseek(storeFile,0,SEEK_END);
+		ptr->offset=ftell(storeFile)+1;
+	}else{
+		fseek(storeFile,ptr->offset,SEEK_SET);
+	}
+    va_list va;
+    va_start(va,format);
+    vfprintf(storeFile,format,va);
+    va_end(va);
+
 }
