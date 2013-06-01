@@ -46,7 +46,9 @@ int checkPrivilege(UserPtr user,int privilege);
 int addChannel(UserPtr userPtr,ChannelPtr ptr );
 int isUser(UserPtr userPtr,const char* userName);
 int restoreUsers(ListPtr userList);
-int storeUsers(ListPtr userList);
+long storeUsers(ListPtr userList);
+long storeUser(UserPtr user);
+int restoreUser(UserPtr user);
 int tickUser(ListPtr userList);
 //更新时备份功能
 #endif

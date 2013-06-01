@@ -219,8 +219,21 @@ int isUser(UserPtr userPtr,const char* userName){
 int restoreUsers(ListPtr userList){
 
 }
-int storeUsers(ListPtr userList){
+long storeUsers(ListPtr userList){
 
+}
+int restoreUser(UserPtr user){
+    
+}
+long storeUser(UserPtr ptr){
+    User user ;
+    memcpy(&user,ptr,sizeof(User));
+    //don't use the point to access data it will make error
+    user.userName = (void*)storeString(ptr->userName);
+    user.userSecretKey = (void*)storeString(ptr->userSecretKey);
+    user.userPassword = (void*)storeString(ptr->userPassword);
+    //user.channels = storeList(channels);
+    return store(0,&user,sizeof(User));
 }
 int tickUser(ListPtr userList){
     //did nothing

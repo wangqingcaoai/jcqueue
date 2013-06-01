@@ -8,16 +8,18 @@
 #define DEFAULT_STORE_PATH_SIZE 512
 #define DEFAULT_STORE_HEADER "JCQ 1.0 "
 #define DEFAULT_STORE_BUF_SIZE 512
+#define STORE_STATE_USING 1
+#define STORE_STATE_DEL 2
+
 static FILE * storeFile;
 static int startOffset;
+
 typedef struct Store{
-    int offset;// to find where data is
+    long offset;// to find where data is
     int state ;// data state;
     int length;//data length;
-    char* readFormat;//
-    char* writeFormat;//
 }Store ,* StorePtr;
-int store(StorePtr,...);
+long store(StorePtr,...);
 int initStore();
 int restore(StorePtr,...);
 int delStore(StorePtr);
