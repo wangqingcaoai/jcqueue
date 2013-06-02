@@ -34,6 +34,17 @@ typedef struct User
     ListPtr channels;//当前开辟的连接通道
 	long storePosition;
 }User,*UserPtr;
+typedef struct UserStore
+{
+    int userId;
+    long userName;
+    long userSecretKey;
+    long userPassword;
+    int privilege;
+    int group;
+    int64 keyUpdateTime;
+    long channels;
+}UserStore,UserStorePtr;
 UserPtr buildUser(const char* userName, const char* userPassword);
 int setUserPassWord(UserPtr  ptr,const char* userPassword);
 int setUserSecretKey(UserPtr ptr,const char* userSecretKey);
@@ -49,7 +60,7 @@ int isUser(UserPtr userPtr,const char* userName);
 int restoreUsers(ListPtr userList);
 long storeUsers(ListPtr userList);
 long storeUser(UserPtr user);
-int restoreUser(UserPtr user);
+UserPtr restoreUser(long storePosition);
 int tickUser(ListPtr userList);
 //更新时备份功能
 #endif

@@ -8,16 +8,17 @@
 #include "store.h"
 #include "../util/config.h"
 #include "../util/log.h"
+#include "../util/util.h"
 int initStore(){
     if(isOn(getConfig("store","on"))){
         if(OFF==isOn(getConfig("store_ignore","off"))){
             storeFile = findStoreFile();
             startOffset = strlen(DEFAULT_STORE_HEADER);
 			char format[startOffset+1];
-			fread(storeFile,format,startOffset);
+			fread(format,startOffset,1,storeFile);
 			format[startOffset]='\0';
 			if(!isSameString(format,DEFAULT_STORE_HEADER)){
-        		addLog(LOG_ERRORE,LOG_LAYER_DATA,STORE_POSITION_NAME," store file format not support!");
+        		addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME," store file format not support!");
 				exit(1);
 			}
 		}else{
@@ -155,8 +156,8 @@ static char*  getRealPath(char*buf,int length,char*path){
 }
 
 //make sure the length is not change.
-long store(long offset,void * buf,int length){
-    if(storeFile==NULL||buf == NULL ||length <=0){
+long store(long offset,void * data,int length){
+    if(storeFile==NULL||data == NULL ||length <=0){
         return -1;
     }
     Store store;
@@ -183,8 +184,8 @@ long store(long offset,void * buf,int length){
     fflush(storeFile);
     return store.offset;
 }
-int restore(long offset,void * buf,int length){
-    if(offset <=0||storeFile==NULL||format==NULL){
+int restore(long offset,void * data,int length){
+    if(offset <=0||storeFile==NULL||data==NULL||length <=0){
         return -1;
     }
     Store store;
@@ -198,8 +199,8 @@ int restore(long offset,void * buf,int length){
         addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"restore data at offset[%ld] failed ,data length not same ",offset);
         return -2;
     }
-    fread(buf,length,1,storeFile);
-    return buf;
+    fread(data,length,1,storeFile);
+    return 0;
 }
 
 
@@ -208,21 +209,18 @@ long storeString(char* string){
     if(string==NULL){
         return -1;
     }
-    Store store;
-    store.length = strlen(string);
-    store.offset = 0;
-    return store(&store,string,store.length);
+    return store(0,string,strlen(string));
 }
 
 char* restoreString(long offset){
     if(offset<=0){
         return NULL;  
     }
-    Store store;
+    Store s;
     fseek(storeFile,offset,SEEK_SET);
-    fread(&store,sizeof(Store),1,storeFile);
-    void * buf = allocMem(store.length+1);
-    fread(&buf,store.length,1,storeFile);
-    buf[store.length+1]='\0';
+    fread(&s,sizeof(Store),1,storeFile);
+    char * buf = allocMem(s.length+1);
+    fread(&buf,s.length,1,storeFile);
+    buf[s.length+1]='\0';
     return buf;
 }

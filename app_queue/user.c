@@ -3,6 +3,7 @@
 #include "user.h"
 #include "../util/util.h"
 #include "../data/list.h"
+#include "../data/store.h"
 
 UserPtr buildUser(const char* userName,const char* userPassword){
     if(isEmptyString(userName)|| isEmptyString(userPassword)){
@@ -223,28 +224,34 @@ long storeUsers(ListPtr userList){
 
 }
 UserPtr restoreUser(long storePosition){
-	User user;
-	int result= restore(storePosition,&user,sizeof(User));
-	UserPtr ptr = allocMem(sizeof(User));
-	ptr->userId = user.userId;
-	ptr->userName= restoreString(user.userName);
-	ptr->userSecretKey= restoreString(user.userSecretKey);
-	ptr->userPassword = restoreString(user.userPassword);
-	ptr->group=user.group;
-	ptr->privilege = user.privilege;
-	ptr->keyUpdateTime = user.keyUpdateTime;
-	ptr->channels = buildList();
-	ptr->storePosition =storePosition;
-	return ptr;
+    UserStore user;
+    int result= restore(storePosition,&user,sizeof(User));
+    if(result != STORE_SUCCESS){
+        return NULL;
+    }
+    UserPtr ptr = allocMem(sizeof(User));
+    ptr->userId = user.userId;
+    ptr->userName = restoreString(user.userName);
+    ptr->userSecretKey = restoreString(user.userSecretKey);
+    ptr->userPassword = restoreString(user.userPassword);
+    ptr->group = user.group;
+    ptr->privilege = user.privilege;
+    ptr->keyUpdateTime = user.keyUpdateTime;
+    //ptr->channels = buildList();
+    ptr->storePosition = storePosition;
+    return ptr;
 }
 long storeUser(UserPtr ptr){
-    User user ;
-    memcpy(&user,ptr,sizeof(User));
+    UserStore user ;
     //don't use the point to access data it will make error
-    user.userName = (void*)storeString(ptr->userName);
-    user.userSecretKey = (void*)storeString(ptr->userSecretKey);
-    user.userPassword = (void*)storeString(ptr->userPassword);
-    user.channels = NULL;
+    user.userId = ptr->userId;
+    user.userName = storeString(ptr->userName);
+    user.userSecretKey = storeString(ptr->userSecretKey);
+    user.userPassword = storeString(ptr->userPassword);
+    user.privilege = ptr->privilege;
+    user.group = ptr->group;
+    user.keyUpdateTime = ptr->keyUpdateTime;
+    user.channels = 0;
     return store(0,&user,sizeof(User));
 }
 int tickUser(ListPtr userList){

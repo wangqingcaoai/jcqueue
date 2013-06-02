@@ -12,17 +12,33 @@ typedef struct ListNode{
     struct ListNode * next;
     void * data;
     int id;
+    long storePosition;
 }ListNode,*ListNodePtr;
+typedef struct ListNodeStore
+{
+    long prev;
+    long next;
+    int id;
+    long data;
+}ListNodeStore, * ListNodeStorePtr;
 typedef struct List 
 {
     int listId;
     ListNodePtr header;
     int count,maxCount;
+    long storePosition;
 }List ,* ListPtr;
+typedef struct ListStore
+{
+    int listId;
+    long header;
+    int count,maxCount;   
+}ListStore, * ListStorePtr;
 typedef enum ListPosition {  
     LIST_PRE,
     LIST_NEXT,
 }ListPosition;
+
 ListPtr buildList();
 
 int insertToList(ListPtr list, void *data);
@@ -53,5 +69,9 @@ void* popFromList(ListPtr p);
 int pushToList(ListPtr, void*data);
 ListNodePtr getListHeader(ListPtr);
 ListNodePtr getListEnd(ListPtr);
+long storeList(ListPtr ptr,StoreHandle);
+ListPtr restoreList(long storePosition,RestoreHandle handle);
+long storeListNode(ListNodePtr ptr,StoreHandle);
+ListNodePtr restoreListNode(long storePosition,RestoreHandle handle);
 //todo 带条件连续查找
 #endif

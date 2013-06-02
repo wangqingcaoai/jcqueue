@@ -9,4 +9,7 @@ typedef void* (*Copy)(void*);
 typedef int(*Less)(void*, void*);
 typedef void(*Record)(void*, int);
 typedef void (*Display)(void* , int );
+typedef long (*StoreHandle)(void*  );
+typedef void * (*RestoreHandle)(long );
+
 #endif

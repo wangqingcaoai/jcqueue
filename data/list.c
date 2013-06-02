@@ -5,6 +5,7 @@
 #include <string.h>
 #include "base.h"
 #include "list.h"
+#include "store.h"
 //减小计数
 static int  removeOne(ListPtr list){
     if(!checklist(list)){
@@ -45,6 +46,8 @@ ListPtr buildList(){
     list->header->id= LIST_HEADER_ID;
     list->header->prev = list->header->next = list->header;
     list->header->data = NULL;
+    list->header->storePosition = 0;
+    list->storePosition = 0;
     return list;
 }
 
@@ -67,6 +70,7 @@ int insertToList(ListPtr list,void *data){
    
     new->id = list->maxCount;
     new->data = data;
+    new->storePosition = 0;
     new = NULL;
     return 1;
 }
@@ -429,7 +433,40 @@ int pushToList(ListPtr ptr, void*data){
     return insertToList(ptr,data);
 }
 
-long storeList(ListPtr ptr,long storePosition,StoreHandle handle){
+long storeList(ListPtr ptr,StoreHandle handle){
+    if(ptr == NULL || handle == NULL){
+        return -1;
+    }
 
-	
+    ListStore lstore;
+    lstore.listId = ptr->listId;
+    lstore.header = storeListNode(ptr->header,handle);
+    lstore.count = ptr->count;
+    lstore.maxCount = ptr->maxCount;
+    return store(ptr->storePosition,&lstore,sizeof(ListStore));
+
+}
+ListPtr restoreList(long storePosition,RestoreHandle handle){
+    if(storePosition <=0 ){
+        return NULL;
+    }
+    ListStore lstore;
+    int result = restore(storePosition,&lstore,sizeof(ListStore));
+    if(result != STORE_SUCCESS){
+        return NULL;
+    }else{
+        ListPtr ptr = (ListPtr)allocMem(sizeof(List));
+        ptr->listId = lstore.listId;
+        ptr->header = restoreListNode(lstore.header,handle);
+        ptr->count = lstore.count ;
+        ptr->maxCount = lstore.maxCount;
+        ptr->storePosition = storePosition;
+        return ptr; 
+    }
+}
+long storeListNode(ListNodePtr ptr,StoreHandle handle){
+
+}
+ListNodePtr restoreListNode(long storePosition,RestoreHandle handle){
+
 }
