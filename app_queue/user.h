@@ -32,6 +32,7 @@ typedef struct User
     int64 keyUpdateTime;//鉴权key 更新时间
 
     ListPtr channels;//当前开辟的连接通道
+	long storePosition;
 }User,*UserPtr;
 UserPtr buildUser(const char* userName, const char* userPassword);
 int setUserPassWord(UserPtr  ptr,const char* userPassword);

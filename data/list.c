@@ -428,3 +428,8 @@ void* popFromList(ListPtr list){
 int pushToList(ListPtr ptr, void*data){
     return insertToList(ptr,data);
 }
+
+long storeList(ListPtr ptr,long storePosition,StoreHandle handle){
+
+	
+}

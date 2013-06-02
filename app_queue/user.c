@@ -222,8 +222,20 @@ int restoreUsers(ListPtr userList){
 long storeUsers(ListPtr userList){
 
 }
-int restoreUser(UserPtr user){
-    
+UserPtr restoreUser(long storePosition){
+	User user;
+	int result= restore(storePosition,&user,sizeof(User));
+	UserPtr ptr = allocMem(sizeof(User));
+	ptr->userId = user.userId;
+	ptr->userName= restoreString(user.userName);
+	ptr->userSecretKey= restoreString(user.userSecretKey);
+	ptr->userPassword = restoreString(user.userPassword);
+	ptr->group=user.group;
+	ptr->privilege = user.privilege;
+	ptr->keyUpdateTime = user.keyUpdateTime;
+	ptr->channels = buildList();
+	ptr->storePosition =storePosition;
+	return ptr;
 }
 long storeUser(UserPtr ptr){
     User user ;
@@ -232,7 +244,7 @@ long storeUser(UserPtr ptr){
     user.userName = (void*)storeString(ptr->userName);
     user.userSecretKey = (void*)storeString(ptr->userSecretKey);
     user.userPassword = (void*)storeString(ptr->userPassword);
-    //user.channels = storeList(channels);
+    user.channels = NULL;
     return store(0,&user,sizeof(User));
 }
 int tickUser(ListPtr userList){
