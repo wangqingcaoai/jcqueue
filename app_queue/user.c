@@ -217,13 +217,16 @@ int isUser(UserPtr userPtr,const char* userName){
     }
 }
 
-int restoreUsers(ListPtr userList){
-
+ListPtr restoreUsers(long storePosition){
+    return restoreList(storePosition,(RestoreHandle)restoreUser);
 }
 long storeUsers(ListPtr userList){
-
+    return storeList(userList,(StoreHandle)storeUser);
 }
 UserPtr restoreUser(long storePosition){
+    if(storePosition <=0){
+        return NULL;
+    }
     UserStore user;
     int result= restore(storePosition,&user,sizeof(User));
     if(result != STORE_SUCCESS){
@@ -242,6 +245,9 @@ UserPtr restoreUser(long storePosition){
     return ptr;
 }
 long storeUser(UserPtr ptr){
+    if(ptr == NULL){
+        return 0;
+    }
     UserStore user ;
     //don't use the point to access data it will make error
     user.userId = ptr->userId;

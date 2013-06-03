@@ -42,6 +42,14 @@ int initAppServer(AppServerPtr ptr){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
     initStore();
+    addUser(ptr->usersList,"test","pw",1,2);
+    long offset =  storeUsers(ptr->usersList);
+    printf("%ld\n",offset );
+    ListPtr l = restoreUsers(offset);
+    printf("%d\n",l->count );
+    UserPtr u = popFromList(l);
+    printf("%s\n",u->userName );
+    exit(1);
     // restoreUsers(ptr->usersList);
     // restoreBaseServer(ptr->baseServer);
     // restoreSubscribes(ptr->subscribeServer);

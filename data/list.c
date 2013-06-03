@@ -440,14 +440,14 @@ long storeList(ListPtr ptr,StoreHandle handle){
 
     ListStore lstore;
     lstore.listId = ptr->listId;
-    lstore.header = storeListNode(ptr->header,handle);
+    lstore.header = storeListNodes(ptr->header,handle);
     lstore.count = ptr->count;
     lstore.maxCount = ptr->maxCount;
-    return store(ptr->storePosition,&lstore,sizeof(ListStore));
-
+    ptr->storePosition = store(ptr->storePosition,&lstore,sizeof(ListStore));
+    return ptr->storePosition;
 }
 ListPtr restoreList(long storePosition,RestoreHandle handle){
-    if(storePosition <=0 ){
+    if(storePosition <=0 || handle == NULL ){
         return NULL;
     }
     ListStore lstore;
@@ -457,16 +457,98 @@ ListPtr restoreList(long storePosition,RestoreHandle handle){
     }else{
         ListPtr ptr = (ListPtr)allocMem(sizeof(List));
         ptr->listId = lstore.listId;
-        ptr->header = restoreListNode(lstore.header,handle);
+        ptr->header = restoreListNodes(lstore.header,handle);
         ptr->count = lstore.count ;
         ptr->maxCount = lstore.maxCount;
         ptr->storePosition = storePosition;
         return ptr; 
     }
 }
+long storeListNodes(ListNodePtr header,StoreHandle handle){
+    if(header == NULL||handle == NULL){
+        return -1;
+    }
+    long headerPosition = storeListNode(header,handle);
+    ListNodePtr ptr = header->next;
+    // it means a empty list
+    if(ptr == header){
+        storeListNode(header,handle);
+    }else{
+            //first store we can just write the prev position into store;
+        while(ptr != header){
+            storeListNode(ptr,handle);
+            ptr =ptr->next;
+        }
+    }
+    return headerPosition;
+    
+
+}
+ListNodePtr restoreListNodes(long storePosition,RestoreHandle handle){
+    ListNodeStore sheader;
+    ListNodePtr header = restoreListNode(storePosition,&sheader,handle);
+    long position = sheader.next;
+    ListNodeStore temp;
+    ListNodePtr prev = header;
+    ListNodePtr current = header;
+    while(position!=storePosition&&position>0){
+        current = restoreListNode(position,&temp,handle);
+        prev->next = current;
+        current->prev = prev;
+        position = temp.next;
+    }
+    current->next = header;
+    header->prev = current;
+    return header;
+}
+
 long storeListNode(ListNodePtr ptr,StoreHandle handle){
-
+    if(ptr == NULL ||handle == NULL){
+        return -1;
+    }
+    ListNodeStore node;
+    node.prev = ptr->prev->storePosition;
+    node.next = ptr->next->storePosition;
+    node.id =  ptr->id;
+    if(ptr->data == NULL){
+        node.data = 0;
+    }else{
+        node.data = handle(ptr->data);
+    }
+    ptr->storePosition = store(ptr->storePosition,&node,sizeof(ListNodeStore));
+    
+    if(ptr->prev->storePosition>0){
+        ListNodeStore prev;
+        restore(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));
+        if(prev.next!=ptr->storePosition){
+            prev.next = ptr->storePosition;
+            store(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));
+        }
+    }
+    if(ptr->next->storePosition>0){
+        ListNodeStore next;
+        restore(ptr->next->storePosition,&next,sizeof(ListNodeStore));
+        if(next.prev!=ptr->storePosition){
+            next.prev = ptr->storePosition;
+            store(ptr->next->storePosition,&next,sizeof(ListNodeStore));
+        }
+    }
+    return ptr->storePosition;
 }
-ListNodePtr restoreListNode(long storePosition,RestoreHandle handle){
-
-}
+ListNodePtr restoreListNode(long storePosition,ListNodeStorePtr node, RestoreHandle handle){
+    if(storePosition<=0 || handle == NULL ||node == NULL){
+        return NULL;
+    }
+    restore(storePosition,node,sizeof(ListNodeStore));
+    ListNodePtr listNode = allocMem(sizeof(ListNode));
+    listNode->prev = NULL;
+    listNode->next = NULL;
+    listNode->id = node->id;
+    if(node->data <=0){
+        listNode->data = NULL;
+    }else{
+        listNode->data = handle(node->data);    
+    }
+    listNode->storePosition = storePosition;
+    return listNode;
+} 

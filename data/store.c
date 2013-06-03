@@ -15,12 +15,19 @@ int initStore(){
             storeFile = findStoreFile();
             startOffset = strlen(DEFAULT_STORE_HEADER);
 			char format[startOffset+1];
-			fread(format,startOffset,1,storeFile);
-			format[startOffset]='\0';
-			if(!isSameString(format,DEFAULT_STORE_HEADER)){
-        		addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME," store file format not support!");
-				exit(1);
-			}
+			int readNum = fread(format,startOffset,1,storeFile);
+            //it means a new store file
+            if(readNum == 0){
+                fwrite(DEFAULT_STORE_HEADER,startOffset,1,storeFile);
+                fflush(storeFile);
+            }else{
+                format[startOffset]='\0';
+                if(!isSameString(format,DEFAULT_STORE_HEADER)){
+                    addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME," store file format not support!");
+                    exit(1);
+                }    
+            }
+			
 		}else{
             //ignore backup file . don't need read data
         } 
@@ -165,8 +172,12 @@ long store(long offset,void * data,int length){
     store.length = length;
     store.state = STORE_STATE_USING;
     if(offset<=0){
-        fseek(storeFile,0,SEEK_END);
-        store.offset=ftell(storeFile)+1;
+        int result = fseek(storeFile,0L,SEEK_END);
+        if(result == -1){
+            addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"seek offset failed");
+            return -3;
+        }
+        store.offset=ftell(storeFile);
         //write StoreHeader first
         fwrite(&store,sizeof(Store),1,storeFile);
     }else{
@@ -184,6 +195,7 @@ long store(long offset,void * data,int length){
     fflush(storeFile);
     return store.offset;
 }
+
 int restore(long offset,void * data,int length){
     if(offset <=0||storeFile==NULL||data==NULL||length <=0){
         return -1;
@@ -202,7 +214,18 @@ int restore(long offset,void * data,int length){
     fread(data,length,1,storeFile);
     return 0;
 }
-
+int delStore(long offset){
+    if(offset<=0){
+        return STORE_ERROR_PARAM_ERROR;
+    }else{
+        Store s;
+        fseek(storeFile,offset,SEEK_SET);
+        fread(&s,sizeof(Store),1,storeFile);
+        s.state = STORE_STATE_DEL;
+        fseek(storeFile,offset,SEEK_SET);
+        fwrite(&s,sizeof(Store),1,storeFile);
+    }
+}
 
 
 long storeString(char* string){
@@ -220,7 +243,7 @@ char* restoreString(long offset){
     fseek(storeFile,offset,SEEK_SET);
     fread(&s,sizeof(Store),1,storeFile);
     char * buf = allocMem(s.length+1);
-    fread(&buf,s.length,1,storeFile);
+    fread(buf,s.length,1,storeFile);
     buf[s.length+1]='\0';
     return buf;
 }

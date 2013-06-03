@@ -57,7 +57,7 @@ int delUser(ListPtr userList,const char* userName);
 int checkPrivilege(UserPtr user,int privilege);
 int addChannel(UserPtr userPtr,ChannelPtr ptr );
 int isUser(UserPtr userPtr,const char* userName);
-int restoreUsers(ListPtr userList);
+ListPtr restoreUsers(long storePosition);
 long storeUsers(ListPtr userList);
 long storeUser(UserPtr user);
 UserPtr restoreUser(long storePosition);

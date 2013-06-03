@@ -72,6 +72,9 @@ ListNodePtr getListEnd(ListPtr);
 long storeList(ListPtr ptr,StoreHandle);
 ListPtr restoreList(long storePosition,RestoreHandle handle);
 long storeListNode(ListNodePtr ptr,StoreHandle);
-ListNodePtr restoreListNode(long storePosition,RestoreHandle handle);
+ListNodePtr restoreListNode(long storePosition,ListNodeStorePtr node,RestoreHandle handle);
+long storeListNodes(ListNodePtr ptr,StoreHandle);
+ListNodePtr restoreListNodes(long storePosition,RestoreHandle handle);
+
 //todo 带条件连续查找
 #endif

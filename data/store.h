@@ -24,7 +24,7 @@ typedef struct Store{
 long store(long offset,void* data,int length);
 int initStore();
 int restore(long offset,void *data,int length);
-int delStore(StorePtr);
+int delStore(long offset);
 FILE* findStoreFile();
 char* restoreString(long offset);
 long storeString(char* string);
