@@ -9,8 +9,18 @@ typedef struct BaseServer
     /* data */
     ListPtr topicList;
     AppServerPtr appServer;
+    long storePosition;
 }BaseServer,* BaseServerPtr;
+typedef struct BaseServerStore
+{
+    int baseserver_id;
+    long topicList;
+    long appServer;
+}BaseServerStore,*BaseServerStorePtr;
 BaseServerPtr buildBaseServer(AppServerPtr app);
 int freeBaseServer(BaseServerPtr * p);
 int tickBaseServer(BaseServerPtr ptr);
+long storeBaseServer(BaseServerPtr);
+BaseServerPtr restoreBaseServer(long storePosition,AppServerPtr ptr);
+
 #endif

@@ -37,7 +37,7 @@ typedef struct AppServer
     Handle requestOut;
     Handle responseOut;
     TickHandle tick;
-	
+	long storePosition;
 }AppServer , * AppServerPtr;
 AppServerPtr buildAppServer(const char* host,const char* port);
 int initAppServer(AppServerPtr);
