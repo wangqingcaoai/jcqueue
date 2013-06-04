@@ -2,6 +2,7 @@
 #define BQ_TOPIC_H
 #include "message.h"
 #include "../data/heap.h"
+#define TOPIC_MAX_TOPIC_NAME 512
 //topic
 //指一类型消息的集合，
 typedef struct Topic
@@ -21,7 +22,7 @@ typedef struct TopicStore{
 	long delay_queue;
 	long using_pool;
 	long sleep_queue;
-}
+}TopicStore,*TopicStorePtr;
 TopicPtr buildTopic(const char* topicName);//新建topic
 int addMessage(TopicPtr topic,MessagePtr message,int delay);//添加消息
 MessagePtr getReadyMessage(TopicPtr topic);//获取消息

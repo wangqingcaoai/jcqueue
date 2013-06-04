@@ -103,3 +103,45 @@ int isMessage(MessagePtr ptr,int64* messageid){
     }
     return 0;
 }
+long storeMessage(MessagePtr ptr){
+    if(ptr== NULL ){
+        return -1L;
+    }
+    MessageStore mstore;
+    if(ptr->storePosition > 0){
+        restore(ptr->storePosition,&mstore,sizeof(MessageStore));
+    }else{
+        mstore.data = 0L; 
+    }
+    mstore.messageid = ptr->messageid;
+    mstore.state = ptr->state;
+    mstore.timestamp = ptr->timestamp;
+    mstore.createtime = ptr->createtime;
+    mstore.priority = ptr->priority;
+    mstore.length = ptr->length;
+    mstore.delay = ptr->delay;
+    mstore.activetime = ptr->activetime;
+    mstore.data = store(mstore.data,ptr->data,ptr->length);
+    ptr->storePosition  = store(ptr->storePosition,&mstore,sizeof(MessageStore));
+    return ptr->storePosition;
+}
+MessagePtr restoreMessage(long storePosition){
+    if(storePosition <=0){
+        return NULL;
+    }
+    MessageStore mstore;
+    restore(storePosition,&mstore,sizeof(MessageStore));
+    MessagePtr ptr = (MessagePtr)allocMem(sizeof(Message));
+    ptr->messageid = mstore.messageid;
+    ptr->state = mstore.state;
+    ptr->timestamp = mstore.timestamp;
+    ptr->createtime = mstore.createtime;
+    ptr->priority = mstore.priority;
+    ptr->length =  mstore.length;
+    ptr->delay =mstore.delay;
+    ptr->activetime = mstore.activetime;
+    ptr->storePosition = storePosition;
+    ptr->data = allocMem(mstore.length);
+    restore(mstore.data,ptr->data,mstore.length);
+    return ptr;
+}

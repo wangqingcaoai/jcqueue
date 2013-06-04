@@ -14,7 +14,7 @@ typedef struct HeapStore{
 	int cap;
 	int len;
 	long data;
-}
+}HeapStore,*HeapStorePtr;
 int heapinsert(HeapPtr h, void *x);
 void * heapremove(HeapPtr h, int k);
 HeapPtr buildHeap(Record record, Less less);

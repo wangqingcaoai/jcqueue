@@ -1,9 +1,11 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "base.h"
 #include "../util/util.h"
 #include "heap.h"
+#include "store.h"
 
 static void set(Heap *h, int k, void *x)
 {
@@ -161,8 +163,8 @@ int heapFindIndex(HeapPtr h,Find f,void * arg){
 }
 
 long storeHeap(HeapPtr ptr,StoreHandle handle){
-	if(ptr==NULL || handle =NULL){
-		return -1;
+	if(ptr==NULL || handle ==NULL){
+		return -1L;
 	}
 	HeapStore heapStore;
 	heapStore.cap = ptr->cap;
@@ -180,7 +182,7 @@ static long storeHeapData(HeapPtr ptr,StoreHandle handle){
 	if(ptr->storePosition >0){
 		//check old store s cap
 		HeapStore heapStore;
-		restoreHeap(ptr->storePosition,&heapStore,sizeof(HeapStore));
+		restore(ptr->storePosition,&heapStore,sizeof(HeapStore));
 		if(heapStore.cap<ptr->cap){
 			//it means we need a new store place
 		}else{
@@ -199,20 +201,20 @@ static long storeHeapData(HeapPtr ptr,StoreHandle handle){
 	}
 	return store(offset,data,cap);
 }
-HeapPtr restoreHeap(long storePosition, Record record,Less less){
-	if(storePosition <=0 || record == NULL|| less == NULL){
+HeapPtr restoreHeap(long storePosition,RestoreHandle handle ,Record record,Less less){
+	if(storePosition <=0 || record == NULL|| less == NULL||handle == NULL){
 		return NULL;
 	}
-	HeapStore heapStore;
+    HeapStore heapStore;
 	restore(storePosition,&heapStore,sizeof(HeapStore));
 	HeapPtr ptr= allocMem(sizeof(Heap));
 	ptr->cap = heapStore.cap;
-	ptr->len = heapStore.len;
-	ptr->data = restoreHeapData(heapStore.data,handle,HeapStore.cap);
+	ptr->len = heapStore.len;	
+    ptr->data = restoreHeapData(heapStore.data,handle,heapStore.cap);
 	ptr->rec =record;
 	ptr->less = less;
 	ptr->storePosition = storePosition;
-
+    return ptr;
 }
 
 static void**  restoreHeapData(long storePosition,RestoreHandle handle,int cap){

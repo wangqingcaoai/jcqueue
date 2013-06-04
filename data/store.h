@@ -1,5 +1,12 @@
 #ifndef DATA_STORE_H
 #define DATA_STORE_H 
+#include <sys/types.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <dirent.h>
+#include <errno.h>
+#include <unistd.h>
 #define STORE_FILE_HEAD "jcq_bak_"
 #define STORE_FILE_EXTENSION ".bak"
 #define STORE_POSITION_NAME "store"

@@ -4,6 +4,7 @@
 #include "../data/heap.h"
 #include "message.h"
 #include "topic.h"
+#include "../data/store.h"
 //新建topic
 TopicPtr buildTopic(const char* topicName){
     if(isEmptyString(topicName)){
@@ -168,18 +169,31 @@ long storeTopic(TopicPtr ptr){
 	}
 	tstore.topicId = ptr->topicId;
 	tstore.topicName = storeString(tstore.topicName,ptr->topicName,TOPIC_MAX_TOPIC_NAME);
-	tstore.ready_queue= storeHeap(ptr->ready_queue,(StoreHandle)StoreMessage);
+	tstore.ready_queue= storeHeap(ptr->ready_queue,(StoreHandle)storeMessage);
 
-	tstore.delay_queue= storeHeap(ptr->delay_queue,(StoreHandle)StoreMessage);
+	tstore.delay_queue= storeHeap(ptr->delay_queue,(StoreHandle)storeMessage);
 
 	
-	tstore.using_pool= storeHeap(ptr->using_pool,(StoreHandle)StoreMessage);
+	tstore.using_pool= storeHeap(ptr->using_pool,(StoreHandle)storeMessage);
 
-	tstore.sleep_queue= storeHeap(ptr->sleep_queue,(StoreHandle)StoreMessage);
-	ptr->storePosition=store(ptr->storePosition,&tstore,sizeof(TopicStore);
+	tstore.sleep_queue= storeHeap(ptr->sleep_queue,(StoreHandle)storeMessage);
+	ptr->storePosition=store(ptr->storePosition,&tstore,sizeof(TopicStore));
 	return ptr->storePosition;
 }
 
 TopicPtr restoreTopic(long storePosition){
-
+    if(storePosition <=0 ){
+        return NULL;
+    }
+    TopicStore tstore;
+    restore(storePosition,&tstore,sizeof(TopicStore));
+    TopicPtr ptr= (TopicPtr)allocMem(sizeof(Topic));
+    ptr->topicId = tstore.topicId;
+    ptr->topicName = restoreString(tstore.topicName);
+    ptr->ready_queue = restoreHeap(tstore.ready_queue,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->delay_queue = restoreHeap(tstore.delay_queue,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->using_pool = restoreHeap(tstore.using_pool,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->sleep_queue = restoreHeap(tstore.sleep_queue,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->storePosition = storePosition;      
+    return ptr;
 }
