@@ -524,6 +524,7 @@ long storeListNode(ListNodePtr ptr,StoreHandle handle){
             prev.next = ptr->storePosition;
             store(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));
         }
+        restore(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));  
     }
     if(ptr->next->storePosition>0){
         ListNodeStore next;
@@ -532,7 +533,10 @@ long storeListNode(ListNodePtr ptr,StoreHandle handle){
             next.prev = ptr->storePosition;
             store(ptr->next->storePosition,&next,sizeof(ListNodeStore));
         }
+        restore(ptr->next->storePosition,&next,sizeof(ListNodeStore));
+        
     }
+    restore(ptr->storePosition,&node,sizeof(ListNodeStore));
     return ptr->storePosition;
 }
 ListNodePtr restoreListNode(long storePosition,ListNodeStorePtr node, RestoreHandle handle){

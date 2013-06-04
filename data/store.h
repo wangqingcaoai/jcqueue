@@ -3,7 +3,7 @@
 #define STORE_FILE_HEAD "jcq_bak_"
 #define STORE_FILE_EXTENSION ".bak"
 #define STORE_POSITION_NAME "store"
-#define STORE_FILE_OPEN_MODE "wb+"
+#define STORE_FILE_OPEN_MODE "rb+"
 #define DEFAULT_STORE_PATH "~/.jcq/"
 #define DEFAULT_STORE_PATH_SIZE 512
 #define DEFAULT_STORE_HEADER "JCQ 1.0 "
@@ -27,6 +27,6 @@ int restore(long offset,void *data,int length);
 int delStore(long offset);
 FILE* findStoreFile();
 char* restoreString(long offset);
-long storeString(char* string);
+long storeString(long offset,char* string,int maxLength);
 static char*  getRealPath(char*buf,int length,char*path);
 #endif

@@ -2,6 +2,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <dirent.h>
 #include <errno.h>
 #include <unistd.h>
@@ -15,7 +18,7 @@ int initStore(){
             storeFile = findStoreFile();
             startOffset = strlen(DEFAULT_STORE_HEADER);
 			char format[startOffset+1];
-			int readNum = fread(format,startOffset,1,storeFile);
+            int readNum = fread(format,startOffset,1,storeFile);
             //it means a new store file
             if(readNum == 0){
                 fwrite(DEFAULT_STORE_HEADER,startOffset,1,storeFile);
@@ -84,9 +87,12 @@ FILE* findStoreFile(){
         char newStoreFileName[newFileLength];
         snprintf(newStoreFileName,newFileLength,"%s%s%s%s",storeDirName,STORE_FILE_HEAD,timeStr,STORE_FILE_EXTENSION);
         printf("%s\n",newStoreFileName );
+        if(access(newStoreFileName,F_OK)!=0){
+            creat(newStoreFileName,(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH));
+        }
         FILE* file= fopen(newStoreFileName,STORE_FILE_OPEN_MODE);
         if(file == NULL){
-            addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"read file[%s] failed!",newStoreFileName);
+            addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"open file[%s] failed!",newStoreFileName);
             exit(1);
         }
         return file;
@@ -125,14 +131,18 @@ FILE* findStoreFile(){
             system(copyCmd);
             FILE* file= fopen(copyStoreFileName,STORE_FILE_OPEN_MODE);
             if(file == NULL){
-                addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"read file[%s] failed!",copyStoreFileName);
+                addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"open file[%s] failed!",copyStoreFileName);
                 exit(1);
             }
             return file;
         }else{
+            if(access(storeFileName,F_OK)!=0){
+                printf("%s\n",storeFileName );
+                creat(storeFileName,(S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH));
+            }
             FILE* file= fopen(storeFileName,STORE_FILE_OPEN_MODE);
             if(file == NULL){
-                addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"read file[%s] failed!",storeFileName);
+                addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"open file[%s] failed!",storeFileName);
                 exit(1);
             }
             return file;
@@ -191,7 +201,7 @@ long store(long offset,void * data,int length){
     }
     
     //then write data;
-    fwrite(data,length,1,storeFile);
+    int writed = fwrite(data,length,1,storeFile);
     fflush(storeFile);
     return store.offset;
 }
@@ -228,11 +238,54 @@ int delStore(long offset){
 }
 
 
-long storeString(char* string){
-    if(string==NULL){
+long storeString(long offset,char* string,int maxLength){
+    if(string==NULL || maxLength <=0){
         return -1;
     }
-    return store(0,string,strlen(string));
+    int strLength = strlen(string);
+    if(strLength+1>maxLength){
+        return -1;
+    }
+    Store store;
+    store.offset = offset;
+    store.length = maxLength;
+    store.state = STORE_STATE_USING;
+    if(offset<=0){
+        int result = fseek(storeFile,0L,SEEK_END);
+        if(result == -1){
+            addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"seek offset failed");
+            return -3;
+        }
+        store.offset=ftell(storeFile);
+        //write StoreHeader first
+        fwrite(&store,sizeof(Store),1,storeFile);
+    }else{
+        fseek(storeFile,offset,SEEK_SET);
+        fread(&store,sizeof(Store),1,storeFile);
+        if(store.length< maxLength){
+            // length change 
+            //need new place;
+            int result = fseek(storeFile,0L,SEEK_END);
+            if(result == -1){
+                addLog(LOG_ERROR,LOG_LAYER_DATA,STORE_POSITION_NAME,"seek offset failed");
+                return -3;
+            }
+            store.offset=ftell(storeFile);
+            //write StoreHeader first
+            fwrite(&store,sizeof(Store),1,storeFile);
+        }else{
+            maxLength = store.length;
+        }
+    }
+    
+    //then write data;
+    
+    fwrite(string,strLength+1,1,storeFile);
+    int leav = maxLength - (strLength+1);
+    //full the empty place;
+    fwrite("\0",1,leav,storeFile);
+    fflush(storeFile);
+    return store.offset;
 }
 
 char* restoreString(long offset){
@@ -242,8 +295,7 @@ char* restoreString(long offset){
     Store s;
     fseek(storeFile,offset,SEEK_SET);
     fread(&s,sizeof(Store),1,storeFile);
-    char * buf = allocMem(s.length+1);
+    char * buf = allocMem(s.length);
     fread(buf,s.length,1,storeFile);
-    buf[s.length+1]='\0';
     return buf;
 }

@@ -228,7 +228,7 @@ UserPtr restoreUser(long storePosition){
         return NULL;
     }
     UserStore user;
-    int result= restore(storePosition,&user,sizeof(User));
+    int result= restore(storePosition,&user,sizeof(UserStore));
     if(result != STORE_SUCCESS){
         return NULL;
     }
@@ -249,16 +249,23 @@ long storeUser(UserPtr ptr){
         return 0;
     }
     UserStore user ;
+    if(ptr->storePosition >0){
+        restore(ptr->storePosition,&user,sizeof(UserStore));
+    }else{
+        user.userName = 0;
+        user.userSecretKey = 0;
+        user.userPassword = 0;
+    }
     //don't use the point to access data it will make error
     user.userId = ptr->userId;
-    user.userName = storeString(ptr->userName);
-    user.userSecretKey = storeString(ptr->userSecretKey);
-    user.userPassword = storeString(ptr->userPassword);
+    user.userName = storeString(user.userName,ptr->userName,USER_MAX_USER_NAME_SIZE);
+    user.userSecretKey = storeString(user.userSecretKey, ptr->userSecretKey,USER_MAX_SECRET_KEY_SIZE);
+    user.userPassword = storeString(user.userPassword, ptr->userPassword,USER_MAX_PASSWORD_SIZE);
     user.privilege = ptr->privilege;
     user.group = ptr->group;
     user.keyUpdateTime = ptr->keyUpdateTime;
     user.channels = 0;
-    return store(0,&user,sizeof(User));
+    return store(0,&user,sizeof(UserStore));
 }
 int tickUser(ListPtr userList){
     //did nothing
