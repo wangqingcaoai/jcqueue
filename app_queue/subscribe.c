@@ -429,3 +429,49 @@ int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,Mess
 int tickSubscribeServer(SubscribeServerPtr ptr){
     return processSubscribeTopic(ptr);
 }
+
+
+long storeSubscribe(SubscribePtr ptr){
+    if(ptr == NULL){
+        return -1L;
+    }
+    SubscribeStore subStore;
+    if(ptr->storePosition >0){
+        restore(ptr->storePosition,&subStore,sizeof(SubscribeStore));
+    }else{
+        subStore.subscribeKeyWord = 0L;
+        subStore.remoteHost = 0L;
+        subStore.protocol = 0L;
+        subStore.type = 0L;
+        subStore.user =0L;
+        subStore.channel = 0L;
+        subStore.subscribedTopicLists = 0L;
+        subStore.pusher = 0L;
+    }
+    subStore.subscribeId = ptr->subscribeId;
+    subStore.subscribeKeyWord = storeString(subStore.subscribeKeyWord,ptr->subscribeKeyWord,SUBSCRIBE_MAX_SUBSCRIBE_KEYWORDS_SIZE);
+    subStore.remoteHost = storeString(subStore.remoteHost,ptr->remoteHost,SUBSCRIBE_MAX_SUBSCRIBE_REMOTEHOST_SIZE);
+    subStore.remotePort = ptr->remotePort;
+    subStore.protocol = storeString(subStore.protocol,ptr->protocol,SUBSCRIBE_MAX_SUBSCRIBE_PROTOCOL_SIZE);
+    subStore.type = storeString(subStore.type,ptr->type,SUBSCRIBE_MAX_SUBSCRIBE_TYPE_SIZE);
+    subStore.user = ptr->user->storePosition;
+    subStore.channel = 0L;
+    subStore.subscribedTopicLists = 0L;// it can be rebuild by  data
+    subStore.pusher = 0L;
+    return ptr->storePosition = store(ptr->storePosition,&subStore,sizeof(subStore));
+
+}
+SubscribePtr restoreSubscribe(long storePosition,SubscribeServerPtr server){
+    if(storePosition <=0){
+        return NULL;
+    }else{
+
+    }
+
+}
+long storeSubscribeServer(SubscribeServerPtr ptr){
+    if(ptr == NULL){
+        return -1L;
+    }
+}
+SubscribeServerPtr restoreSubscribeServer(long storePosition);

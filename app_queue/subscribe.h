@@ -21,6 +21,11 @@
 #define SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED 4
 #define SUBSCRIBE_BUILD_SUBSCRIBE_FAILED 5
 #define SUBSCRIBE_ERROR_SUBSCRIBE_TOPIC_NOT_FOUND 6
+#define SUBSCRIBE_MAX_SUBSCRIBE_KEYWORDS_SIZE 512
+#define SUBSCRIBE_MAX_SUBSCRIBE_REMOTEHOST_SIZE 124
+#define SUBSCRIBE_MAX_SUBSCRIBE_PROTOCOL_SIZE 20
+#define SUBSCRIBE_MAX_SUBSCRIBE_TYPE_SIZE 20
+
 typedef struct Pusher* PusherPtr;
 typedef struct AppServer * AppServerPtr;
 typedef struct NetMessage * NetMessagePtr;
@@ -38,13 +43,27 @@ typedef struct Subscribe
     ChannelPtr channel;//订阅的用户频道
     ListPtr subscribedTopicLists;//指向订阅的topic
     PusherPtr pusher;
+    long storePosition;
 }Subscribe,*SubscribePtr;
+typedef struct SubscribeStore
+{
+    int64 subscribeId;
+    long subscribeKeyWord;//订阅,匹配的关键字
+    long remoteHost;//远端接收host 可以是ip
+    unsigned int remotePort;//远端接收端口
+    long protocol;//远端支持的协议
+    long type;//订阅类型
+    long user;//订阅的用户
+    long channel;//订阅的用户频道
+    long subscribedTopicLists;//指向订阅的topic
+    long pusher;
+}SubscribeStore,*SubscribeStorePtr;
 typedef struct SubscribeTopic{
     int64 id;
     TopicPtr topic;
     char* topicName;
     ListPtr subscribesList;//指向订阅
-
+    long storePosition;
 }SubscribeTopic, *SubscribeTopicPtr;
 
 typedef struct SubscribeServer
@@ -54,7 +73,12 @@ typedef struct SubscribeServer
     ListPtr subscribes;
     AppServerPtr appServer;
 }SubscribeServer,* SubscribeServerPtr;
-
+typedef struct SubscribeServerStore
+{
+    int serverId ;
+    long subscribes;
+    long appServer;
+};
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer);
 int freeSubscribeServer(SubscribeServerPtr *);
 SubscribePtr buildSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
@@ -86,6 +110,11 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
 int isMatchSubscribeByTopicName(SubscribePtr ,const char* topicName);
 int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message);
 
-int restoreSubscribes(SubscribeServerPtr);
+
+long storeSubscribe(SubscribePtr ptr);
+SubscribePtr restoreSubscribe(long storePosition);
+long storeSubscribeServer(SubscribeServerPtr ptr);
+SubscribeServerPtr restoreSubscribeServer(long storePosition);
 int tickSubscribeServer(SubscribeServerPtr);
+
 #endif
