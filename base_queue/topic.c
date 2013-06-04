@@ -152,3 +152,34 @@ int isSameTopicName(TopicPtr ptr,const char* topicName){
     }
     return isSameString(ptr->topicName,topicName);
 }
+long storeTopic(TopicPtr ptr){
+	if(ptr== NULL){
+		return -1L;
+	}
+	TopicStore tstore;
+	if(ptr->storePosition>0){
+		restore(ptr->storePosition,&tstore,sizeof(TopicStore));
+	}else{
+		tstore.topicName=0;
+		tstore.ready_queue=0;
+		tstore.delay_queue=0;
+		tstore.using_pool=0;
+		tstore.sleep_queue=0;
+	}
+	tstore.topicId = ptr->topicId;
+	tstore.topicName = storeString(tstore.topicName,ptr->topicName,TOPIC_MAX_TOPIC_NAME);
+	tstore.ready_queue= storeHeap(ptr->ready_queue,(StoreHandle)StoreMessage);
+
+	tstore.delay_queue= storeHeap(ptr->delay_queue,(StoreHandle)StoreMessage);
+
+	
+	tstore.using_pool= storeHeap(ptr->using_pool,(StoreHandle)StoreMessage);
+
+	tstore.sleep_queue= storeHeap(ptr->sleep_queue,(StoreHandle)StoreMessage);
+	ptr->storePosition=store(ptr->storePosition,&tstore,sizeof(TopicStore);
+	return ptr->storePosition;
+}
+
+TopicPtr restoreTopic(long storePosition){
+
+}

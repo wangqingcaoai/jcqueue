@@ -8,11 +8,21 @@ typedef struct Heap {
     void    **data;
     Less    less;
     Record  rec;
+	long storePosition;
 }Heap,* HeapPtr;
+typedef struct HeapStore{
+	int cap;
+	int len;
+	long data;
+}
 int heapinsert(HeapPtr h, void *x);
 void * heapremove(HeapPtr h, int k);
 HeapPtr buildHeap(Record record, Less less);
 void freeHeap(HeapPtr *h,Free freeMem);
 int heapFindIndex(HeapPtr h,Find f,void * arg);
+long storeHeap(HeapPtr ptr,StoreHandle handle);
+HeapPtr restoreHeap(long storePosition,RestoreHandle handle, Record record,Less less);
 
+static long storeHeapData(HeapPtr ptr,StoreHandle handle);
+static void**  restoreHeapData(long storePosition,RestoreHandle handle,int cap);
 #endif

@@ -159,3 +159,77 @@ int heapFindIndex(HeapPtr h,Find f,void * arg){
     }
     return -1;
 }
+
+long storeHeap(HeapPtr ptr,StoreHandle handle){
+	if(ptr==NULL || handle =NULL){
+		return -1;
+	}
+	HeapStore heapStore;
+	heapStore.cap = ptr->cap;
+	heapStore.len = ptr->len;
+	heapStore.data= storeHeapData(ptr,handle);
+	ptr->storePosition = store(ptr->storePosition,&heapStore,sizeof(HeapStore));
+	return ptr->storePosition;
+}
+static long storeHeapData(HeapPtr ptr,StoreHandle handle){
+	if(ptr== NULL || handle ==NULL){
+		return -1;
+	}
+	int offset=0;
+	int cap = ptr->cap; 
+	if(ptr->storePosition >0){
+		//check old store s cap
+		HeapStore heapStore;
+		restoreHeap(ptr->storePosition,&heapStore,sizeof(HeapStore));
+		if(heapStore.cap<ptr->cap){
+			//it means we need a new store place
+		}else{
+		// process >
+			offset = heapStore.data;
+			cap = heapStore.cap;
+		}
+	}
+	long data[cap];
+	int i=0;
+	for(i=0;i<ptr->len;i++){
+		data[i]=handle(ptr->data[i]);
+	}
+	for(i=ptr->len;i<ptr->cap;i++){
+		data[i]=0;
+	}
+	return store(offset,data,cap);
+}
+HeapPtr restoreHeap(long storePosition, Record record,Less less){
+	if(storePosition <=0 || record == NULL|| less == NULL){
+		return NULL;
+	}
+	HeapStore heapStore;
+	restore(storePosition,&heapStore,sizeof(HeapStore));
+	HeapPtr ptr= allocMem(sizeof(Heap));
+	ptr->cap = heapStore.cap;
+	ptr->len = heapStore.len;
+	ptr->data = restoreHeapData(heapStore.data,handle,HeapStore.cap);
+	ptr->rec =record;
+	ptr->less = less;
+	ptr->storePosition = storePosition;
+
+}
+
+static void**  restoreHeapData(long storePosition,RestoreHandle handle,int cap){
+	if(storePosition <=0 || handle ==NULL|| cap <=0){
+	return NULL;
+	}	
+	
+    void** ndata = (void**)allocMem(sizeof(void*) * cap);
+	long data[cap];
+	restore(storePosition,data,cap);
+	int i=0;
+	for(i=0;i<cap;i++){
+		if(data[i]<= 0){
+			ndata[i] = NULL;
+		}else{
+			ndata[i]= handle(data[i]);
+		}
+	}
+	return ndata;
+}

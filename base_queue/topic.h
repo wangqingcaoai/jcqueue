@@ -12,7 +12,16 @@ typedef struct Topic
     Heap* delay_queue;//延迟队列 有优先级
     Heap* using_pool;//使用池，正在处理的消息
     Heap* sleep_queue;//休眠队列 正在休眠的消息
+	long storePosition;
 }Topic, * TopicPtr;
+typedef struct TopicStore{
+	int64 topicId;
+	long topicName;
+	long ready_queue;
+	long delay_queue;
+	long using_pool;
+	long sleep_queue;
+}
 TopicPtr buildTopic(const char* topicName);//新建topic
 int addMessage(TopicPtr topic,MessagePtr message,int delay);//添加消息
 MessagePtr getReadyMessage(TopicPtr topic);//获取消息
@@ -25,6 +34,6 @@ int freeTopic(TopicPtr *topic);
 char* getTopicName(TopicPtr ptr);
 int backupTopic(TopicPtr ptr);//还未撰写
 int isSameTopicName(TopicPtr ptr,const char* topicName);
-
-
+long storeTopic(TopicPtr ptr);
+TopicPtr restoreTopic(long storePosition);
 #endif
