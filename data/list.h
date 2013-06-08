@@ -76,5 +76,6 @@ ListNodePtr restoreListNode(long storePosition,ListNodeStorePtr node,RestoreHand
 long storeListNodes(ListNodePtr ptr,StoreHandle);
 ListNodePtr restoreListNodes(long storePosition,RestoreHandle handle);
 
+ListPtr mergeList(ListPtr first,ListPtr second);
 //todo 带条件连续查找
 #endif

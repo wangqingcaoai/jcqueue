@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../data/heap.h"
+#include "../data/list.h"
 #include "message.h"
 #include "topic.h"
 #include "../data/store.h"
@@ -24,7 +25,7 @@ TopicPtr buildTopic(const char* topicName){
     ptr->delay_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
     ptr->using_pool = buildHeap((Record)MessageRecord,(Less)MessageLess);
     ptr->sleep_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
-
+    ptr->storePosition = 0L;
     return ptr;
 }
 //添加消息
@@ -190,10 +191,23 @@ TopicPtr restoreTopic(long storePosition){
     TopicPtr ptr= (TopicPtr)allocMem(sizeof(Topic));
     ptr->topicId = tstore.topicId;
     ptr->topicName = restoreString(tstore.topicName);
-    ptr->ready_queue = restoreHeap(tstore.ready_queue,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
-    ptr->delay_queue = restoreHeap(tstore.delay_queue,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
-    ptr->using_pool = restoreHeap(tstore.using_pool,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
-    ptr->sleep_queue = restoreHeap(tstore.sleep_queue,restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->ready_queue = restoreHeap(tstore.ready_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->delay_queue = restoreHeap(tstore.delay_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->using_pool = restoreHeap(tstore.using_pool,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->sleep_queue = restoreHeap(tstore.sleep_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
     ptr->storePosition = storePosition;      
     return ptr;
+}
+
+ListPtr getUsingMessages(TopicPtr ptr){
+    if(ptr == NULL){
+        return NULL;
+    }
+    ListPtr list = buildList();
+    int i =0,count = getHeapLength(ptr->using_pool); 
+    for ( i = 0; i < count; ++i)
+    {
+        insertToList(list, getHeapDataByIndex(ptr->using_pool,i));      
+    }
+    return list;
 }

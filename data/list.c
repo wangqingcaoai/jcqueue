@@ -60,6 +60,7 @@ int insertToList(ListPtr list,void *data){
     if(new == NULL){
         return LIST_ERROR_MEM_ALLOC_FAILED;
     }
+    new->storePosition =0L;
     header->prev->next = new;
     new->prev = header->prev;
     header->prev = new;
@@ -556,3 +557,17 @@ ListNodePtr restoreListNode(long storePosition,ListNodeStorePtr node, RestoreHan
     listNode->storePosition = storePosition;
     return listNode;
 } 
+
+ListPtr mergeList(ListPtr first,ListPtr second){
+    if(first == NULL){
+        return NULL;
+    }
+    ListNodePtr start = getListHeader(second);
+    ListNodePtr end = getListEnd(second);
+    void* ptr = nextFromList(&start,end,NULL,NULL);
+    while(ptr!=NULL){
+        insertToList(first,ptr);
+        ptr = nextFromList(&start,end,NULL,NULL);
+    }
+    return first;
+}

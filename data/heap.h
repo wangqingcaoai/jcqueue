@@ -25,4 +25,9 @@ HeapPtr restoreHeap(long storePosition,RestoreHandle handle, Record record,Less 
 
 static long storeHeapData(HeapPtr ptr,StoreHandle handle);
 static void**  restoreHeapData(long storePosition,RestoreHandle handle,int cap);
+
+
+void* getHeapDataByIndex(HeapPtr h,int index);
+
+int getHeapLength(HeapPtr h);
 #endif

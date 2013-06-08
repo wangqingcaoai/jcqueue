@@ -2,6 +2,7 @@
 #define BQ_TOPIC_H
 #include "message.h"
 #include "../data/heap.h"
+#include "../data/list.h"
 #define TOPIC_MAX_TOPIC_NAME 512
 //topic
 //指一类型消息的集合，
@@ -37,4 +38,6 @@ int backupTopic(TopicPtr ptr);//还未撰写
 int isSameTopicName(TopicPtr ptr,const char* topicName);
 long storeTopic(TopicPtr ptr);
 TopicPtr restoreTopic(long storePosition);
+
+ListPtr getUsingMessages(TopicPtr ptr);
 #endif

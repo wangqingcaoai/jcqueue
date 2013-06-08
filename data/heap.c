@@ -129,6 +129,7 @@ HeapPtr buildHeap(Record record, Less less){
     ptr->data = NULL;
     ptr->rec = record;
     ptr->less = less;
+    ptr->storePosition= 0L;
     return ptr;
 }
 void freeHeap(HeapPtr * h,Free freeMem){
@@ -234,4 +235,19 @@ static void**  restoreHeapData(long storePosition,RestoreHandle handle,int cap){
 		}
 	}
 	return ndata;
+}
+
+void* getHeapDataByIndex(HeapPtr h,int index){
+    if(index<=0 || h ==NULL || index>=h->len){
+        return NULL;
+    }else{
+        return h->data[index];
+    }
+}
+int getHeapLength(HeapPtr h){
+    if(h == NULL){
+        return -1;
+    }else{
+        return h->len;
+    }
 }

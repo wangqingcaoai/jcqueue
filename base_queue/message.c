@@ -32,6 +32,7 @@ MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* d
         ptr->data = NULL;
         ptr->length = 0;
     }
+    ptr->storePosition = 0L;
     return ptr;
 }
 int setMessageState(MessagePtr ptr, MessageState state){

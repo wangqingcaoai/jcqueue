@@ -38,23 +38,55 @@ AppServerPtr buildAppServer(const char* host,const char*port){
 	return ptr;
 }
 int initAppServer(AppServerPtr ptr){
+    initStore();
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
-    initStore();
-    addUser(ptr->usersList,"test","pw",1,2);
-    long offset =  storeUsers(ptr->usersList);
-    printf("%ld\n",offset );
-    ListPtr l = restoreUsers(offset);
-    printf("%d\n",l->count );
-    UserPtr u = popFromList(l);
-    printf("%s\n",u->userName );
-    exit(1);
-    // restoreUsers(ptr->usersList);
-    // restoreBaseServer(ptr->baseServer);
-    // restoreSubscribes(ptr->subscribeServer);
-    // restorePushs(ptr->pushServer);
-    // restoreTransfarServer(ptr->transfarServer);
+    AppServerStore appStore;
+    long storePosition = getStartStorePosition();
+    if(storePosition <=0){
+        return APP_SERVER_SUCCESS;
+    }else{
+        restore(storePosition,&appStore,sizeof(AppServerStore));
+        if(ptr->usersList!=NULL){
+            freeList(&(ptr->usersList),(Free)freeUser);
+        }
+        if(ptr->admin != NULL){
+            freeUser(&(ptr->admin));
+        }
+        if(ptr->acceptUser != NULL){
+            freeUser(&(ptr->acceptUser));
+        }
+        if(ptr->sendUser !=NULL){
+            freeUser(&(ptr->sendUser));
+        }
+        if(ptr->baseServer !=NULL){
+            freeBaseServer(&(ptr->baseServer));
+        }
+        if(ptr->subscribeServer!=NULL){
+            freeSubscribeServer(&(ptr->subscribeServer));
+        }
+        if(ptr->pushServer!=NULL){
+            freePushServer(&(ptr->pushServer));
+        }
+        // if(ptr->transfarServer !=NULL){
+        //     freeTransfarServer(&(ptr->transfarServer));
+        // }
+        // 不能改变这些语句的顺序
+        
+        ptr->usersList = restoreUsers(appStore.usersList);
+        
+        ptr->admin =  restoreUser(appStore.admin);
+        
+        ptr->sendUser = restoreUser(appStore.sendUser);
+
+        ptr->acceptUser =restoreUser(appStore.acceptUser);
+        ptr->baseServer = restoreBaseServer(appStore.baseServer,ptr);
+        ptr->subscribeServer = restoreSubscribeServer(appStore.subscribeServer,ptr);
+        ptr->pushServer =  restorePushServer(appStore.pushServer,ptr);
+        //TODO need to think how to use tranfarServer store;
+        ptr->storePosition = storePosition;
+    }
     return APP_SERVER_SUCCESS;
 }
 int storeAppServer(AppServerPtr ptr){ 
@@ -62,11 +94,31 @@ int storeAppServer(AppServerPtr ptr){
     if(ptr == NULL){
         return APP_SERVER_ERROR_PARAM_ERROR;
     }
-    // storeUsers(ptr->usersList);
-    // storeBaseServer(ptr->baseServer);
-    // storeSubscribes(ptr->subscribeServer);
-    // storePushs(ptr->pushServer);
-    // storeTransfarServer(ptr->transfarServer);
+    AppServerStore appStore;
+    if(ptr->storePosition > 0){
+        restore(ptr->storePosition,&appStore,sizeof(AppServerStore));
+    }else{
+        appStore.usersList = 0L;
+        appStore.admin = 0L;
+        appStore.sendUser = 0L;
+        appStore.acceptUser = 0L;
+        appStore.baseServer = 0L;
+        appStore.subscribeServer = 0L;
+        appStore.pushServer = 0L;
+        appStore.transfarServer = 0L;
+        appStore.requestServer = 0L;
+    }
+    appStore.usersList = storeUsers(ptr->usersList);
+    appStore.admin = storeUser(ptr->admin);
+    appStore.sendUser = storeUser(ptr->sendUser);
+    appStore.acceptUser = storeUser(ptr->acceptUser);
+    appStore.baseServer = storeBaseServer(ptr->baseServer);
+    appStore.subscribeServer = storeSubscribeServer(ptr->subscribeServer);
+    appStore.pushServer = storePushServer(ptr->pushServer);
+    appStore.transfarServer = 0L;
+    appStore.requestServer = storeRequestServer(ptr->requestServer);
+    ptr->storePosition = store(ptr->storePosition,&appStore,sizeof(AppServerStore));
+    setStartStorePosition(ptr->storePosition);
     return APP_SERVER_SUCCESS;
 }
 int freeAppServer(AppServerPtr *pptr){

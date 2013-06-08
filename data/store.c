@@ -22,6 +22,8 @@ int initStore(){
             //it means a new store file
             if(readNum == 0){
                 fwrite(DEFAULT_STORE_HEADER,startOffset,1,storeFile);
+                long position = 0L;
+                fwrite(&position,sizeof(position),1,storeFile);
                 fflush(storeFile);
             }else{
                 format[startOffset]='\0';
@@ -298,4 +300,20 @@ char* restoreString(long offset){
     char * buf = allocMem(s.length);
     fread(buf,s.length,1,storeFile);
     return buf;
+}
+
+long getStartStorePosition(){
+    long startOffset = strlen(DEFAULT_STORE_HEADER);
+    fseek(storeFile,startOffset,SEEK_SET);
+    long position = 0;
+    fread(&position,sizeof(long),1,storeFile);
+    return  position;
+}
+
+int setStartStorePosition(long storePosition){
+    long startOffset = strlen(DEFAULT_STORE_HEADER);
+    fseek(storeFile,startOffset,SEEK_SET);
+    long position = 0;
+    fwrite(&position,sizeof(long),1,storeFile);
+    return  0;
 }

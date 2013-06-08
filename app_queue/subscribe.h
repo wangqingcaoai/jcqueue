@@ -72,13 +72,14 @@ typedef struct SubscribeServer
     ListPtr subscribeTopics;
     ListPtr subscribes;
     AppServerPtr appServer;
+    long storePosition;
 }SubscribeServer,* SubscribeServerPtr;
 typedef struct SubscribeServerStore
 {
     int serverId ;
     long subscribes;
     long appServer;
-};
+}SubscribeServerStore;
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer);
 int freeSubscribeServer(SubscribeServerPtr *);
 SubscribePtr buildSubScribe(const char* subscribeKeyWord,const char* remoteHost,const int remotePort,const char* protocol,const char* type, UserPtr user);
@@ -114,7 +115,10 @@ int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,Mess
 long storeSubscribe(SubscribePtr ptr);
 SubscribePtr restoreSubscribe(long storePosition);
 long storeSubscribeServer(SubscribeServerPtr ptr);
-SubscribeServerPtr restoreSubscribeServer(long storePosition);
+SubscribeServerPtr restoreSubscribeServer(long storePosition,AppServerPtr appServer);
 int tickSubscribeServer(SubscribeServerPtr);
 
+SubscribePtr findSubscribeByStorePosition(SubscribeServerPtr server, long storePosition);
+int isSubscribeByStorePosition(SubscribePtr ptr, long* storePosition);
+ListPtr getAllPushingMessagesBySubscribe(SubscribePtr ptr);
 #endif

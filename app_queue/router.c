@@ -177,7 +177,7 @@ int aq_client_server_add(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr)
         }
     }
     int result = addRequester(serverPtr->requestServer,uptr,host,port);
-    if(result == REQEUST_SUCCESS){
+    if(result == REQUEST_SUCCESS){
         setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_SERVER_ADD_SUCCESS),AQ_CLIENT_SERVER_ADD_SUCCESS_MSG,host,port);
     }else{
         setNetMessageError(ptr,buildErrorCode(AQ_ERRORS_MARK,AQ_CLIENT_ERROR_SERVER_ADD_FAILED),AQ_CLIENT_ERROR_SERVER_ADD_FAILED_MSG,host,port);
@@ -191,7 +191,7 @@ int aq_client_server_list(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr
         return -1;
     }
     int result =getRequesterList(serverPtr->requestServer,ptr);
-    if(result == REQEUST_SUCCESS){
+    if(result == REQUEST_SUCCESS){
         setNetMessageSendCMDData(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_SERVER_LIST_SUCCESS),NULL);
     }
 }
@@ -206,9 +206,9 @@ int aq_client_server_del(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr)
     }
     int request_id = atoi(param);
     int result = delRequesterFromServer(serverPtr->requestServer,request_id);
-    if(result == REQEUST_SUCCESS){
+    if(result == REQUEST_SUCCESS){
         setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_SERVER_DEL_SUCCESS),AQ_CLIENT_SERVER_DEL_SUCCESS_MSG,request_id);
-    }else if(result == REQEUST_ERROR_REQUESTER_NOT_FOUND){
+    }else if(result == REQUEST_ERROR_REQUESTER_NOT_FOUND){
         setNetMessageError(ptr,buildErrorCode(AQ_ERRORS_MARK,AQ_CLIENT_ERROR_SERVER_NOT_FOUND),AQ_CLIENT_ERROR_SERVER_NOT_FOUND_MSG,request_id);
     }
     freeString(&param);
@@ -225,9 +225,9 @@ int aq_client_server_use(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr)
     }
     int request_id = atoi(param);
     int result = changeCurrentRequester(serverPtr->requestServer,request_id);
-    if(result == REQEUST_SUCCESS){
+    if(result == REQUEST_SUCCESS){
         setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_SERVER_USE_SUCCESS),AQ_CLIENT_SERVER_USE_SUCCESS_MSG,request_id);
-    }else if(result == REQEUST_ERROR_REQUESTER_NOT_FOUND){
+    }else if(result == REQUEST_ERROR_REQUESTER_NOT_FOUND){
         setNetMessageError(ptr,buildErrorCode(AQ_ERRORS_MARK,AQ_CLIENT_ERROR_SERVER_NOT_FOUND),AQ_CLIENT_ERROR_SERVER_NOT_FOUND_MSG,request_id);
     }
     freeString(&param);
@@ -242,7 +242,7 @@ static int aq_client_to_server(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr 
     }
     RequesterPtr rptr = serverPtr->requestServer->current;
     int result = addMessageToRequester(rptr,ptr);
-    if(result == REQEUST_SUCCESS){
+    if(result == REQUEST_SUCCESS){
         setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_TO_SERVER_SUCCESS),AQ_CLIENT_TO_SERVER_SUCCESS_MSG,rptr->remoteHost,rptr->remotePort);
         return 0;
     }
@@ -297,7 +297,7 @@ static int aq_server_add_user(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr u
         ugroup = USER_GROUP_DEFAULT;
     }
     int result = addUser(serverPtr->usersList,user,passwd,uprivilege,ugroup);
-    if(result == REQEUST_SUCCESS){
+    if(result == REQUEST_SUCCESS){
         setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_SERVER_ADD_USER_SUCCESS),AQ_SERVER_ADD_USER_SUCCESS_MSG,user);
     }else if(result == USER_ERROR_USER_EXIST){
         setNetMessageError(ptr,buildErrorCode(AQ_ERRORS_MARK,AQ_SERVER_ERROR_SERVER_USER_EXISTS),AQ_SERVER_ERROR_SERVER_USER_EXISTS_MSG,user);
@@ -321,7 +321,7 @@ static int aq_server_del_user(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr u
     // }
     // RequesterPtr rptr = serverPtr->requestServer->current;
     // int result = addMessageToRequester(rptr,ptr);
-    // if(result == REQEUST_SUCCESS){
+    // if(result == REQUEST_SUCCESS){
     //     setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_TO_SERVER_SUCCESS),AQ_CLIENT_TO_SERVER_SUCCESS_MSG,rptr->remoteHost,rptr->remotePort);
     //     return 0;
     // }

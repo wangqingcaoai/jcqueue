@@ -12,6 +12,7 @@
 #include "../data/list.h"
 #include "subscribe.h"
 #include "../parser/net_message.h"
+#include "../data/store.h"
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
     static int server_id;
     
@@ -24,6 +25,7 @@ SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
     ptr->subscribeTopics = buildList();
     ptr->subscribes = buildList();
     ptr->appServer = appServer;
+    ptr->storePosition = 0L;
     return ptr;
 
 }
@@ -65,6 +67,7 @@ SubscribePtr buildSubscribe(const char* subscribeKeyWord,const char* remoteHost,
     ptr->channel = NULL;
     ptr->subscribedTopicLists = buildList();
     ptr->pusher = buildPusher(ptr);
+    ptr->storePosition = 0;
     return ptr;
 }
 int freeSubscribe(SubscribePtr *pptr){
@@ -113,6 +116,7 @@ SubscribeTopicPtr buildSubScribeTopic(const char* topicName,TopicPtr tptr){
     ptr->topicName = allocString(topicName);
     ptr->topic = tptr;
     ptr->subscribesList = buildList();
+    ptr->storePosition =0L;
     return ptr;
 
 
@@ -211,8 +215,7 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
                     }
                     freeList(&topicList,NULL);
                 }       
-            }
-             
+            }        
         }    
     }
     
@@ -457,21 +460,112 @@ long storeSubscribe(SubscribePtr ptr){
     subStore.user = ptr->user->storePosition;
     subStore.channel = 0L;
     subStore.subscribedTopicLists = 0L;// it can be rebuild by  data
-    subStore.pusher = 0L;
+    subStore.pusher = ptr->pusher->storePosition;
     return ptr->storePosition = store(ptr->storePosition,&subStore,sizeof(subStore));
 
 }
-SubscribePtr restoreSubscribe(long storePosition,SubscribeServerPtr server){
+SubscribePtr restoreSubscribe(long storePosition){
     if(storePosition <=0){
         return NULL;
-    }else{
-
     }
+    SubscribeStore subStore;
+
+    restore(storePosition,&subStore,sizeof(SubscribeStore));
+    SubscribePtr ptr = (SubscribePtr)allocMem(sizeof(Subscribe));
+    if(ptr == NULL){
+        return ptr;
+    }
+    ptr->subscribeId = subStore.subscribeId;
+    ptr->subscribeKeyWord = restoreString(subStore.subscribeKeyWord);
+    ptr->remoteHost = restoreString(subStore.remoteHost);
+    ptr->remotePort = subStore.remotePort;
+    ptr->protocol = restoreString(subStore.protocol);
+    ptr->type = restoreString(subStore.type);
+    ptr->user = restoreUser(subStore.user);
+    ptr->channel = NULL;
+    ptr->subscribedTopicLists = buildList();
+    ptr->pusher = buildPusher(ptr);
+    ptr->pusher->storePosition =  subStore.pusher;
+    ptr->storePosition = storePosition;
+    return ptr;
 
 }
 long storeSubscribeServer(SubscribeServerPtr ptr){
     if(ptr == NULL){
         return -1L;
     }
+    SubscribeServerStore serverStore;
+    serverStore.serverId = ptr->serverId;
+    serverStore.subscribes = storeList(ptr->subscribes,(StoreHandle)storeSubscribe);
+    serverStore.appServer = ptr->appServer->storePosition;
+    return ptr->storePosition = store(ptr->storePosition,&serverStore,sizeof(SubscribeServerStore));    
+
 }
-SubscribeServerPtr restoreSubscribeServer(long storePosition);
+SubscribeServerPtr restoreSubscribeServer(long storePosition,AppServerPtr appServer){
+    if(storePosition <=0 ||appServer == NULL){
+        return NULL;
+    }
+    SubscribeServerStore serverStore;
+    restore(storePosition,&serverStore,sizeof(SubscribeServer));
+    SubscribeServerPtr  ptr = (SubscribeServerPtr)allocMem(sizeof(SubscribeServer));
+    ptr->serverId = serverStore.serverId;
+    ptr->appServer = appServer;
+    ptr->subscribes = restoreList(serverStore.subscribes,(RestoreHandle)restoreSubscribe); 
+    initSubscribes(ptr->subscribes);
+    return ptr;
+}
+int initSubscribes(SubscribeServerPtr server){
+    if(server == NULL){
+        return SUBSCRIBE_ERROR_PARAM_ERROR;
+    }
+    ListNodePtr start = getListHeader(server->subscribes);
+    ListNodePtr end = getListEnd(server->subscribes);
+    SubscribePtr sptr = nextFromList(&start,end,NULL,NULL);
+    while(sptr!=NULL){
+        UserPtr temp = sptr->user;
+        sptr->user = findUserByStorePosition(server->appServer->usersList,temp->storePosition);
+        freeMem((void**)&temp);
+        ListPtr topicList = getTopicListByKeyword(server->appServer->baseServer,sptr->subscribeKeyWord);
+        if(topicList!=NULL){
+            if(!isEmptyList(topicList)){
+                //将topic信息更新到topic列表当中，
+                addSubscribeTopicsByList(server, topicList,  sptr);
+            }
+            freeList(&topicList,NULL);
+        }
+        sptr = nextFromList(&start,end,NULL,NULL);
+    }
+    return SUBSCRIBE_SUCCESS;
+}
+
+SubscribePtr findSubscribeByStorePosition(SubscribeServerPtr server, long storePosition){
+    if(server == NULL || storePosition <=0){
+        return NULL;
+    }
+    return getFromList(server->subscribes,(Find)isSubscribeByStorePosition,&storePosition);
+}
+int isSubscribeByStorePosition(SubscribePtr ptr, long* storePosition){
+    if(ptr== NULL || storePosition == NULL || (*storePosition)<=0){
+        return 0;
+    }
+    return ptr->storePosition == (*storePosition);
+}
+
+ListPtr getAllPushingMessagesBySubscribe(SubscribePtr ptr){
+    if(ptr == NULL){
+        return NULL;
+    }
+    ListNodePtr start = getListHeader(ptr->subscribedTopicLists);
+    ListNodePtr end = getListEnd(ptr->subscribedTopicLists);
+    SubscribeTopicPtr sptr = nextFromList(&start,end,NULL,NULL);
+    ListPtr list = buildList();
+    ListPtr using = NULL;
+    while(sptr!=NULL){
+        using = getUsingMessages(sptr->topic);
+        mergeList(list,using);
+        freeList(&using,NULL);
+        sptr = nextFromList(&start,end,NULL,NULL);
+    }
+    return list;
+       
+}

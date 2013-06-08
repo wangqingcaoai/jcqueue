@@ -39,6 +39,18 @@ typedef struct AppServer
     TickHandle tick;
 	long storePosition;
 }AppServer , * AppServerPtr;
+typedef struct AppServerStore
+{
+    long usersList;
+    long admin;
+    long sendUser;
+    long acceptUser ;
+    long baseServer;
+    long subscribeServer;
+    long pushServer;
+    long transfarServer;
+    long requestServer;
+}AppServerStore,*AppServerStorePtr;
 AppServerPtr buildAppServer(const char* host,const char* port);
 int initAppServer(AppServerPtr);
 int storeAppServer(AppServerPtr);

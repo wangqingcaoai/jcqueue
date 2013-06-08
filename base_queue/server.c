@@ -13,7 +13,8 @@ BaseServerPtr buildBaseServer(AppServerPtr app){
     baseserver_id++;
     ptr->baseserver_id = baseserver_id;
     ptr->appServer = app;
-    ptr->topicList = buildList(NULL,NULL);
+    ptr->topicList = buildList();
+    ptr->storePosition = 0L;
     return ptr;
 }
 

@@ -23,6 +23,7 @@ UserPtr buildUser(const char* userName,const char* userPassword){
     ptr->group = USER_GROUP_DEFAULT;
     ptr->keyUpdateTime = USER_DEFAULT_UPDATE_TIME;
     ptr->channels = buildList();
+    ptr->storePosition =0L;
     return ptr;
 }
 
@@ -268,8 +269,28 @@ long storeUser(UserPtr ptr){
     return store(0,&user,sizeof(UserStore));
 }
 int tickUser(ListPtr userList){
-    //did nothing
+    //need used to update the key
 }
 
 
 
+
+UserPtr findUserByStorePosition(ListPtr userList,long storePosition){
+    if(userList == NULL){
+        return NULL;
+    }
+    if(storePosition <= 0){
+        return NULL;
+    }
+    
+    UserPtr user = getFromList(userList,(Find)isUserByStorePosition,(void*)&storePosition);
+    return user;
+}
+
+int isUserByStorePosition(UserPtr userPtr,long * storePosition){
+    if(userPtr == NULL ||storePosition == NULL|| *(storePosition)<=0){
+        return 0;
+    }else{
+        return userPtr->storePosition == (*storePosition);
+    }
+}

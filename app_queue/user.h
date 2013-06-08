@@ -18,8 +18,6 @@
 
 #define USER_MAX_PASSWORD_SIZE 128
 
-#define USER_MAX_USER_NAME_SIZE 60
-
 #define USER_SUCCESS 0
 #define USER_ERROR_PARAM_ERROR 1
 #define USER_ERROR_USER_NOT_FOUND 2
@@ -65,10 +63,12 @@ int delUser(ListPtr userList,const char* userName);
 int checkPrivilege(UserPtr user,int privilege);
 int addChannel(UserPtr userPtr,ChannelPtr ptr );
 int isUser(UserPtr userPtr,const char* userName);
+int isUserByStorePosition(UserPtr userPtr,long * storePosition);
 ListPtr restoreUsers(long storePosition);
 long storeUsers(ListPtr userList);
 long storeUser(UserPtr user);
 UserPtr restoreUser(long storePosition);
 int tickUser(ListPtr userList);
+UserPtr findUserByStorePosition(ListPtr userList,long);
 //更新时备份功能
 #endif

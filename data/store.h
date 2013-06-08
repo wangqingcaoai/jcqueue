@@ -1,12 +1,6 @@
 #ifndef DATA_STORE_H
 #define DATA_STORE_H 
-#include <sys/types.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <dirent.h>
-#include <errno.h>
-#include <unistd.h>
+
 #define STORE_FILE_HEAD "jcq_bak_"
 #define STORE_FILE_EXTENSION ".bak"
 #define STORE_POSITION_NAME "store"
@@ -36,4 +30,6 @@ FILE* findStoreFile();
 char* restoreString(long offset);
 long storeString(long offset,char* string,int maxLength);
 static char*  getRealPath(char*buf,int length,char*path);
+long getStartStorePosition();
+int setStartStorePosition(long storePosition);
 #endif
