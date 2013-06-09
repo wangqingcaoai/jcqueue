@@ -181,7 +181,7 @@ makeServerSocket(const char *host,const char *port)
             if (r == -1) {
                 addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"bind()");
                 close(fd);
-                continue;
+                exit(1);
             }
 //监听，设置连接数
             r = listen(fd, 1024);
@@ -189,6 +189,7 @@ makeServerSocket(const char *host,const char *port)
                 addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_SERVER_POSITION_NAME,"listen()");
                 close(fd);
                 continue;
+                exit(1);
             }
 
             break;
@@ -389,4 +390,24 @@ int tickTransfarServer(TransfarServerPtr ptr){
     }
     srvtick(ptr);
     return TRANSFAR_SERVER_SUCCESS;
+}
+
+int stopTransfarServer(TransfarServerPtr ptr){
+    
+    if(ptr == NULL){
+        return TRANSFAR_SERVER_ERROR_PARAM_ERROR;
+    }
+    if(isOn(getConfig("verbose","off"))){
+        printf("stopTransfarServer ...\n");
+    }
+    
+    sockwant(ptr->eventQueue,&ptr->sock, 0);
+    closeFd(ptr->sock.fd);
+    ConnectPtr con;
+    int count = getHeapLength(ptr->conns),i;
+    for ( i = 0; i < count; ++i)
+    {
+        con = getHeapDataByIndex(ptr->conns,i);
+        connectClose(con);
+    }    
 }

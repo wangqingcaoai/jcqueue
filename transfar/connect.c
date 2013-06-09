@@ -128,6 +128,9 @@ int freeConnect(ConnectPtr *c){
         return  CONNECT_ERROR_PARAM_ERROR;
     }
     ConnectPtr ptr = (*c);
+    if(ptr == NULL){
+        return CONNECT_ERROR_PARAM_ERROR;
+    }
     ptr->tServer =NULL;
     freeNetMessage(&(ptr->netMessage));
     freeString(&(ptr->addr));

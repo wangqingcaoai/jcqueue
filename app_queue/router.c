@@ -234,13 +234,16 @@ int aq_client_server_use(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr)
 }
 
 int aq_client_close(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr){
-
+    stopClientAppServer(serverPtr);
 }
 static int aq_client_to_server(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr uptr){
     if(serverPtr == NULL|| ptr==NULL || uptr == NULL){
         return -1;
     }
     RequesterPtr rptr = serverPtr->requestServer->current;
+    if(rptr == NULL){
+        setNetMessageError(ptr,buildErrorCode(AQ_ERRORS_MARK,AQ_CLIENT_TO_SERVER_FAILED_NO_SERVER_USING),AQ_CLIENT_TO_SERVER_FAILED_NO_SERVER_USING_MSG);        
+    }
     int result = addMessageToRequester(rptr,ptr);
     if(result == REQUEST_SUCCESS){
         setNetMessageError(ptr,buildErrorCode(AQ_SUCCESS_MARK,AQ_CLIENT_TO_SERVER_SUCCESS),AQ_CLIENT_TO_SERVER_SUCCESS_MSG,rptr->remoteHost,rptr->remotePort);
@@ -266,6 +269,7 @@ int aq_server_router(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr){
     }else if(!strcasecmp(ptr->cmd,AQ_SERVER_GET_USER)){
         result =  aq_server_get_user(serverPtr , ptr,uptr);
     }else{
+        
     }
     return result;
 }

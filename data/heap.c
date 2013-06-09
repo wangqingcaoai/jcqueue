@@ -132,17 +132,17 @@ HeapPtr buildHeap(Record record, Less less){
     ptr->storePosition= 0L;
     return ptr;
 }
-void freeHeap(HeapPtr * h,Free freeMem){
+void freeHeap(HeapPtr * h,Free handle){
     if(h == NULL){
         return ;
     }
     HeapPtr ptr = *h;
     if(ptr!=NULL){
-        if(freeMem!=NULL){
+        if(handle!=NULL){
             int i = 0;
             for (i = 0; i < ptr->len; ++i)
             {
-                (*freeMem)(&ptr->data[i]);
+                (*handle)(&ptr->data[i]);
             }
         }
         freeMem((void**)&(ptr->data));

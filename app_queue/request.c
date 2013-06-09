@@ -323,7 +323,11 @@ long storeRequestServer(RequestServerPtr ptr){
     }
     rsStore.serverId = ptr->serverId;
     rsStore.requesters = storeList(ptr->requesters,(StoreHandle)storeRequester);
-    rsStore.current =  ptr->current->storePosition;
+    if(ptr->current == NULL){
+        rsStore.current = 0L;
+    }else{
+        rsStore.current =  ptr->current->storePosition;    
+    }
     rsStore.appServer = ptr->appServer->storePosition;
     return ptr->storePosition = store(ptr->storePosition,&rsStore,sizeof(RequestServerStore));
 }

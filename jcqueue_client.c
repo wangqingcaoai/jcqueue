@@ -16,7 +16,7 @@ struct option long_options[] = {
 int main(int argc, char  *argv[])
 {
     int opt;
-    initConfig(NULL);
+    initConfig("/etc/jcq/jcqueue_client.conf");
     while((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1)
     {
         switch (opt)
@@ -45,59 +45,11 @@ int main(int argc, char  *argv[])
     char* host = getConfig("host","127.0.0.1");
     char* port = getConfig("port","12222");
     AppServerPtr serverPtr = buildClientAppServer(host,port);
+    char* store_dir = getConfig("store_dir",NULL);
+    if(store_dir == NULL){
+        setConfig("store_dir","~/.jcq_client/");
+    }
     initClientAppServer(serverPtr);
     processClientAppServer(serverPtr);
-    // while(true){
-    //     processServer();
-    //     tick();
-    // }
-
-// char *ptr= "cmd:\r\ntarget:test\r\njcq 1.0\r\ntargetType:test\r\nuser:test\r\npassword:test\r\nkey:test\r\ndelay:0\r\npriority:1\r\ntimestamp:\r\nextraParam:param1[value]param2[value2]参数3[]\r\nlength:18\r\ndata:eerttyytwwerttewww\r\n\r\ncmd:\r\ntarget:test\r\njcq 1.0\r\ntargetType:test2\r\nuser:test\r\npassword:test\r\nkey:test\r\ndelay:0\r\npriority:1\r\ntimestamp:\r\nextraParam:param1[value]param2[value2]参数3[]\r\nlength:18\r\ndata:eerttyytwwerttewww\r\n\r\n ";
-
-//     char *test = malloc(strlen(ptr)+1);
-
-//     strcpy(test,ptr);
-//     NetMessagePtr nm = buildNetMessage();
-//     //displayNetMessage(&nm);
-//     int result = isJCQMessage(nm,test,strlen(ptr));
-//     printf("%d\n", result);
-
-//     parserJCQMessage(nm,test,strlen(ptr)+1);
-//     displayNetMessage(nm);
-//     printf("%s\n","next message" );
-//     parserJCQMessage(nm,test,strlen(ptr)+1);
-//     displayNetMessage(nm);
-//     parserJCQMessage(nm,test,0);
-//     displayNetMessage(nm);
-//     //getExtraParam(&nm,"参数3");
-//     // setSendExtraParam(nm,"test","value");
-//     // displayNetMessage(nm);
-//     // setSendExtraParam(nm,"param1","test");
-//     displayNetMessage(nm);
-//     setSendExtraParam(nm,"param1","test2");
-//     displayNetMessage(nm);
-//     setSendExtraParam(nm,"test","new");
-//     displayNetMessage(nm);
-//     setSendExtraParam(nm,"test","long teste");
-//     displayNetMessage(nm);
-// int length = 10;
-//     char * str[10]={
-//         "af[]",
-//         "fd[",
-//         "ddd",
-//         "[fd]fd",
-//         "fdfd[fdfd]dfdf",
-//         "fdfdf[fdfdf]fdfd[fds",
-//         "dfdf[fdfs,]fdf[f]",
-//         "[[[[[]",
-//         "[fdfd",
-//         "fdff]",
-//     };
-//     int i=0,r=0;
-//     while(i<length){
-//         r = isExtraParamFormatRight(str[i],strlen(str[i]));
-//         printf("%s %s\n", str[i],r?"right":" wrong");   
-//         i++;
-//     }
     return 0;
 }

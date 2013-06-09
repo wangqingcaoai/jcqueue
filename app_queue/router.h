@@ -22,6 +22,11 @@
 #define AQ_SERVER_ADD_USER "add_user"
 #define AQ_SERVER_DEL_USER "del_user"
 #define AQ_SERVER_GET_USER "get_user"
+#define AQ_SERVER_GET_USERS "get_users"
+#define AQ_SERVER_CLOSE "server_close"
+#define AQ_SERVER_GET_TOPICS "get_topics"
+#define AQ_SERVER_GET_TOPIC "get_topic"
+
 
 int aq_router(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr);
 static int aq_subscribe_add(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr uptr);

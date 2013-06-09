@@ -117,8 +117,9 @@ int sendConsoleData(ConsolePtr ptr){
     if(mptr->sendState == NETMESSAGE_WRITESTATE_FINISH){
         return CONSOLE_SUCCESS;
     }
-    if(!(mptr->sendBuf !=NULL && mptr->sendBufLength > 0)){
+    if(mptr->sendState ==NETMESSAGE_WRITESTATE_WAIT){
         reparserNetMessage(ptr->netMessage);
+        mptr->sendState == NETMESSAGE_WRITESTATE_WRITING;
     }
     int writeLength = write(ptr->out.fd,mptr->sendBuf+mptr->writedLength,mptr->sendBufLength-mptr->writedLength);
     if(writeLength <0 ){

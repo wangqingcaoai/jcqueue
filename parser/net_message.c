@@ -98,7 +98,7 @@ int setNetMessageError(NetMessagePtr ptr,int errcode,char* errorMessage,...){
     if(ptr == NULL || errcode <0 || errorMessage == NULL){
         return NETMESSAGE_ERROR_PARAM_ERROR;
     }
-    ptr->errcode = errcode;
+    ptr->sendErrcode = errcode;
     ptr->sendData = allocMem(NETMESSAGE_DEFAULT_ERROR_BUF_SIZE);
     va_list va;
     va_start(va,errorMessage);

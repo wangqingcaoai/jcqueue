@@ -128,15 +128,7 @@ typedef struct NetMessage
   * cmd target targetType param1[value1]param2[] data:dfdfdf\n
   */
 #define CMD_READ_FORMAT "%s  %s %s \n"
-#define CMD_WRITE_FORMAT  "cmd:%s\r\n"\
-    "user:%s\r\n"\
-    "password:%s\r\n"\
-    "key:%s\r\n"\
-    "errcode:%d\r\n"\
-    "timestamp:%" PRId64 "\r\n"\
-    "extraParam:%s\r\n"\
-    "length:%d\r\n"\
-    "data:"
+#define CMD_WRITE_FORMAT  "%d "
 int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,void* sendData,int datalength);
 int setNetMessageSendUser(NetMessagePtr ptr,UserPtr uptr);
 NetMessagePtr buildNetMessage();

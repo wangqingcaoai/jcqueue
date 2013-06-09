@@ -98,14 +98,7 @@ int reparserCMDMessage(NetMessagePtr ptr,char * protocolType, char* version){
     }
     ptr->sendTime = nanoseconds();
     int writedLength = snprintf(ptr->sendBuf,NETMESSAGE_DEFAULT_SEND_BUF_SIZE,CMD_WRITE_FORMAT,
-        ptr->sendCmd,
-        ptr->currentUser,
-        ptr->currentPassword,
-        ptr->currentUserKey,
-        ptr->sendErrcode,
-        ptr->sendTime,
-        ptr->sendExtraParam,
-        ptr->sendLength);
+        ptr->sendErrcode);
 
     int leavLength = NETMESSAGE_DEFAULT_SEND_BUF_SIZE  - writedLength;
     int endLength = strlen(JCQ_FORMAT_END)+1;

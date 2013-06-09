@@ -24,4 +24,5 @@ int processClientConsoleIn(ConsolePtr ptr,int ev);
 int processClientConsoleOut(ConsolePtr ptr,int ev);
 
 int tickClientAppServer(AppServerPtr ptr);
+int stopClientAppServer(AppServerPtr ptr);
 #endif

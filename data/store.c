@@ -227,7 +227,7 @@ int restore(long offset,void * data,int length){
     return 0;
 }
 int delStore(long offset){
-    if(offset<=0){
+    if(offset<=0||storeFile == NULL){
         return STORE_ERROR_PARAM_ERROR;
     }else{
         Store s;
@@ -241,7 +241,7 @@ int delStore(long offset){
 
 
 long storeString(long offset,char* string,int maxLength){
-    if(string==NULL || maxLength <=0){
+    if(string==NULL || maxLength <=0 ||storeFile == NULL){
         return -1;
     }
     int strLength = strlen(string);
@@ -291,7 +291,7 @@ long storeString(long offset,char* string,int maxLength){
 }
 
 char* restoreString(long offset){
-    if(offset<=0){
+    if(offset<=0 || storeFile == NULL){
         return NULL;  
     }
     Store s;
@@ -303,6 +303,9 @@ char* restoreString(long offset){
 }
 
 long getStartStorePosition(){
+    if(storeFile == NULL){
+        return -1L;
+    }
     long startOffset = strlen(DEFAULT_STORE_HEADER);
     fseek(storeFile,startOffset,SEEK_SET);
     long position = 0;
@@ -311,6 +314,9 @@ long getStartStorePosition(){
 }
 
 int setStartStorePosition(long storePosition){
+    if(storePosition<=0 || storeFile == NULL){
+        return -1;
+    }
     long startOffset = strlen(DEFAULT_STORE_HEADER);
     fseek(storeFile,startOffset,SEEK_SET);
     long position = 0;

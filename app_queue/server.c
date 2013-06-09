@@ -34,7 +34,6 @@ AppServerPtr buildAppServer(const char* host,const char*port){
     ptr->pushServer = buildPushServer(ptr);
     ptr->transfarServer = buildTransfarServer(ptr,host,port);
     
-
 	return ptr;
 }
 int initAppServer(AppServerPtr ptr){

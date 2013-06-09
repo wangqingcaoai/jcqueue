@@ -35,9 +35,11 @@
 #define AQ_SERVER_ERROR_SERVER_USER_PARAM_EMPTY 10
 #define AQ_SERVER_ERROR_SERVER_USER_PARAM_EMPTY_MSG "  user param failed format is user[username]password[qweqwe]group[1]privilege[1]"
 
-#define AQ_SERVER_ERROR_SERVER_USER_EXISTS 10
+#define AQ_SERVER_ERROR_SERVER_USER_EXISTS 11
 #define AQ_SERVER_ERROR_SERVER_USER_EXISTS_MSG "  user %s is exists!"
 
+#define AQ_CLIENT_TO_SERVER_FAILED_NO_SERVER_USING 12
+#define AQ_CLIENT_TO_SERVER_FAILED_NO_SERVER_USING_MSG " no server using current ,please add a new server to connect!"
 
 #define AQ_ADD_SUBSCRIBE_SUCCESS 1
 #define AQ_ADD_SUBSCRIBE_SUCCESS_MSG "add subscribe suceess!"

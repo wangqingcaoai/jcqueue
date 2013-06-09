@@ -1,5 +1,6 @@
 PREFIX=/usr/local
 BINDIR=$(PREFIX)/bin
+CONFIG_DIR = /etc/jcq
 INSTALL=install
 TARGET=jcqueue_server jcqueue_client 
 dirs = app_queue\
@@ -26,14 +27,20 @@ lib%.a: %/*.c
 	ar rs  $@ $(@:lib%.a=%)/*.o 
 %.o:%.c
 	$(CC) $(CFLAGS) -c $^ 
-.PHONY: install
-install: $(BINDIR) $(TARGET:%=$(BINDIR)/%)
-
+.PHONY: install uninstall
+install: $(BINDIR) $(TARGET:%=$(BINDIR)/%) $(CONFIG_DIR) $(TARGET:%=$(CONFIG_DIR)/%.conf)
+	
 $(BINDIR):
 	$(INSTALL) -d $@
 
 $(BINDIR)/%: %
 	$(INSTALL) $< $@
+$(CONFIG_DIR):
+	mkdir $(CONFIG_DIR)
+$(CONFIG_DIR)/%:%
+	cp $< $@
+uninstall:
+	rm -f $(TARGET:%=$(BINDIR)/%)
 
 clean:
 	rm -f $(dirs:%=%/*.o)

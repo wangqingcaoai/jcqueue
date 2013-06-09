@@ -66,4 +66,5 @@ int processConsoleOut(ConsolePtr ptr,int ev);
 int processRequestOut(ConnectPtr ptr,int ev);
 int processResponseOut(ConnectPtr ptr,int ev);
 int tickAppServer(AppServerPtr);
+int stopAppServer(AppServerPtr );
 #endif

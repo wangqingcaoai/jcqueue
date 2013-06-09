@@ -36,6 +36,7 @@ void srvStart(TransfarServerPtr s);
 void srvProcess(TransfarServerPtr s );
 void srvtick(TransfarServerPtr s);
 int tickTransfarServer(TransfarServerPtr ptr);
+int stopTransfarServer(TransfarServerPtr ptr);
 
 
 #endif

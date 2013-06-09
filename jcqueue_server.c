@@ -14,8 +14,9 @@ struct option long_options[] = {
 };
 int main(int argc, char  *argv[])
 {
+
     int opt;
-    initConfig(NULL);
+    initConfig("/etc/jcq/jcqueue_server.conf");
     while((opt = getopt_long(argc, argv, short_options, long_options, NULL)) != -1)
     {
         switch (opt)
@@ -44,9 +45,18 @@ int main(int argc, char  *argv[])
     char* host = getConfig("host","127.0.0.1");
     char* port = getConfig("port","12221");
     AppServerPtr serverPtr = buildAppServer(host,port);
+    char* store_dir = getConfig("store_dir",NULL);
+    if(store_dir == NULL){
+        setConfig("store_dir","~/.jcq_server/");
+    }
+    // struct sigaction act;
+    // act.sa_sigaction=serverStop();
+    // act.sa_flags=SA_SIGINFO;
+    // sigemptyset(&act.sa_mask);
+    // sigaction(SIGINT,&act,NULL);
+    // sigaction(SIGQUIT,&act,NULL); 
+
     initAppServer(serverPtr);
     processAppServer(serverPtr);
-    
-
     return 0;
-}
+} 
