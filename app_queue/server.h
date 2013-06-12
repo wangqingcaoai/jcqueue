@@ -6,6 +6,7 @@
 #include "../transfar/sockets.h"
 #include "../transfar/server.h"
 #include "../transfar/connect.h"
+#include "router.h"
 #define APP_SERVER_SUCCESS 0
 #define APP_SERVER_ERROR_PARAM_ERROR 1;
 typedef void(*TickHandle)(void*);
@@ -38,6 +39,8 @@ typedef struct AppServer
     Handle responseOut;
     TickHandle tick;
 	long storePosition;
+    long maxIds;
+
 }AppServer , * AppServerPtr;
 typedef struct AppServerStore
 {
@@ -50,6 +53,7 @@ typedef struct AppServerStore
     long pushServer;
     long transfarServer;
     long requestServer;
+    long maxIds;
 }AppServerStore,*AppServerStorePtr;
 AppServerPtr buildAppServer(const char* host,const char* port);
 int initAppServer(AppServerPtr);

@@ -56,7 +56,7 @@ int main(int argc, char  *argv[])
     // sigaction(SIGINT,&act,NULL);
     // sigaction(SIGQUIT,&act,NULL); 
 
-    initAppServer(serverPtr);
+    //initAppServer(serverPtr);
     processAppServer(serverPtr);
     return 0;
 } 

@@ -7,19 +7,20 @@
 #include "../transfar/server.h"
 #include "../util/config.h"
 #include "../errors.h"
-#include "request.h"	
+#include "request.h"
+
 AppServerPtr buildClientAppServer(const char* host,const char* port){
     AppServerPtr ptr = allocMem(sizeof(AppServer));
     if(ptr == NULL){
         return ptr;
     }
-    ptr->request = (Handle)processClientRequest;
-    ptr->response = (Handle)processClientResponse;
+    ptr->request = (Handle)processClientPusherRequest;
+    ptr->response = (Handle)processClientPusherResponse;
     ptr->requestOut = (Handle)processClientRequestOut;
     ptr->responseOut = (Handle)processClientResponseOut;
 
-    ptr->pusherRequest = (Handle)processClientPusherRequest;
-    ptr->pusherResponse = (Handle)processClientPusherResponse;
+    //ptr->pusherRequest = (Handle)processClientPusherRequest;
+   // ptr->pusherResponse = (Handle)processClientPusherResponse;
     ptr->consoleIn = (Handle)processClientConsoleIn;
     ptr->consoleOut = (Handle)processClientConsoleOut;
     ptr->tick  = (TickHandle)tickClientAppServer;
@@ -70,6 +71,8 @@ int initClientAppServer(AppServerPtr ptr){
         //     freeTransfarServer(&(ptr->transfarServer));
         // }
         // 不能改变这些语句的顺序
+        ptr->maxIds = initMaxIds(appStore.maxIds);
+        
         ptr->usersList = restoreUsers(appStore.usersList);
         
         ptr->admin =  restoreUser(appStore.admin);
@@ -82,6 +85,7 @@ int initClientAppServer(AppServerPtr ptr){
         // ptr->pushServer =  restorePushServer(appStore.pushServer,ptr);
         // //TODO need to think how to use tranfarServer store;
         ptr->requestServer = restoreRequestServer(appStore.requestServer,ptr);
+        
         ptr->storePosition = storePosition;
     }
     return APP_SERVER_SUCCESS;
@@ -104,7 +108,9 @@ int storeClientAppServer(AppServerPtr ptr){
         appStore.pushServer = 0L;
         appStore.transfarServer = 0L;
         appStore.requestServer = 0L;
+        appStore.maxIds = 0L;
     }
+    appStore.maxIds = initMaxIds(ptr->maxIds);
     appStore.usersList = storeUsers(ptr->usersList);
     appStore.admin = storeUser(ptr->admin);
     appStore.sendUser = storeUser(ptr->sendUser);
@@ -154,9 +160,11 @@ int processClientRequest(ConnectPtr ptr,int ev){
             case CONNECT_STATE_READ_FORMAT_ERROR:
                 setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
                 
-                setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
                 return APP_SERVER_SUCCESS;
         }
+     
+        setNetMessageReadState(ptr->netMessage,NETMESSAGE_READSTATE_WAIT);
         //check user
         if(ptr->state == CONNECT_STATE_READ_MESSAGE_READY){
             if(ptr->netMessage->user != NULL){
@@ -168,11 +176,11 @@ int processClientRequest(ConnectPtr ptr,int ev){
                         //success
                         aq_client_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
                     }else{
-                        setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
+                        setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
                     }
                 }    
             }else{
-                setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
             
                 
             }
@@ -212,30 +220,35 @@ int processClientResponseOut(ConnectPtr ptr,int ev){
                 return APP_SERVER_SUCCESS;
             case CONNECT_STATE_READ_FORMAT_ERROR:
                 setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
-                setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
                 return APP_SERVER_SUCCESS;
         }
+        
+   //     setNetMessageReadState(ptr->netMessage,NETMESSAGE_READSTATE_WAIT);
         //check user
         if(ptr->state == CONNECT_STATE_READ_MESSAGE_READY){
-            displayNetMessage(ptr->netMessage);
+            //displayNetMessage(ptr->netMessage);
             if(ptr->netMessage->user != NULL){
-                if(ptr->user == NULL){
-                    ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
+                if(!isSameString(ptr->tServer->appServer->acceptUser->userName,ptr->netMessage->user)){
+                    setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
                 }else{
-                    int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
+                    ptr->user = ptr->tServer->appServer->acceptUser;
+                    int checkState = checkUser(ptr->tServer->appServer->acceptUser,ptr->netMessage->key,ptr->netMessage->password);
                     if(checkState == USER_SUCCESS){
                         //success
-                        aq_client_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                        aq_client_request_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                        setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_FINISH);
+                        return APP_SERVER_SUCCESS;
                     }else{
-                        setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
+                        setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
                     }
                 }    
             }else{
-                setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
             
                     
             }
-            //setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+            setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
             return APP_SERVER_SUCCESS;
         }
     }else if(ev == 'h'){ 
@@ -248,7 +261,8 @@ int processClientPusherResponse(ConnectPtr ptr,int ev){
     if(ev == 'w'){
 
         setNetMessageSendUser(ptr->netMessage,ptr->tServer->appServer->sendUser);
-        sendResponseData(ptr);   
+        sendResponseData(ptr); 
+        setConnectRead(ptr);
     }else if(ev == 'h'){
         ptr->halfClose =1;
     }
@@ -264,30 +278,34 @@ int processClientPusherRequest(ConnectPtr ptr,int ev){
                 return APP_SERVER_SUCCESS;
             case CONNECT_STATE_READ_FORMAT_ERROR:
                 setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
-                setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
                 return APP_SERVER_SUCCESS;
         }
+
+        setNetMessageReadState(ptr->netMessage,NETMESSAGE_READSTATE_WAIT);
         //check user
         if(ptr->state == CONNECT_STATE_READ_MESSAGE_READY){
             if(ptr->netMessage->user != NULL){
-                if(ptr->user == NULL){
-                    ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
-                }
-                if(ptr->user == NULL){
-                    setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
-            
-                    return APP_SERVER_SUCCESS;
+                                
+                if(!isSameString(ptr->tServer->appServer->acceptUser->userName,ptr->netMessage->user)){
+                    setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
                 }else{
+                    ptr->user = ptr->tServer->appServer->acceptUser;
                     int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
                     if(checkState == USER_SUCCESS){
                         //success
-                        aq_push_server_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                      int result =   aq_push_server_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                        if(AQ_STOP_SEND == result){
+
+                            setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_FINISH);
+                            return APP_SERVER_SUCCESS;
+                        }
                     }else{
-                        setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
+                        setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
                     }
                 }    
             }else{
-                setNetMessageError(ptr->netMessage,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
             }
             setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
         }
@@ -306,9 +324,11 @@ int processClientConsoleIn(ConsolePtr ptr,int ev){
                 return APP_SERVER_SUCCESS;
             case CONSOLE_STATE_READ_FORMAT_ERROR:
                 setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);        
-                setNetMessageError(ptr->netMessage,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
+                setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(PARSER_ERRORS_MARK,PARSER_ERROR_FORMAT_ERROR),PARSER_ERROR_FORMAT_ERROR_MSG);
                 
         }
+
+        setNetMessageReadState(ptr->netMessage,NETMESSAGE_READSTATE_WAIT);
         //check user
         if(ptr->state == CONSOLE_STATE_READ_MESSAGE_READY){
             aq_client_router(ptr->tServer->appServer,ptr->netMessage,ptr->tServer->appServer->sendUser);
@@ -343,6 +363,6 @@ int stopClientAppServer(AppServerPtr ptr){
     storeClientAppServer(ptr);
     stopTransfarServer(ptr->transfarServer);
     freeClientAppServer(&ptr);
-    printf("server closed success\n" );
+    printf("client closed success\n" );
     exit(1);
 }

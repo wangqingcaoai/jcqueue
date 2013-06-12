@@ -19,6 +19,7 @@ typedef struct Message
     int length;//消息长度
     int delay ;//消息的延迟时间
     int64 activetime;//消息激活时间
+    int relateCount;//消息关联的消费者数
     long storePosition;
 }Message,* MessagePtr;
 typedef struct MessageStore
@@ -32,6 +33,7 @@ typedef struct MessageStore
     int priority;//优先级 数值越低优先级越高
     int length;//消息长度
     int delay ;//消息的延迟时间
+    int relateCount ;
     int64 activetime;//消息激活时间
 
 }MessageStore,*MessageStorePtr;
@@ -48,4 +50,6 @@ void setMessageDelay(MessagePtr ptr,int delay);
 int isMessageWaitFinished(MessagePtr ptr,int64 timestamp);
 long storeMessage(MessagePtr ptr);
 MessagePtr restoreMessage(long storePosition);
+int MessageLessByPriority(MessagePtr ptr1, MessagePtr ptr2);
+int MessageLessByActiveTime(MessagePtr ptr1, MessagePtr ptr2);
 #endif

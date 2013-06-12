@@ -109,7 +109,7 @@ int addSubscribeTopicToSubscribe(SubscribePtr ptr,SubscribeTopicPtr sptr);
 int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName);
 int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicName);
 int isMatchSubscribeByTopicName(SubscribePtr ,const char* topicName);
-int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message);
+int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message,TopicPtr topic);
 
 
 long storeSubscribe(SubscribePtr ptr);

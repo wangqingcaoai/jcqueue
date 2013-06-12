@@ -4,18 +4,16 @@
 #include "../util/util.h"
 #include "../data/list.h"
 #include "../data/store.h"
-
+#include "../util/maxids.h"
 UserPtr buildUser(const char* userName,const char* userPassword){
     if(isEmptyString(userName)|| isEmptyString(userPassword)){
         return NULL;
     }
-    static int user_id;
     UserPtr ptr = (UserPtr)allocMem(sizeof(User));
     if(ptr == NULL){
         return NULL;
     }
-    user_id ++;
-    ptr->userId = user_id;
+    ptr->userId = getUserNextId();
     ptr->userName = allocString(userName);
     ptr->userSecretKey = NULL;
     ptr->userPassword = allocString(userPassword);
@@ -266,7 +264,7 @@ long storeUser(UserPtr ptr){
     user.group = ptr->group;
     user.keyUpdateTime = ptr->keyUpdateTime;
     user.channels = 0;
-    return store(0,&user,sizeof(UserStore));
+    return ptr->storePosition = store(ptr->storePosition,&user,sizeof(UserStore));
 }
 int tickUser(ListPtr userList){
     //need used to update the key

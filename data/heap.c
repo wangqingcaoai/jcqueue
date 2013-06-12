@@ -6,6 +6,7 @@
 #include "../util/util.h"
 #include "heap.h"
 #include "store.h"
+#include "../util/maxids.h"
 
 static void set(Heap *h, int k, void *x)
 {
@@ -238,7 +239,7 @@ static void**  restoreHeapData(long storePosition,RestoreHandle handle,int cap){
 }
 
 void* getHeapDataByIndex(HeapPtr h,int index){
-    if(index<=0 || h ==NULL || index>=h->len){
+    if(index<=0 || h ==NULL || index>h->len){
         return NULL;
     }else{
         return h->data[index];

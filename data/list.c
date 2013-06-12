@@ -6,6 +6,7 @@
 #include "base.h"
 #include "list.h"
 #include "store.h"
+#include "../util/maxids.h"
 //减小计数
 static int  removeOne(ListPtr list){
     if(!checklist(list)){
@@ -28,8 +29,6 @@ int checklist(ListPtr list){
     }
 }
 ListPtr buildList(){
-    static int list_id;
-    
     ListPtr list = (ListPtr)allocMem(sizeof(List));
     if(list == NULL){
         return NULL;
@@ -40,9 +39,8 @@ ListPtr buildList(){
         freeMem((void**)&list);
         return NULL;
     }
-    list_id ++;
     list->count  = 0;
-    list->listId = list_id; 
+    list->listId = getListNextId(); 
     list->header->id= LIST_HEADER_ID;
     list->header->prev = list->header->next = list->header;
     list->header->data = NULL;
@@ -71,7 +69,6 @@ int insertToList(ListPtr list,void *data){
    
     new->id = list->maxCount;
     new->data = data;
-    new->storePosition = 0;
     new = NULL;
     return 1;
 }
@@ -481,27 +478,14 @@ long storeListNodes(ListNodePtr header,StoreHandle handle){
             ptr =ptr->next;
         }
     }
-    return headerPosition;
+    ListNodeStore node;
+    restore(headerPosition,&node,sizeof(ListNodeStore));
+  //  printf("%ld<-%ld->%ld\n",node.prev,headerPosition,node.next );
     
+    return headerPosition;
 
 }
-ListNodePtr restoreListNodes(long storePosition,RestoreHandle handle){
-    ListNodeStore sheader;
-    ListNodePtr header = restoreListNode(storePosition,&sheader,handle);
-    long position = sheader.next;
-    ListNodeStore temp;
-    ListNodePtr prev = header;
-    ListNodePtr current = header;
-    while(position!=storePosition&&position>0){
-        current = restoreListNode(position,&temp,handle);
-        prev->next = current;
-        current->prev = prev;
-        position = temp.next;
-    }
-    current->next = header;
-    header->prev = current;
-    return header;
-}
+
 
 long storeListNode(ListNodePtr ptr,StoreHandle handle){
     if(ptr == NULL ||handle == NULL){
@@ -519,6 +503,7 @@ long storeListNode(ListNodePtr ptr,StoreHandle handle){
     ptr->storePosition = store(ptr->storePosition,&node,sizeof(ListNodeStore));
     
     if(ptr->prev->storePosition>0){
+
         ListNodeStore prev;
         restore(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));
         if(prev.next!=ptr->storePosition){
@@ -526,6 +511,7 @@ long storeListNode(ListNodePtr ptr,StoreHandle handle){
             store(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));
         }
         restore(ptr->prev->storePosition,&prev,sizeof(ListNodeStore));  
+        // printf("<pre> %ld<-%ld->%ld\n",prev.prev,ptr->prev->storePosition,prev.next);
     }
     if(ptr->next->storePosition>0){
         ListNodeStore next;
@@ -536,9 +522,26 @@ long storeListNode(ListNodePtr ptr,StoreHandle handle){
         }
         restore(ptr->next->storePosition,&next,sizeof(ListNodeStore));
         
+        // printf("<next> %ld<-%ld->%ld\n",next.prev, ptr->next->storePosition,next.next);
     }
-    restore(ptr->storePosition,&node,sizeof(ListNodeStore));
     return ptr->storePosition;
+}
+ListNodePtr restoreListNodes(long storePosition,RestoreHandle handle){
+    ListNodeStore sheader;
+    ListNodePtr header = restoreListNode(storePosition,&sheader,handle);
+    long position = sheader.next;
+    ListNodeStore temp;
+    ListNodePtr prev = header;
+    ListNodePtr current = header;
+    while(position!=storePosition&&position>0){
+        current = restoreListNode(position,&temp,handle);
+        prev->next = current;
+        current->prev = prev;
+        position = temp.next;
+    }
+    current->next = header;
+    header->prev = current;
+    return header;
 }
 ListNodePtr restoreListNode(long storePosition,ListNodeStorePtr node, RestoreHandle handle){
     if(storePosition<=0 || handle == NULL ||node == NULL){

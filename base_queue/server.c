@@ -3,15 +3,13 @@
 #include "server.h"
 #include "topic.h"
 #include "../app_queue/server.h"
+#include "../util/maxids.h"
 BaseServerPtr buildBaseServer(AppServerPtr app){
-    static int baseserver_id;
-    
     BaseServerPtr ptr = (BaseServerPtr)allocMem(sizeof(BaseServer));
     if(ptr == NULL){
         return NULL;
     }
-    baseserver_id++;
-    ptr->baseserver_id = baseserver_id;
+    ptr->baseserver_id = getBaseServerNextId();
     ptr->appServer = app;
     ptr->topicList = buildList();
     ptr->storePosition = 0L;

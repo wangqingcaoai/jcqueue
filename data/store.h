@@ -1,6 +1,6 @@
 #ifndef DATA_STORE_H
 #define DATA_STORE_H 
-
+#include <stdio.h>
 #define STORE_FILE_HEAD "jcq_bak_"
 #define STORE_FILE_EXTENSION ".bak"
 #define STORE_POSITION_NAME "store"

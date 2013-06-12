@@ -66,4 +66,6 @@
 #define BQ_DEL_TOPIC_SUCCESS 8
 #define BQ_DEL_TOPIC_SUCCESS_MSG "del topic %s success, remove count %d "
 
+#define BQ_GET_TOPIC_LIST_SUCCESS 9
+
 #endif

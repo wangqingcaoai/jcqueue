@@ -223,15 +223,15 @@ int reparserJCQMessage(NetMessagePtr ptr,char * protocolType, char* version){
         ptr->sendBuf = allocMem(NETMESSAGE_DEFAULT_SEND_BUF_SIZE);
     }ptr->sendTime = nanoseconds();
     int writedLength = snprintf(ptr->sendBuf,NETMESSAGE_DEFAULT_SEND_BUF_SIZE,JCQ_FORMAT,
-        protocolType,
-        version,
-        ptr->sendCmd,
-        ptr->currentUser,
-        ptr->currentPassword,
-        ptr->currentUserKey,
+        protocolType==NULL?"":protocolType,
+        version==NULL?"":version,
+        ptr->sendCmd==NULL?"":ptr->sendCmd,
+        ptr->currentUser==NULL?"":ptr->currentUser,
+        ptr->currentPassword==NULL?"":ptr->currentPassword,
+        ptr->currentUserKey==NULL?"":ptr->currentUserKey,
         ptr->sendErrcode,
         ptr->sendTime,
-        ptr->sendExtraParam,
+        ptr->sendExtraParam==NULL?"":ptr->sendExtraParam,
         ptr->sendLength);
     int leavLength = NETMESSAGE_DEFAULT_SEND_BUF_SIZE  -writedLength;
     int endLength = strlen(JCQ_FORMAT_END);

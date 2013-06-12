@@ -127,12 +127,12 @@ typedef struct NetMessage
   * cmd format
   * cmd target targetType param1[value1]param2[] data:dfdfdf\n
   */
-#define CMD_READ_FORMAT "%s  %s %s \n"
+#define CMD_READ_FORMAT "%s %s %s\n"
 #define CMD_WRITE_FORMAT  "%d "
 int setNetMessageSendData(NetMessagePtr ptr,int errcode,char* sendCmd,void* sendData,int datalength);
 int setNetMessageSendUser(NetMessagePtr ptr,UserPtr uptr);
 NetMessagePtr buildNetMessage();
-int setNetMessageError(NetMessagePtr ptr,int errcode,char* errorMessage,...);
+int setNetMessageError(NetMessagePtr ptr,char* cmd,int errcode,char* errorMessage,...);
 char * getExtraParam(NetMessagePtr ptr,const char* paramName);
 int setExtraParam(NetMessagePtr ptr,const char* paramName,const char* paramValue);
 
@@ -147,5 +147,8 @@ int isExtraParamFormatRight(const char*buf,int length);
 int setNetMessageJustData(NetMessagePtr ptr,void *data,int length);
 int setNetMessageSendCMDData(NetMessagePtr ptr,int errcode,char* sendCmd);
 int setNetMessageSendState(NetMessagePtr ptr,int state);
+int getNetMessageSendState(NetMessagePtr ptr);
+int setNetMessageReadState(NetMessagePtr ptr,int state);
+int getNetMessageReadState(NetMessagePtr ptr);
 
 #endif

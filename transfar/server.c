@@ -24,14 +24,11 @@ TransfarServerPtr buildTransfarServer(AppServerPtr app,const char* addr,const ch
     if(isEmptyString(addr) || isEmptyString(port) ){
         return NULL;
     }
-    static int id;
-    
     TransfarServerPtr ptr = (TransfarServerPtr)allocMem(sizeof(TransfarServer));
     if(ptr==NULL){
         return ptr;
     }
-    id++;
-    ptr->id = id;
+    ptr->id = getTransfarServerNextId();
     ptr->appServer = app;
     ptr->addr = allocString(addr);
     ptr->port = allocString(port);
@@ -281,10 +278,20 @@ srvaccept(TransfarServerPtr s, int ev)
 /**
  * 心跳处理
  */
-void srvtick(TransfarServerPtr s){
-    if(s == NULL){
+void srvtick(TransfarServerPtr ptr){
+    if(ptr == NULL){
         return ;
     }
+    // ConnectPtr con;
+    // int count = getHeapLength(ptr->conns),i;
+    // for ( i = 0; i < count; ++i)
+    // {
+    //     con = getHeapDataByIndex(ptr->conns,i);
+    //     if(con->halfClose == 1){
+    //         connectClose(con);
+    //     }
+
+    // } 
     //
 
 }

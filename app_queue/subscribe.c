@@ -13,15 +13,14 @@
 #include "subscribe.h"
 #include "../parser/net_message.h"
 #include "../data/store.h"
+#include "../util/maxids.h"
 SubscribeServerPtr buildSubscribeServer(AppServerPtr appServer){
-    static int server_id;
     
     SubscribeServerPtr ptr = (SubscribeServerPtr)allocMem(sizeof(SubscribeServer));
     if(ptr == NULL){
         return ptr;
     }
-    server_id++;
-    ptr->serverId = server_id;
+    ptr->serverId = getSubscribeServerNextId();
     ptr->subscribeTopics = buildList();
     ptr->subscribes = buildList();
     ptr->appServer = appServer;
@@ -50,14 +49,12 @@ SubscribePtr buildSubscribe(const char* subscribeKeyWord,const char* remoteHost,
     if(user ==NULL){
         return NULL;
     }
-    static int64 subscribe_id;
     
     SubscribePtr ptr = (SubscribePtr)allocMem(sizeof(Subscribe));
     if(ptr == NULL){
         return ptr;
     }
-    subscribe_id++;
-    ptr->subscribeId = subscribe_id;
+    ptr->subscribeId = getSubscribeNextId();
     ptr->subscribeKeyWord = allocString(subscribeKeyWord);
     ptr->remoteHost = allocString(remoteHost);
     ptr->remotePort = remotePort;
@@ -93,14 +90,14 @@ int freeSubscribe(SubscribePtr *pptr){
     ptr->channel =NULL;
 
     freeList(&(ptr->subscribedTopicLists),NULL);//free
-    freePusher(&(ptr->pusher));
+    //freePusher(&(ptr->pusher));
     freeMem((void**)&ptr);
     (*pptr) = NULL;
     return SUBSCRIBE_SUCCESS;
 }
 
 SubscribeTopicPtr buildSubScribeTopic(const char* topicName,TopicPtr tptr){
-    static int id;
+    
     if(isEmptyString(topicName)){
         return NULL;
     }
@@ -111,8 +108,8 @@ SubscribeTopicPtr buildSubScribeTopic(const char* topicName,TopicPtr tptr){
     if(ptr == NULL){
         return ptr;
     }
-    id++;
-    ptr->id =  id;
+    
+    ptr->id =  getSubscribeTopicNextId();
     ptr->topicName = allocString(topicName);
     ptr->topic = tptr;
     ptr->subscribesList = buildList();
@@ -189,11 +186,17 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
     int result = SUBSCRIBE_SUCCESS;
     if(isEmptyString(keyword)||
         isEmptyString(remoteHost)||
-        isEmptyString(remotePort)||
-        isEmptyString(protocol)||
-        isEmptyString(type)){
+        isEmptyString(remotePort)
+        ){
         result = SUBSCRIBE_ERROR_PARAM_EMPTY;
     }else{
+        if(isEmptyString(protocol)){
+            protocol = allocString("jcq");
+        }
+        if(isEmptyString(type)){
+            type = allocString("push");
+        }
+        
         SubscribePtr ptr = buildSubscribe( keyword,remoteHost,atoi(remotePort), protocol, type,userPtr);
         char buf[UTIL_NUM_BUF_SIZE];
         setSendExtraParam(netMessage,"subscribe_id",int64ToString(ptr->subscribeId,buf,UTIL_NUM_BUF_SIZE));
@@ -202,6 +205,7 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
             result =SUBSCRIBE_ERROR_PARAM_ERROR;
         }else {
             insertToList(server->subscribes,ptr);
+            addPusher(server->appServer->pushServer,ptr);
             if(server->appServer == NULL){
                 addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"no appServer defined on subscribeServer, could not find topic");
                 result =  SUBSCRIBE_ERROR_PARAM_ERROR;
@@ -211,11 +215,14 @@ int addSubscribe(SubscribeServerPtr server, UserPtr userPtr , NetMessagePtr netM
                 if(topicList!=NULL){
                     if(!isEmptyList(topicList)){
                         //将topic信息更新到topic列表当中，
+                        printf("add topic\n");
+                        printf("add topic list to subscribe %"PRId64"\n",ptr->subscribeId );
                         addSubscribeTopicsByList(server, topicList,  ptr);
                     }
                     freeList(&topicList,NULL);
                 }       
-            }        
+            }
+
         }    
     }
     
@@ -238,7 +245,10 @@ int delSubscribe(SubscribeServerPtr server,UserPtr userPtr,NetMessagePtr mptr){
     char buf[UTIL_NUM_BUF_SIZE];
     char* param = getExtraParam(mptr,"subscribe_id");
     int64 subscribe_id = atoll(param);
-
+    SubscribePtr sub = getFromList(server->subscribes,(Find)isSubscribeById,&subscribe_id);
+    if(sub!=NULL){
+        removePusherFromPushServer(server->appServer->pushServer,sub);
+    }
     int removeNum =removeFromList(server->subscribes,(Find)isSubscribeById,&subscribe_id,(Free)freeSubscribe);
     if(removeNum == 0){
         return SUBSCRIBE_ERROR_SUBSCRIBE_NOT_FOUND;
@@ -278,6 +288,7 @@ int addSubscribeTopic(SubscribeServerPtr subscribeServer,TopicPtr tptr, Subscrib
                 addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to add subscribetopic on SubscribeServer(serverID:%d) ,list is NULL",subscribeServer->serverId);
                 return SUBSCRIBE_BUILD_SUBSCRIBE_TOPIC_FAILED;
             }
+            printf("add new subscribetopic %s\n", tptr->topicName);
             insertToList(subscribeServer->subscribeTopics,ptr);
         }
         addSubscribeToSubscribeTopic(ptr,subscribe);
@@ -313,8 +324,9 @@ int processSubscribeTopic(SubscribeServerPtr server){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     if(server->subscribeTopics == NULL){
-        addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to process subscribetopic on SubscribeServer(ID:%d) ,subscribeTopics list is NULL",server->serverId);
-        return SUBSCRIBE_ERROR_PARAM_ERROR;
+        //addLog(LOG_ERROR,LOG_LAYER_APP_QUEUE,SUBSCRIBE_POSITION_NAME,"failed to process subscribetopic on SubscribeServer(ID:%d) ,subscribeTopics list is NULL",server->serverId);
+        //return SUBSCRIBE_ERROR_PARAM_ERROR;
+        return SUBSCRIBE_SUCCESS;
     }
     ListNodePtr start = getListHeader(server->subscribeTopics);
     ListNodePtr end = getListEnd(server->subscribeTopics);
@@ -323,14 +335,19 @@ int processSubscribeTopic(SubscribeServerPtr server){
     while(stptr!=NULL){
         //获取就绪消息
         mptr = getReadyMessage(stptr->topic);
+        
         if(mptr == NULL){
             //没有就绪的消息 不做处理
         }else{
             //有就绪消息，发送到每个的推送器
-            pushMessageToSubscribeList(server,stptr->subscribesList,mptr);
+           // if(isOn(getConfig("verbose","off"))){
+                printf("send \"%s\" 's message %"PRId64" to  pusher client \n",stptr->topic->topicName,mptr->messageid );
+            //}
+            pushMessageToSubscribeList(server,stptr->subscribesList,mptr,stptr->topic);
         }
         stptr = nextFromList(&start,end,NULL,NULL);
     }
+
 
 }//need add Push server 
 int addSubscribeToSubscribeTopic(SubscribeTopicPtr ptr,SubscribePtr sptr){
@@ -378,6 +395,7 @@ int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName
     SubscribePtr sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,(char*)topicName);
     while(sptr!=NULL){
         addSubscribeTopic(server,tptr,sptr);
+        printf("update subscribe %"PRId64" after add topic %s\n",sptr->subscribeId,topicName);
         sptr = nextFromList(&start,end,(Find)isMatchSubscribeByTopicName,(char*)topicName);
     }
     return SUBSCRIBE_SUCCESS;
@@ -385,6 +403,9 @@ int UpdateSubscribeAfterAddTopic(SubscribeServerPtr server, const char*topicName
 int isMatchSubscribeByTopicName(SubscribePtr ptr ,const char* topicName){
     if(ptr == NULL || topicName ==NULL){
         return 0;
+    }
+    else if(!strcmp(topicName,ptr->subscribeKeyWord)){
+        return 1;
     }else if(REGEX_SUCCESS == isMatchedString(topicName,ptr->subscribeKeyWord)){
         return 1;
     }else{
@@ -405,6 +426,7 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
     int removeNum =removeFromList(server->subscribeTopics,(Find)isSubscribeTopicByTopicName,(char*)topicName,(Free)freeSubscribeTopic);
+    printf("update subscribe  after remove topic %s\n",topicName);
     if(removeNum == 0){
         return SUBSCRIBE_ERROR_SUBSCRIBE_TOPIC_NOT_FOUND;
     }else{
@@ -414,8 +436,8 @@ int UpdateSubscribeAfterRemoveTopic(SubscribeServerPtr server, const char*topicN
     return SUBSCRIBE_SUCCESS;
 }
 
-int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message){
-    if(server ==NULL || subscribes == NULL ||message ==NULL){
+int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,MessagePtr message,TopicPtr topic){
+    if(server ==NULL || subscribes == NULL ||message ==NULL || topic == NULL){
         return SUBSCRIBE_ERROR_PARAM_ERROR;
     }
 
@@ -423,7 +445,10 @@ int pushMessageToSubscribeList(SubscribeServerPtr server,ListPtr subscribes,Mess
     ListNodePtr end = getListEnd(subscribes);
     SubscribePtr sptr = nextFromList(&start,end,NULL,NULL);
     while(sptr!=NULL){
-        addMessageToPusher(sptr->pusher,message);
+        printf("push messageid %"PRId64" to  subscribe  %d\n",message->messageid,sptr->subscribeId);
+        
+        addMessageToPusher(sptr->pusher,message,topic);
+        message->relateCount++;
         sptr = nextFromList(&start,end,NULL,NULL);
     }
     return SUBSCRIBE_SUCCESS;
@@ -506,7 +531,7 @@ SubscribeServerPtr restoreSubscribeServer(long storePosition,AppServerPtr appSer
         return NULL;
     }
     SubscribeServerStore serverStore;
-    restore(storePosition,&serverStore,sizeof(SubscribeServer));
+    restore(storePosition,&serverStore,sizeof(SubscribeServerStore));
     SubscribeServerPtr  ptr = (SubscribeServerPtr)allocMem(sizeof(SubscribeServer));
     ptr->serverId = serverStore.serverId;
     ptr->appServer = appServer;
@@ -562,7 +587,13 @@ ListPtr getAllPushingMessagesBySubscribe(SubscribePtr ptr){
     ListPtr using = NULL;
     while(sptr!=NULL){
         using = getUsingMessages(sptr->topic);
-        mergeList(list,using);
+        ListNodePtr usingStart = getListHeader(using);
+        ListNodePtr usingEnd = getListEnd(using);
+        MessagePtr mptr = nextFromList(&usingStart,usingEnd,NULL,NULL);
+        while(mptr != NULL){
+            insertToList(list,buildPusherMessage(mptr,sptr->topic));    
+            mptr = nextFromList(&usingStart,usingEnd,NULL,NULL);
+        }
         freeList(&using,NULL);
         sptr = nextFromList(&start,end,NULL,NULL);
     }

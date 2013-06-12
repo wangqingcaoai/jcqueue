@@ -3,18 +3,18 @@
 #include "../data/list.h"
 #include "push.h"
 #include "../errors.h"
+#include "../util/maxids.h"
 PushServerPtr buildPushServer(AppServerPtr server){
     if(server == NULL){
         return NULL;
     }
-    static int id;
     PushServerPtr ptr = (PushServerPtr)allocMem(sizeof(PushServer));
     if(ptr==NULL){
         return ptr;
     }
-    id++;
+    
     ptr->appServer = server;
-    ptr->serverId = id;
+    ptr->serverId = getPusherServerNextId();
     ptr->pushers = buildList();
     ptr->storePosition = 0L;
     return ptr;
@@ -34,7 +34,7 @@ int freePushServer(PushServerPtr * pptr){
     return PUSH_SUCCESS;
 }
 PusherPtr buildPusher(SubscribePtr subscribe){
-    static int id;
+    
     if(subscribe == NULL){
         return NULL;
     }
@@ -44,10 +44,10 @@ PusherPtr buildPusher(SubscribePtr subscribe){
     if(ptr == NULL){
         return ptr;
     }
-    id++;
-    ptr->pusherId = id;
+    ptr->pusherId = getPusherNextId();
     ptr->subscribe = subscribe;
     ptr->messageReady = buildList();
+    ptr->messagePushed = buildList();
     ptr->connect = NULL;
     ptr->storePosition = 0L;
     return ptr; 
@@ -69,15 +69,24 @@ int addPusher(PushServerPtr server,SubscribePtr subscribe){
     if(server == NULL||subscribe==NULL){
         return PUSH_PARAM_ERROR;
     }
-    PusherPtr  ptr = buildPusher(subscribe);
-    insertToList(server->pushers,ptr);
+    insertToList(server->pushers,subscribe->pusher);
     return PUSH_SUCCESS;
 }
-int addMessageToPusher(PusherPtr ptr,MessagePtr message){
-    if(ptr == NULL || message == NULL){
+
+int removePusherFromPushServer(PushServerPtr server,SubscribePtr subscribe){
+    if(server == NULL){
         return PUSH_PARAM_ERROR;
     }
-    insertToList(ptr->messageReady,message);
+    removeFromList(server->pushers,(Find)isSameSubscribe,subscribe,NULL);
+    
+}
+int addMessageToPusher(PusherPtr ptr,MessagePtr message,TopicPtr topic){
+    if(ptr == NULL || message == NULL|| topic == NULL){
+        return PUSH_PARAM_ERROR;
+    }
+  printf("add message %"PRId64" to push (%d) readymessage  \n",message->messageid,ptr->pusherId );  
+    PusherMessagePtr pusherMessage = buildPusherMessage(message,topic);
+    insertToList(ptr->messageReady,pusherMessage);
     return PUSH_SUCCESS;
 }
 int pushToTarget(PushServerPtr server, PusherPtr ptr){
@@ -92,31 +101,52 @@ int pushToTarget(PushServerPtr server, PusherPtr ptr){
             );
         ptr->connect->user = ptr->subscribe->user;
         ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_FINISH;    
-    
+        ptr->connect->relateData = ptr;
     }
-    if(ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_FINISH){
-        MessagePtr mPtr= popFromList(ptr->messageReady);
-        if(mPtr == NULL){
-            return PUSH_SUCCESS;
+    if(ptr->connect->netMessage->sendState == NETMESSAGE_WRITESTATE_FINISH){
+        PusherMessagePtr pmPtr= popFromList(ptr->messageReady);
+        if(pmPtr == NULL){
+            ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_FINISH;
+            
         }else{
-            NetMessagePtr nmptr = ptr->connect->netMessage;
-            setNetMessageSendData(nmptr,buildErrorCode(PUSH_SUCCESS_MARK,PUSH_PUSH_SUCCESS),PUSH_TO_CLIENT_CMD,mPtr->data,mPtr->length);
-            
-            setSendExtraParam(nmptr,"message_id",int64ToString(mPtr->messageid,buf,bufSize));
-            
-            setSendExtraParam(nmptr,"priority",intToString(mPtr->priority,buf,bufSize));
-
-            setSendExtraParam(nmptr,"delay",intToString(mPtr->delay,buf,bufSize));
-
-            setSendExtraParam(nmptr,"activetime",int64ToString(mPtr->activetime,buf,bufSize));
-
-            setSendExtraParam(nmptr,"timestamp",int64ToString(mPtr->timestamp,buf,bufSize));
-            ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_WAIT;
+            MessagePtr mPtr = pmPtr->message;
+            TopicPtr tPtr = pmPtr->topic;
+            if(mPtr == NULL || tPtr == NULL){
+                ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_FINISH;
         
+            }else{
+                NetMessagePtr nmptr = ptr->connect->netMessage;
+                if(ptr->connect->netMessage->protocolType ==NULL){
+                    ptr->connect->netMessage->protocolType = NETMESSAGE_TYPE_JCQ;
+                }
+                if(ptr->connect->netMessage->version ==NULL){
+                    ptr->connect->netMessage->version = NETMESSAGE_VERSION_JCQ;
+                }
+                setNetMessageSendData(nmptr,buildErrorCode(PUSH_SUCCESS_MARK,PUSH_PUSH_SUCCESS),PUSH_TO_CLIENT_CMD,mPtr->data,mPtr->length);
+                setSendExtraParam(nmptr,"topic_name",tPtr->topicName);
+
+                setSendExtraParam(nmptr,"message_id",int64ToString(mPtr->messageid,buf,bufSize));
+                
+                setSendExtraParam(nmptr,"priority",intToString(mPtr->priority,buf,bufSize));
+
+                setSendExtraParam(nmptr,"delay",intToString(mPtr->delay,buf,bufSize));
+
+                setSendExtraParam(nmptr,"activetime",int64ToString(mPtr->activetime,buf,bufSize));
+
+                setSendExtraParam(nmptr,"timestamp",int64ToString(mPtr->timestamp,buf,bufSize));
+                ptr->connect->netMessage->sendState = NETMESSAGE_WRITESTATE_WAIT;
+                setConnectWrite(ptr->connect);
+                insertToList(ptr->messagePushed,pmPtr);
+                printf("pusher(%d) push message %"PRId64" to %s :%d \n",ptr->pusherId,mPtr->messageid,ptr->subscribe->remoteHost,ptr->subscribe->remotePort );
+        
+            }
         }
+        return PUSH_SUCCESS;
     }
     
 }
+
+
 int processPush(PushServerPtr server){
     if(server == NULL){
         return PUSH_PARAM_ERROR;
@@ -216,7 +246,7 @@ int initPushersDatas(PushServerPtr server){
         PusherPtr ptemp = pusher->subscribe->pusher;
         pusher->subscribe->pusher = pusher;
         freeMem((void**)ptemp);
-        //process message?
+        pusher->messagePushed = buildList();// if stored we resend message
         initPushersReadyMessage(pusher);
         pusher = nextFromList(&start,end,NULL,NULL);
     }
@@ -227,4 +257,65 @@ int initPushersReadyMessage(PusherPtr ptr){
     }
     ptr->messageReady = getAllPushingMessagesBySubscribe(ptr->subscribe);
     return PUSH_SUCCESS;
+}
+
+PusherMessagePtr  buildPusherMessage(MessagePtr message,TopicPtr topic){
+    if(message == NULL || topic == NULL){
+        return NULL;
+    }
+
+    PusherMessagePtr ptr =  (PusherMessagePtr)allocMem(sizeof(PusherMessage));
+    ptr->id = getPusherMessageNextId();
+    ptr->message = message;
+    ptr->topic = topic;
+    return ptr;
+}
+int freePusherMessage(PusherMessagePtr *pptr){
+    if(pptr == NULL){
+        return PUSH_PARAM_ERROR;
+    }
+    PusherMessagePtr ptr = *pptr;
+    if(ptr == NULL){
+        return PUSH_PARAM_ERROR;
+    }else{
+        freeMem((void**)pptr);
+    }
+    return PUSH_SUCCESS;
+}
+// long storePusherServer(PusherMessagePtr );
+// PusherMessagePtr restorePusherMessage(long storePosition);
+
+int pushMessageRecived(PusherPtr ptr,int64 messageId,char* topicName){
+    if(ptr == NULL || messageId <=0 || isEmptyString(topicName)){
+        return PUSH_PARAM_ERROR;
+    }
+    else{
+        if(!isEmptyList(ptr->messagePushed)){
+            PusherMessagePtr pmPtr = getFromList(ptr->messagePushed,(Find)isPusherMessage,&messageId);
+            if(pmPtr!=NULL){
+                pmPtr->message->relateCount--;
+                if(pmPtr->message->relateCount <=0){
+                    delMessage(pmPtr->topic,messageId);
+                    return PUSH_SUCCESS;
+                }
+            }
+        }
+    }
+    return PUSH_MESSAGE_NOT_FOUND;
+}
+int isPusherMessage(PusherMessagePtr ptr,int64 *messageId){
+    if(ptr== NULL || messageId ==NULL){
+        return 0;
+    }else{
+        return isMessage(ptr->message , messageId);
+    }
+}
+int isSameSubscribe(PusherPtr push,SubscribePtr subscribe){
+    if(push == NULL || subscribe == NULL){
+        return 0;
+    }else if(push->subscribe ==subscribe){
+        return 1;
+    }else {
+        return 0;
+    }
 }

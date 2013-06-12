@@ -2,22 +2,24 @@
 #include <stdlib.h>
 #include <string.h>
 #include "message.h"
+#include "../util/maxids.h"
 
 MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* data,int length,int delay){
-    static int64 messageid;
+    
     
     MessagePtr ptr = (MessagePtr)allocMem(sizeof(Message));
     if(ptr == NULL){
         return NULL;
     }
-    messageid++;
-    ptr->messageid = messageid;
+    
+    ptr->messageid = getMessageNextId();
     ptr->state = state;
     ptr->timestamp = timestamp;
     ptr->createtime =nanoseconds();//TODO;
     ptr->priority = priority;
     ptr->length = length;
     ptr->delay = delay;
+    ptr->relateCount =0;
     ptr->activetime = ptr->createtime+delay;
     if(length > 0){
         ptr->data = (void*)allocMem(length);
@@ -25,7 +27,6 @@ MessagePtr buildMessage(MessageState state,int64 timestamp, int priority,void* d
             memcpy(ptr->data,data,length);
         }else{
             freeMem((void**)&ptr);
-            messageid --;
         }
         
     }else{
@@ -66,15 +67,22 @@ void * getMessageData(MessagePtr ptr){
 MessageState getMessageState(MessagePtr ptr){
     return ptr->state;
 }
-int MessageLess(MessagePtr ptr1, MessagePtr ptr2){
+int MessageLessByPriority(MessagePtr ptr1, MessagePtr ptr2){
+    if(ptr1->priority<=ptr2->priority){
+            return 1;
+    }
+    return 0;    
+}
+int MessageLessByActiveTime(MessagePtr ptr1, MessagePtr ptr2){
+
     if(ptr1->activetime<ptr2->activetime){
         return 1;
     }else if(ptr1->activetime = ptr2->activetime){
         if(ptr1->priority<=ptr2->priority){
             return 1;
         }
+        return 0; 
     }
-    return 0;
 }
 void MessageRecord(MessagePtr ptr, int i){
     //did nothing;
@@ -121,6 +129,7 @@ long storeMessage(MessagePtr ptr){
     mstore.priority = ptr->priority;
     mstore.length = ptr->length;
     mstore.delay = ptr->delay;
+    mstore.relateCount = ptr->relateCount;
     mstore.activetime = ptr->activetime;
     mstore.data = store(mstore.data,ptr->data,ptr->length);
     ptr->storePosition  = store(ptr->storePosition,&mstore,sizeof(MessageStore));
@@ -140,6 +149,7 @@ MessagePtr restoreMessage(long storePosition){
     ptr->priority = mstore.priority;
     ptr->length =  mstore.length;
     ptr->delay =mstore.delay;
+    ptr->relateCount = mstore.relateCount;
     ptr->activetime = mstore.activetime;
     ptr->storePosition = storePosition;
     ptr->data = allocMem(mstore.length);

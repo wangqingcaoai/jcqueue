@@ -50,13 +50,11 @@ int setNetMessageSendUser(NetMessagePtr ptr,UserPtr uptr){
     return NETMESSAGE_SUCCESS;
 }
 NetMessagePtr buildNetMessage(){
-    static int64 id;
     NetMessagePtr ptr= allocMem(sizeof(NetMessage));
     if(ptr == NULL){
         return NULL;
     }
-    id++;
-    ptr->id = id; 
+    ptr->id = getNetMessageNextId(); 
     ptr->cmd = NULL;
     ptr->user = NULL;
     ptr->password = NULL;
@@ -94,10 +92,17 @@ NetMessagePtr buildNetMessage(){
     
     return ptr;
 }
-int setNetMessageError(NetMessagePtr ptr,int errcode,char* errorMessage,...){
-    if(ptr == NULL || errcode <0 || errorMessage == NULL){
+int setNetMessageError(NetMessagePtr ptr,char * cmd,int errcode,char* errorMessage,...){
+    if(ptr == NULL || errcode <0 || errorMessage == NULL ||isEmptyString(cmd)){
         return NETMESSAGE_ERROR_PARAM_ERROR;
     }
+    if(ptr->sendCmd !=NULL){
+        freeString(&(ptr->sendCmd));
+    }
+    if(ptr->sendData!=NULL){
+        freeMem((void**)&(ptr->sendData));
+    }
+    ptr->sendCmd =  allocString(cmd); 
     ptr->sendErrcode = errcode;
     ptr->sendData = allocMem(NETMESSAGE_DEFAULT_ERROR_BUF_SIZE);
     va_list va;
@@ -258,6 +263,8 @@ int setNetMessageParam(NetMessagePtr ptr,const char* paramName,const char* param
         }
         if(isExtraParamFormatRight(paramValue,strlen(paramValue))){
             ptr->extraParam = allocString(paramValue);    
+        }else if(isEmptyString(paramValue)){
+            ptr->extraParam = NULL;
         }
         else{
             return NETMESSAGE_ERROR_PARAM_VALUE_FORMAT_ERROR;
@@ -535,4 +542,22 @@ int setNetMessageSendState(NetMessagePtr ptr,int state){
         return NETMESSAGE_ERROR_PARAM_ERROR;
     }
     ptr->sendState = state;
+}
+int getNetMessageSendState(NetMessagePtr ptr){
+    if(ptr == NULL){
+        return NETMESSAGE_WRITESTATE_FINISH;
+    }
+    return ptr->sendState; 
+}
+int setNetMessageReadState(NetMessagePtr ptr,int state){
+    if(ptr == NULL){
+        return NETMESSAGE_ERROR_PARAM_ERROR;
+    }
+    ptr->readState = state;
+}
+int getNetMessageReadState(NetMessagePtr ptr){
+    if(ptr == NULL){
+        return NETMESSAGE_READSTATE_FINISH;
+    }
+    return ptr->readState; 
 }

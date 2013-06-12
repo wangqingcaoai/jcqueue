@@ -26,6 +26,7 @@
 #define USER_ERROR_SECRET_FAILED 5
 #define USER_ERROR_PASSWD_FAILED 6
 #define USER_ERROR_PRIVILEGE_FAILED 7
+#define USER_LIST_BUF_SIZE 1024
 typedef struct Channel * ChannelPtr;
 typedef struct User
 {

@@ -52,8 +52,8 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
         memset(bufExtraParam,'\0',leavLength+1);
 
         memset(bufData,'\0',leavLength+1);
-        
-        sscanf(temp,CMD_READ_FORMAT,bufcmd,bufExtraParam,bufData);
+        printf("%s\n",temp );
+        sscanf(temp,"%s",bufcmd);
         if(isEmptyString(bufcmd)){
             error = PARSER_ERROR_FORMAT_ERROR;
         }else{
@@ -61,7 +61,8 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
                 error = PARSER_ERROR_FORMAT_ERROR;
             }else{
                 setNetMessageParam(ptr,"cmd",bufcmd);
-                if(!isSameString(bufExtraParam,"-")){
+                sscanf(temp,CMD_READ_FORMAT,bufcmd,bufExtraParam,bufData);
+                if(!isSameString(bufExtraParam,"-")&&(!isEmptyString(bufExtraParam))){
                     if(isExtraParamFormatRight(bufExtraParam,strlen(bufExtraParam))){
                         setNetMessageParam(ptr,"extraParam",bufExtraParam);    
                     }else{

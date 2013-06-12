@@ -9,18 +9,17 @@
 #include "../util/log.h"
 #include "../transfar/connect.h"
 #include "../parser/net_message.h"
+#include "../util/maxids.h"
 RequestServerPtr buildRequestServer(AppServerPtr server){
     if(server == NULL){
         return NULL;
     }
-    static int id;
     RequestServerPtr ptr = (RequestServerPtr)allocMem(sizeof(RequestServer));
     if(ptr==NULL){
         return ptr;
     }
-    id++;
     ptr->appServer = server;
-    ptr->serverId = id;
+    ptr->serverId = getRequestServerNextId();
     ptr->requesters = buildList();
     ptr->current = NULL;
     ptr->storePosition = 0L;
@@ -41,7 +40,6 @@ int freeRequestServer(RequestServerPtr * pptr){
     return REQUEST_SUCCESS;
 }
 RequesterPtr buildRequester(UserPtr user,const char* remoteHost,const char* remotePort){
-    static int id;
     if(user == NULL ||remoteHost == NULL||remotePort == NULL){
         return NULL;
     }
@@ -50,8 +48,7 @@ RequesterPtr buildRequester(UserPtr user,const char* remoteHost,const char* remo
     if(ptr == NULL){
         return ptr;
     }
-    id++;
-    ptr->requesterId = id;
+    ptr->requesterId = getRequesterNextId();
     ptr->user = user;
     ptr->messageReady = buildList();
     ptr->remoteHost = allocString(remoteHost);
@@ -109,7 +106,7 @@ int requestToTarget(RequestServerPtr server, RequesterPtr ptr){
     }
     char buf[UTIL_NUM_BUF_SIZE];
     int bufSize = UTIL_NUM_BUF_SIZE;
-    if(ptr->connect == NULL){
+    if(ptr->connect == NULL ){
         ptr->connect = buildRequestConnect(server->appServer->transfarServer,ptr->remoteHost,ptr->remotePort,
             server->appServer->responseOut,server->appServer->requestOut);
         if(ptr->connect == NULL){
@@ -159,13 +156,11 @@ MicroNetMessagePtr buildMicroNetMessage(NetMessagePtr ptr){
     if(ptr == NULL){
         return NULL;
     }
-    static int64 id;
     MicroNetMessagePtr mptr = allocMem(sizeof(MicroNetMessage));
     if(mptr == NULL){
         return NULL;
     }
-    id++;
-    mptr->id = id;
+    mptr->id = getMicroNetMessageNextId();
     mptr->cmd = allocString(ptr->cmd) ;
     mptr->extraParam = allocString(ptr->extraParam);
     mptr->data = allocMem(ptr->length);
@@ -225,7 +220,7 @@ int getRequesterList(RequestServerPtr server,NetMessagePtr message){
     int writedLength = 0,leavLength =0,write;
     while(requester!=NULL){
         if(writedLength<REQUEST_LIST_BUF_SIZE){
-            write = snprintf(buf+writedLength,REQUEST_LIST_BUF_SIZE-writedLength,"ID:%d %s:%s",requester->requesterId,requester->remoteHost,requester->remotePort);
+            write = snprintf(buf+writedLength,REQUEST_LIST_BUF_SIZE-writedLength,"ID:%d %s:%s\n",requester->requesterId,requester->remoteHost,requester->remotePort);
             writedLength += write;
         }else{
              break;

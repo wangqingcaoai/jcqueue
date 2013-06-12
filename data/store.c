@@ -285,7 +285,9 @@ long storeString(long offset,char* string,int maxLength){
     fwrite(string,strLength+1,1,storeFile);
     int leav = maxLength - (strLength+1);
     //full the empty place;
-    fwrite("\0",1,leav,storeFile);
+    char end[1];
+    end[0] = '\0';
+    fwrite(end,1,leav,storeFile);
     fflush(storeFile);
     return store.offset;
 }
@@ -319,7 +321,7 @@ int setStartStorePosition(long storePosition){
     }
     long startOffset = strlen(DEFAULT_STORE_HEADER);
     fseek(storeFile,startOffset,SEEK_SET);
-    long position = 0;
+    long position = storePosition;
     fwrite(&position,sizeof(long),1,storeFile);
     return  0;
 }

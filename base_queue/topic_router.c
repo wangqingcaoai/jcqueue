@@ -4,6 +4,7 @@
 #include "topic.h"
 #include "server.h"
 #include "../util/regex.h"
+#include "../app_queue/subscribe.h"
 int addTopic(BaseServerPtr ptr,const char* topicName){
     if(topicName == NULL){
         return -1;
@@ -13,8 +14,10 @@ int addTopic(BaseServerPtr ptr,const char* topicName){
     }
     TopicPtr tptr = getFromList(ptr->topicList,(Find)isSameTopicName,(char*)topicName);
     if(tptr == NULL){
+        printf("add new topic named %s\n", topicName);
         TopicPtr new = buildTopic(topicName);
         insertToList(ptr->topicList,new);
+        UpdateSubscribeAfterAddTopic(ptr->appServer->subscribeServer,topicName);
         return 0;
     }else{
         return -1;
@@ -28,6 +31,9 @@ int removeTopic(BaseServerPtr ptr,const char* topicName){
         return -1;
     }
     int count = removeFromList(ptr->topicList,(Find)isSameTopicName,(char*)topicName,(Free)freeTopic);
+    
+    printf("remove topic named %s\n", topicName);
+    UpdateSubscribeAfterRemoveTopic(ptr->appServer->subscribeServer,topicName);
     return count;   
 
 }
@@ -54,6 +60,9 @@ int isMatchTopicName(TopicPtr ptr, const char* keyword){
     if(ptr==NULL){
         return 0;
     }else{
+        if(!strcasecmp(ptr->topicName,keyword)){
+            return 1;
+        }
         int result = isMatchedString(ptr->topicName,keyword);
         if(result == REGEX_SUCCESS){
             return 1;

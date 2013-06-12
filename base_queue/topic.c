@@ -6,25 +6,24 @@
 #include "message.h"
 #include "topic.h"
 #include "../data/store.h"
+#include "../util/maxids.h"
 //新建topic
 TopicPtr buildTopic(const char* topicName){
     if(isEmptyString(topicName)){
         return NULL;
     }
-    static int64 topicid;
     
     //创建topic内存对象
     TopicPtr ptr= (TopicPtr)allocMem(sizeof(Topic));
     if(ptr == NULL){
         return ptr;
     }
-    topicid++;
-    ptr->topicId = topicid;
+    ptr->topicId = getTopicNextId();
     ptr->topicName = allocString(topicName);
-    ptr->ready_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
-    ptr->delay_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
-    ptr->using_pool = buildHeap((Record)MessageRecord,(Less)MessageLess);
-    ptr->sleep_queue = buildHeap((Record)MessageRecord,(Less)MessageLess);
+    ptr->ready_queue = buildHeap((Record)MessageRecord,(Less)MessageLessByPriority);
+    ptr->delay_queue = buildHeap((Record)MessageRecord,(Less)MessageLessByActiveTime);
+    ptr->using_pool = buildHeap((Record)MessageRecord,(Less)MessageLessByPriority);
+    ptr->sleep_queue = buildHeap((Record)MessageRecord,(Less)MessageLessByPriority);
     ptr->storePosition = 0L;
     return ptr;
 }
@@ -32,8 +31,11 @@ TopicPtr buildTopic(const char* topicName){
 int addMessage(TopicPtr topic,MessagePtr message,int delay){
     setMessageDelay(message,delay>=0?delay:0);
     if(delay > 0){
+        printf("add  message to (%s) delay queue messageid:%" PRId64 " delay:%d\n",topic->topicName,message->messageid,delay);
         heapinsert(topic->delay_queue,message);
     }else{
+
+        printf("add  message to (%s) ready queue messageid:%" PRId64 " delay:%d\n",topic->topicName,message->messageid,delay);
         heapinsert(topic->ready_queue,message);
     }
     return 0;
@@ -46,6 +48,7 @@ MessagePtr getReadyMessage(TopicPtr topic){
     if(ptr==NULL){
         return ptr;
     }
+    printf("get (%s)ready messageid:%" PRId64 "\n",topic->topicName,ptr->messageid );
     heapinsert(topic->using_pool,ptr);
     return ptr;
 
@@ -61,6 +64,7 @@ int sleepMessage(TopicPtr topic,int64 messageid){
         if(ptr == NULL){
             return -1;
         }else{
+            printf("sleep (%s) message messageid:%" PRId64 "\n",topic->topicName,ptr->messageid);
             heapinsert(topic->sleep_queue,ptr);
         }
     }
@@ -75,6 +79,8 @@ int reuseMessage(TopicPtr topic,int64 messageid,int delay){
         if(ptr == NULL){
             return -1;
         }else{
+            printf("reuse (%s) message messageid:%" PRId64 "\n",topic->topicName,ptr->messageid);
+            
             addMessage(topic,ptr,delay);
         }
     }
@@ -84,10 +90,13 @@ int delMessage(TopicPtr topic, int64 messageid){
     int i= heapFindIndex(topic->using_pool,(Find)isMessage,&messageid);
     if(i!=-1){
         MessagePtr ptr = heapremove(topic->using_pool,i);
+        printf("remove  message  from (%s)using_pool messageid:%" PRId64 "\n",topic->topicName,ptr->messageid);
         freeMessage(&ptr);
         return 1;
     }else if((i= heapFindIndex(topic->sleep_queue,(Find)isMessage,&messageid))!=-1){
+        
         MessagePtr ptr = heapremove(topic->sleep_queue,i);
+        printf("remove message from (%s)sleep_queue messageid:%" PRId64 "\n",topic->topicName,ptr->messageid);
         freeMessage(&ptr);
         return 1;
     }
@@ -103,6 +112,8 @@ int wakeUpMessage(TopicPtr topic,int64 messageid,int delay){
         if(ptr == NULL){
             return -1;
         }else{
+            printf("wake  (%s)message messageid:%" PRId64 " delay:%d\n",topic->topicName,ptr->messageid,delay);
+            
             addMessage(topic,ptr,delay);
         }
     }
@@ -115,6 +126,7 @@ int tickTopic(TopicPtr topic,int64 timestamp){
     //对延迟队列进行检查
     while((ptr=heapremove(topic->delay_queue,0))!=NULL){
         if(isMessageWaitFinished(ptr,timestamp)){
+            printf("delay message in (%s)is ready  messageid:%" PRId64 "\n",topic->topicName,ptr->messageid);
             addMessage(topic,ptr,0);
             continue;
         }else{
@@ -191,10 +203,10 @@ TopicPtr restoreTopic(long storePosition){
     TopicPtr ptr= (TopicPtr)allocMem(sizeof(Topic));
     ptr->topicId = tstore.topicId;
     ptr->topicName = restoreString(tstore.topicName);
-    ptr->ready_queue = restoreHeap(tstore.ready_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
-    ptr->delay_queue = restoreHeap(tstore.delay_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
-    ptr->using_pool = restoreHeap(tstore.using_pool,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
-    ptr->sleep_queue = restoreHeap(tstore.sleep_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLess);
+    ptr->ready_queue = restoreHeap(tstore.ready_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLessByPriority);
+    ptr->delay_queue = restoreHeap(tstore.delay_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLessByActiveTime);
+    ptr->using_pool = restoreHeap(tstore.using_pool,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLessByPriority);
+    ptr->sleep_queue = restoreHeap(tstore.sleep_queue,(RestoreHandle)restoreMessage,(Record)MessageRecord,(Less)MessageLessByPriority);
     ptr->storePosition = storePosition;      
     return ptr;
 }

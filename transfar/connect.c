@@ -99,13 +99,11 @@ ConnectPtr buildConnect(const int cfd, const int state){
     if(cfd<0 ){
         return NULL;
     }
-    static int id;
     ConnectPtr ptr = (ConnectPtr)allocMem(sizeof(Connect));
     if(ptr == NULL){
         return NULL;
     }
-    id++;
-    ptr->id = id;
+    ptr->id = getConnectNextId();
     ptr->tServer = NULL;
     ptr->state = state;
     ptr->sock.fd = cfd;
@@ -120,6 +118,7 @@ ConnectPtr buildConnect(const int cfd, const int state){
     ptr->read =NULL;
     ptr->write = NULL;
     ptr->user =NULL;
+    ptr->relateData = NULL;
         return ptr;
 }
 
@@ -147,6 +146,7 @@ int getRequestData(ConnectPtr ptr){
     char buf[CONNECT_RECV_BUF_SIZE];
     int recvlength=0;
     int result =CONNECT_SUCCESS;
+
     if(isOn(getConfig("verbose","off"))){
         printf("read data\n" );
     }
@@ -195,6 +195,15 @@ int getRequestData(ConnectPtr ptr){
         }
     }
     if(needWrite){
+        setConnectWrite(ptr);
+    }
+    return result;
+	
+}
+int setConnectWrite(ConnectPtr ptr){
+    if(ptr == NULL){
+        return CONNECT_ERROR_PARAM_ERROR;
+    }else{
 
         int r = sockwant(ptr->tServer->eventQueue,&(ptr->sock),'w');
         ptr->sock.f= ptr->write;
@@ -203,8 +212,6 @@ int getRequestData(ConnectPtr ptr){
 
         }
     }
-    return result;
-	
 }
 
 int setConnectHostInfo(ConnectPtr ptr,const char * addr,const char *port){
@@ -255,6 +262,7 @@ int sendResponseData(ConnectPtr ptr){
     if(mptr->sendState == NETMESSAGE_WRITESTATE_WAIT){
         reparserNetMessage(ptr->netMessage);
         mptr->sendState = NETMESSAGE_WRITESTATE_WRITING;
+        mptr->writedLength = 0;
         if(isOn(getConfig("verbose","off"))){
             printf("send  data\n" );
         } 
@@ -273,16 +281,23 @@ int sendResponseData(ConnectPtr ptr){
             if(isOn(getConfig("verbose","off"))){
                 printf("send  data success\n" );
             }
-            int r = sockwant(ptr->tServer->eventQueue,&(ptr->sock),'r');
-            ptr->sock.f = ptr->read;
-            if (r == -1) {
-                addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"sockwant failed");
-
-            }
+            setConnectRead(ptr);
         }  
     }
     
     return CONNECT_SUCCESS;
+}
+int setConnectRead(ConnectPtr ptr){
+    if(ptr == NULL){
+        return CONNECT_ERROR_PARAM_ERROR;
+    }
+    setNetMessageReadState(ptr->netMessage,NETMESSAGE_READSTATE_WAIT);
+    int r = sockwant(ptr->tServer->eventQueue,&(ptr->sock),'r');
+    ptr->sock.f = ptr->read;
+    if (r == -1) {
+        addLog(LOG_WARNING,LOG_LAYER_TRANSFAR,TRANSFAR_CONNECT_POSITION_NAME,"sockwant failed");
+
+    }
 }
 int connectClose(ConnectPtr ptr){
     //when  connet remove  
@@ -363,7 +378,21 @@ ConnectPtr buildRequestConnect(TransfarServerPtr ptr,const char* addr,const char
 
     return cPtr;
 }
-
+void*  getRelateData(ConnectPtr ptr){
+    if(ptr == NULL){
+        return NULL;
+    }else{
+        return ptr->relateData;
+    }
+}
+int  setRelateData(ConnectPtr ptr,void* data){
+    if(ptr == NULL){
+        return CONNECT_ERROR_PARAM_ERROR;
+    }else{
+        ptr->relateData = data;
+        return CONNECT_SUCCESS;
+    }
+}
 int tickConnects(TransfarServerPtr ptr){
-
+    // close connect
 }

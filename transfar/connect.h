@@ -35,7 +35,7 @@ typedef struct Connect{
     int halfClose;
     Handle read;
     Handle write;
-
+    void * relateData;
 }Connect, *ConnectPtr ;
 ConnectPtr buildConnect(const int cfd, const int state);
 int setConnectHostInfo(ConnectPtr ptr,const char * addr,const char *port);	
@@ -53,5 +53,6 @@ void checkConnectError(ConnectPtr c, const char *s);
 char *get_ip_str(const struct sockaddr *sa, char *s, size_t maxlen);
 char *get_port_str(const struct sockaddr *sa, char *s, size_t maxlen);
 int tickConnects(TransfarServerPtr ptr);
-
+int setConncetWrite(ConnectPtr ptr);
+int setConncetRead(ConnectPtr ptr);
 #endif
