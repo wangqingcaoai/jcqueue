@@ -5,6 +5,7 @@
 #include "../data/list.h"
 #include "../data/store.h"
 #include "../util/maxids.h"
+#include "../secure/secure.h"
 UserPtr buildUser(const char* userName,const char* userPassword){
     if(isEmptyString(userName)|| isEmptyString(userPassword)){
         return NULL;
@@ -16,7 +17,7 @@ UserPtr buildUser(const char* userName,const char* userPassword){
     ptr->userId = getUserNextId();
     ptr->userName = allocString(userName);
     ptr->userSecretKey = NULL;
-    ptr->userPassword = allocString(userPassword);
+    ptr->userPassword = buildMd5Key(userPassword);
     ptr->privilege = USER_PRIVILEGE_DEFAULT;
     ptr->group = USER_GROUP_DEFAULT;
     ptr->keyUpdateTime = USER_DEFAULT_UPDATE_TIME;
