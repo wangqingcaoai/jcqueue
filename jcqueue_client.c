@@ -49,7 +49,7 @@ int main(int argc, char  *argv[])
     if(store_dir == NULL){
         setConfig("store_dir","~/.jcq_client/");
     }
-    initClientAppServer(serverPtr);
+    //initClientAppServer(serverPtr);
     processClientAppServer(serverPtr);
     return 0;
 }

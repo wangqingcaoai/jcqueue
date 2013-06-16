@@ -174,7 +174,8 @@ int processClientRequest(ConnectPtr ptr,int ev){
                     int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
                     if(checkState == USER_SUCCESS){
                         //success
-                        aq_client_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                        int result = aq_client_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+
                     }else{
                         setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
                     }
@@ -227,22 +228,23 @@ int processClientResponseOut(ConnectPtr ptr,int ev){
    //     setNetMessageReadState(ptr->netMessage,NETMESSAGE_READSTATE_WAIT);
         //check user
         if(ptr->state == CONNECT_STATE_READ_MESSAGE_READY){
-            //displayNetMessage(ptr->netMessage);
+            
+            //printf("here\n");           
             if(ptr->netMessage->user != NULL){
-                if(!isSameString(ptr->tServer->appServer->acceptUser->userName,ptr->netMessage->user)){
-                    setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
-                }else{
-                    ptr->user = ptr->tServer->appServer->acceptUser;
-                    int checkState = checkUser(ptr->tServer->appServer->acceptUser,ptr->netMessage->key,ptr->netMessage->password);
-                    if(checkState == USER_SUCCESS){
-                        //success
-                        aq_client_request_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                // if(!isSameString(ptr->tServer->appServer->acceptUser->userName,ptr->netMessage->user)){
+                //     setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
+                // }else{
+                    // ptr->user = ptr->tServer->appServer->acceptUser;
+                    // int checkState = checkUser(ptr->tServer->appServer->acceptUser,ptr->netMessage->key,ptr->netMessage->password);
+                    // if(checkState == USER_SUCCESS){
+                    //     //success
+                        int result  = aq_client_request_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
                         setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_FINISH);
                         return APP_SERVER_SUCCESS;
-                    }else{
-                        setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
-                    }
-                }    
+                    // }else{
+                    //     setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_ERROR_SECURE_FAILED),AQ_ERROR_USER_ERROR_SECURE_FAILED_MSG);
+                    // }
+                // }    
             }else{
                 setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
             

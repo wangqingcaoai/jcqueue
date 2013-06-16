@@ -210,7 +210,7 @@ int aq_client_request_router(AppServerPtr serverPtr, NetMessagePtr ptr,UserPtr u
     int result = 0;
     if(!strcasecmp(ptr->cmd,RESPONSE_OK)){
         result = aq_response_ok(serverPtr, ptr,uptr);
-    }else if(isSameString(ptr->cmd,RESPONSE_ERROR)){
+    }else if(!strcasecmp(ptr->cmd,RESPONSE_ERROR)){
         result = aq_response_error(serverPtr, ptr,uptr);
     }else{
         printf("unknow response\n");
@@ -518,10 +518,10 @@ static int aq_server_add_user(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr u
     if(0<=ugroup || ugroup > USER_GROUP_DEFAULT){
         ugroup = USER_GROUP_DEFAULT;
     }
-    char *md5Password = buildMd5Key(passwd);
+    //char *md5Password = buildMd5Key(passwd);
     int result = addUser(serverPtr->usersList,user,passwd,uprivilege,ugroup);
     if(result == REQUEST_SUCCESS){
-        printf("add new user %s (passwd:%s md5:%s)\n",user,passwd,md5Password);
+        //printf("add new user %s (passwd:%s md5:%s)\n",user,passwd,md5Password);
         setNetMessageError(ptr,RESPONSE_OK,buildErrorCode(AQ_SUCCESS_MARK,AQ_SERVER_ADD_USER_SUCCESS),AQ_SERVER_ADD_USER_SUCCESS_MSG,user);
     }else if(result == USER_ERROR_USER_EXIST){
         setNetMessageError(ptr,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_SERVER_ERROR_SERVER_USER_EXISTS),AQ_SERVER_ERROR_SERVER_USER_EXISTS_MSG,user);
@@ -530,7 +530,7 @@ static int aq_server_add_user(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr u
     freeString(&passwd);
     freeString(&group);
     freeString(&privilege);
-    freeString(&md5Password);
+   // freeString(&md5Password);
 
 }
 static int aq_server_get_user(AppServerPtr serverPtr,NetMessagePtr ptr,UserPtr uptr){

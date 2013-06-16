@@ -172,13 +172,14 @@ int processRequest(ConnectPtr ptr,int ev){
             if(ptr->netMessage->user != NULL){
                 // if(ptr->user == NULL){
                     ptr->user = findUser(ptr->tServer->appServer->usersList,ptr->netMessage->user);    
-                //}
+                // }
                 if(ptr->user == NULL){
                     setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_FOUND),AQ_ERROR_USER_NOT_FOUND_MSG,ptr->netMessage->user);
             
                     return APP_SERVER_SUCCESS;
                 }else{
                     int checkState = checkUser(ptr->user,ptr->netMessage->key,ptr->netMessage->password);
+                   // printf("connect%s %s %s\n", ptr->user->userName,ptr->user->userPassword,ptr->netMessage->password);
                     if(checkState == USER_SUCCESS){
                         //success
                        int result =  aq_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
@@ -196,7 +197,15 @@ int processRequest(ConnectPtr ptr,int ev){
 
                 setNetMessageError(ptr->netMessage,RESPONSE_ERROR,buildErrorCode(AQ_ERRORS_MARK,AQ_ERROR_USER_NOT_SEND),AQ_ERROR_USER_NOT_SEND_MSG);
             }
-            setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+            if(ptr->netMessage->cmd == RESPONSE_ERROR){
+                setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_WAIT);
+               int result =  aq_router(ptr->tServer->appServer,ptr->netMessage,ptr->user);
+                    if(AQ_STOP_SEND == result){
+
+                        setNetMessageSendState(ptr->netMessage,NETMESSAGE_WRITESTATE_FINISH);
+                        return APP_SERVER_SUCCESS;
+                    } 
+            }
                 
         }else{
             printf("error connect state %d\n",ptr->state);

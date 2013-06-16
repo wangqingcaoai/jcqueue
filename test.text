@@ -1,0 +1,14 @@
+client_server_add host[127.0.0.1]port[12221]
+subscribe_add keyword[test]remoteHost[127.0.0.1]remotePort[12223]
+
+subscribe_add keyword[test]remoteHost[127.0.0.1]remotePort[12224]
+add_topic topic_name[test]
+add_topic topic_name[test2]
+get topic_name[test]
+add topic_name[test]delay[0]priority[12] data:12
+add topic_name[test]delay[0]priority[2] data:2
+add topic_name[test]delay[0]priority[17] data:17
+add topic_name[test]delay[0]priority[13] data:13
+del topic_name[test]message_id[
+reuse topic_name[test]message_id[
+

@@ -17,8 +17,9 @@ UserPtr buildUser(const char* userName,const char* userPassword){
     ptr->userId = getUserNextId();
     ptr->userName = allocString(userName);
     ptr->userSecretKey = NULL;
-    ptr->userPassword = buildMd5Key(userPassword);
+    ptr->userPassword = allocString(userPassword);//buildMd5Key(userPassword);
     ptr->privilege = USER_PRIVILEGE_DEFAULT;
+    //printf("bulid  use %s %s %s\n",ptr->userName,userPassword, ptr->userPassword);
     ptr->group = USER_GROUP_DEFAULT;
     ptr->keyUpdateTime = USER_DEFAULT_UPDATE_TIME;
     ptr->channels = buildList();
@@ -30,10 +31,11 @@ int setUserPassWord(UserPtr ptr, const char* userPassword){
     if(ptr == NULL){
         return USER_ERROR_PARAM_ERROR;
     }else{
+
         if(ptr->userPassword != NULL){
             freeString(&(ptr->userPassword));
         }
-        ptr->userPassword = allocString(userPassword);
+        ptr->userPassword = allocString(userPassword);//buildMd5Key(userPassword);
         return USER_SUCCESS;
     }
 

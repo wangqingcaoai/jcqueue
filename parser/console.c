@@ -52,7 +52,7 @@ int parserCMDMessage(NetMessagePtr ptr,void * buf, int length){
         memset(bufExtraParam,'\0',leavLength+1);
 
         memset(bufData,'\0',leavLength+1);
-        printf("%s\n",temp );
+    
         sscanf(temp,"%s",bufcmd);
         if(isEmptyString(bufcmd)){
             error = PARSER_ERROR_FORMAT_ERROR;
